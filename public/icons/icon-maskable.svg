@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Club de Tenis de Mesa UVG">
+  <rect width="512" height="512" fill="#1b4a8a"/>
+  <g transform="rotate(-28 256 268) scale(0.78) translate(72 72)">
+    <rect x="150" y="300" width="36" height="112" rx="18" fill="#f2ede4"/>
+    <ellipse cx="168" cy="236" rx="104" ry="118" fill="#e8483a"/>
+    <ellipse cx="168" cy="236" rx="104" ry="118" fill="none" stroke="#f2ede4" stroke-width="16"/>
+  </g>
+  <circle cx="338" cy="186" r="44" fill="#ff7a1a"/>
+</svg>

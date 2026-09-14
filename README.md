@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Club de Tenis de Mesa UVG
 
-## Getting Started
+Sistema del club: ranking por divisiones (Mayor y Menor, round robin, dos rankings por semestre), registro y confirmación de resultados, torneos y marcador en vivo. PWA móvil primero.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router, TypeScript, Turbopack) + Tailwind 4 + componentes estilo shadcn/ui
+- Supabase: Postgres, Auth (carnet + PIN), RLS, Realtime
+- Vercel + Supabase, plan gratuito
+
+## Requisitos
+
+- Node 20.9+ y npm
+- Docker Desktop (para Supabase local)
+
+## Arrancar en local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:start          # levanta Supabase local (Postgres, Auth, Studio) y aplica migraciones + seed
+cp .env.example .env.local
+# pegar en .env.local la URL y la anon key que imprime `npm run db:start`
+npm run dev               # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Studio local: http://127.0.0.1:54323
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Usuarios del seed (PIN `123456` para todos):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Carnet | Rol         | División |
+| ------ | ----------- | -------- |
+| 20001  | coordinador | mayor    |
+| 20002  | jugador     | mayor    |
+| 20005  | jugador     | menor    |
 
-## Learn More
+## Comandos
 
-To learn more about Next.js, take a look at the following resources:
+| Comando                     | Qué hace                                                  |
+| --------------------------- | --------------------------------------------------------- |
+| `npm run verify`            | typecheck + lint + tests + build (lo mismo que corre CI)  |
+| `npm test`                  | tests unitarios (vitest)                                  |
+| `npm run db:reset`          | recrea la BD local con migraciones + seed                 |
+| `npm run db:types`          | regenera `src/lib/supabase/database.types.ts`             |
+| `npm run db:diff -- nombre` | genera una migración a partir de cambios hechos en Studio |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estructura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+supabase/
+  migrations/     esquema versionado (fuente de verdad de la BD)
+  seed.sql        datos de desarrollo (nunca en producción)
+  config.toml     configuración de Supabase local
+src/
+  app/            rutas (App Router)
+  components/ui/  componentes base
+  lib/
+    supabase/     clientes (browser, server, proxy) y tipos
+    ranking/      lógica pura del reglamento, con tests
+    env.ts        variables de entorno validadas
+  proxy.ts        refresca la sesión en cada request
+```
 
-## Deploy on Vercel
+## Reglas que viven en la base de datos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Cada pareja se enfrenta una sola vez por ranking (índice único).
+- Un jugador no puede estar en las dos divisiones del mismo ranking (trigger).
+- Un partido solo suma en la tabla cuando está `confirmado` o `resuelto`.
+- La tabla de posiciones es la vista `tabla_posiciones`; nunca se persisten puntos.
+- Lectura pública de todo lo que aparece en la tabla; escritura directa solo del coordinador. Los jugadores registran y confirman a través de funciones RPC (fase 3).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Roadmap
+
+| Fase | Entrega                                                            | Estado    |
+| ---- | ------------------------------------------------------------------ | --------- |
+| 0    | Repo, esquema del ranking, RLS, tipos, CI                          | listo     |
+| 1    | Ingreso con carnet + PIN, tabla pública                            | siguiente |
+| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario |           |
+| 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h |           |
+| 4    | Cierre: desempates, ascensos y descensos, exportar Excel           |           |
+| 5    | Torneos (eliminación, grupos + llave)                              |           |
+| 6    | Marcador en vivo, offline, push                                    |           |
+
+## Producción
+
+1. Crear proyecto en supabase.com y enlazar: `npx supabase link --project-ref <ref>`
+2. Aplicar migraciones: `npx supabase db push` (el seed NO se aplica en producción)
+3. Vercel: importar el repo y definir `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`
+4. En Supabase > Authentication > URL Configuration, poner el dominio de Vercel como Site URL
