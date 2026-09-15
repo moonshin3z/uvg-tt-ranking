@@ -83,6 +83,7 @@ export type Database = {
           confirmado_en: string | null
           confirmado_por: string | null
           creado_en: string
+          disputa_motivo: string | null
           division_id: string
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
@@ -101,6 +102,7 @@ export type Database = {
           confirmado_en?: string | null
           confirmado_por?: string | null
           creado_en?: string
+          disputa_motivo?: string | null
           division_id: string
           estado?: Database["public"]["Enums"]["partido_estado"]
           ganador?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           confirmado_en?: string | null
           confirmado_por?: string | null
           creado_en?: string
+          disputa_motivo?: string | null
           division_id?: string
           estado?: Database["public"]["Enums"]["partido_estado"]
           ganador?: string | null
@@ -452,9 +455,66 @@ export type Database = {
     }
     Functions: {
       abrir_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
+      anular_partido: {
+        Args: { p_nota: string; p_partido_id: string }
+        Returns: {
+          actualizado_en: string
+          confirmado_en: string | null
+          confirmado_por: string | null
+          creado_en: string
+          disputa_motivo: string | null
+          division_id: string
+          estado: Database["public"]["Enums"]["partido_estado"]
+          ganador: string | null
+          id: string
+          jugador_a: string
+          jugador_b: string
+          registrado_en: string | null
+          registrado_por: string | null
+          resolucion: string | null
+          sets_a: number | null
+          sets_b: number | null
+          tipo: Database["public"]["Enums"]["partido_tipo"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       armar_divisiones: {
         Args: { p_asignacion: Json; p_ranking_id: string; p_semilla?: string }
         Returns: number
+      }
+      autoconfirmar_vencidos: { Args: never; Returns: number }
+      confirmar_resultado: {
+        Args: { p_partido_id: string }
+        Returns: {
+          actualizado_en: string
+          confirmado_en: string | null
+          confirmado_por: string | null
+          creado_en: string
+          disputa_motivo: string | null
+          division_id: string
+          estado: Database["public"]["Enums"]["partido_estado"]
+          ganador: string | null
+          id: string
+          jugador_a: string
+          jugador_b: string
+          registrado_en: string | null
+          registrado_por: string | null
+          resolucion: string | null
+          sets_a: number | null
+          sets_b: number | null
+          tipo: Database["public"]["Enums"]["partido_tipo"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       crear_ranking: {
         Args: {
@@ -471,9 +531,127 @@ export type Database = {
         }
         Returns: string
       }
+      disputar_resultado: {
+        Args: { p_motivo: string; p_partido_id: string }
+        Returns: {
+          actualizado_en: string
+          confirmado_en: string | null
+          confirmado_por: string | null
+          creado_en: string
+          disputa_motivo: string | null
+          division_id: string
+          estado: Database["public"]["Enums"]["partido_estado"]
+          ganador: string | null
+          id: string
+          jugador_a: string
+          jugador_b: string
+          registrado_en: string | null
+          registrado_por: string | null
+          resolucion: string | null
+          sets_a: number | null
+          sets_b: number | null
+          tipo: Database["public"]["Enums"]["partido_tipo"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       es_coordinador: { Args: never; Returns: boolean }
       exigir_coordinador: { Args: never; Returns: undefined }
       generar_calendario: { Args: { p_ranking_id: string }; Returns: number }
+      partido_a_json: {
+        Args: { p: Database["public"]["Tables"]["partido"]["Row"] }
+        Returns: Json
+      }
+      ranking_de_partido: {
+        Args: { p_partido_id: string }
+        Returns: {
+          cerrado_en: string | null
+          creado_en: string
+          estado: Database["public"]["Enums"]["ranking_estado"]
+          fecha_limite: string
+          horas_autoconfirmacion: number | null
+          id: string
+          n_ascienden: number
+          n_descienden: number
+          n_premiados: number
+          nombre: string
+          numero: number
+          pts_derrota: number
+          pts_victoria: number
+          semestre_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ranking"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      registrar_resultado: {
+        Args: {
+          p_partido_id: string
+          p_puntos?: Json
+          p_sets_a: number
+          p_sets_b: number
+        }
+        Returns: {
+          actualizado_en: string
+          confirmado_en: string | null
+          confirmado_por: string | null
+          creado_en: string
+          disputa_motivo: string | null
+          division_id: string
+          estado: Database["public"]["Enums"]["partido_estado"]
+          ganador: string | null
+          id: string
+          jugador_a: string
+          jugador_b: string
+          registrado_en: string | null
+          registrado_por: string | null
+          resolucion: string | null
+          sets_a: number | null
+          sets_b: number | null
+          tipo: Database["public"]["Enums"]["partido_tipo"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      resolver_partido: {
+        Args: { p_ganador: string; p_nota: string; p_partido_id: string }
+        Returns: {
+          actualizado_en: string
+          confirmado_en: string | null
+          confirmado_por: string | null
+          creado_en: string
+          disputa_motivo: string | null
+          division_id: string
+          estado: Database["public"]["Enums"]["partido_estado"]
+          ganador: string | null
+          id: string
+          jugador_a: string
+          jugador_b: string
+          registrado_en: string | null
+          registrado_por: string | null
+          resolucion: string | null
+          sets_a: number | null
+          sets_b: number | null
+          tipo: Database["public"]["Enums"]["partido_tipo"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       division_tipo: "mayor" | "menor"

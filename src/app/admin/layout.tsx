@@ -10,6 +10,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Link href="/admin/ranking" className="rounded-md px-3 py-2 hover:bg-background">
           Ranking
         </Link>
+        <Link href="/admin/partidos" className="rounded-md px-3 py-2 hover:bg-background">
+          Partidos
+        </Link>
         <Link href="/admin/jugadores" className="rounded-md px-3 py-2 hover:bg-background">
           Jugadores
         </Link>

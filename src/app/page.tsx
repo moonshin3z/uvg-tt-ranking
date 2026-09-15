@@ -5,6 +5,10 @@ import type { DivisionTipo } from "@/lib/supabase/tipos";
 import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { EnVivo } from "@/components/en-vivo";
+import { misPartidos } from "@/lib/partidos/consultas";
 
 const ESTADO_RANKING: Record<string, string> = {
   abierto: "En juego",
@@ -41,7 +45,12 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
     );
   }
 
-  const [filas, resultados] = await Promise.all([tablaDeDivision(ranking, division), ultimosResultados(ranking)]);
+  const [filas, resultados, mios] = await Promise.all([
+    tablaDeDivision(ranking, division),
+    ultimosResultados(ranking),
+    sesion && ["abierto", "en_desempates"].includes(ranking.estado) ? misPartidos(sesion.authId, ranking.id) : null,
+  ]);
+  const pendientesMios = mios ? mios.porConfirmar.length + mios.pendientes.length : 0;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
@@ -56,7 +65,33 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
         </p>
       </header>
 
+      {mios && pendientesMios > 0 ? (
+        <Card className="border-accent/40 bg-accent/10">
+          <CardContent className="flex items-center justify-between gap-3 p-4 sm:p-4">
+            <p className="text-sm">
+              {mios.porConfirmar.length > 0 ? (
+                <>
+                  Tenés <span className="font-semibold">{mios.porConfirmar.length}</span> resultado
+                  {mios.porConfirmar.length === 1 ? "" : "s"} por confirmar
+                  {mios.pendientes.length > 0 ? " y " : "."}
+                </>
+              ) : null}
+              {mios.pendientes.length > 0 ? (
+                <>
+                  <span className="font-semibold">{mios.pendientes.length}</span> partido
+                  {mios.pendientes.length === 1 ? "" : "s"} por jugar.
+                </>
+              ) : null}
+            </p>
+            <Button asChild size="sm">
+              <Link href="/partidos">Ver</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <SelectorDivision actual={division} />
+      <EnVivo />
 
       <Card>
         <CardContent className="p-0 sm:p-0">

@@ -74,8 +74,8 @@ src/
 | ---- | ------------------------------------------------------------------ | --------- |
 | 0    | Repo, esquema del ranking, RLS, tipos, CI                          | listo     |
 | 1    | Ingreso con carnet + PIN, tabla pública                            | listo     |
-| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario | en prueba |
-| 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h |           |
+| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario | listo     |
+| 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h | en prueba |
 | 4    | Cierre: desempates, ascensos y descensos, exportar Excel           |           |
 | 5    | Torneos (eliminación, grupos + llave)                              |           |
 | 6    | Marcador en vivo, offline, push                                    |           |

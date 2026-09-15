@@ -104,7 +104,9 @@ begin
   where division_id = d_mayor and jugador_a = a and jugador_b = b;
 
   a := least(j3, j4); b := greatest(j3, j4);
-  update public.partido set estado = 'jugado', ganador = j3, registrado_por = j3, registrado_en = now()
+  update public.partido set estado = 'jugado', ganador = j3,
+    sets_a = case when a = j3 then 3 else 0 end, sets_b = case when b = j3 then 3 else 0 end,
+    registrado_por = j3, registrado_en = now()
   where division_id = d_mayor and jugador_a = a and jugador_b = b;
 
   -- Se deja CERRADO para que en desarrollo se pueda crear y armar el

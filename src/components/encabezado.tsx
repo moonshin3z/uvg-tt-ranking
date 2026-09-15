@@ -20,7 +20,11 @@ export async function Encabezado() {
               <Button asChild variant="outline" size="sm">
                 <Link href="/admin/ranking">Panel</Link>
               </Button>
-            ) : null}
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/partidos">Mis partidos</Link>
+              </Button>
+            )}
             <span className="hidden text-sm text-muted-foreground sm:inline">{sesion.usuario.nombre}</span>
             <form action={salir}>
               <Button type="submit" variant="ghost" size="sm">
