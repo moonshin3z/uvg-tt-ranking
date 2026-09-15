@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { DivisionTipo } from "@/lib/supabase/database.types";
+import type { DivisionTipo } from "@/lib/supabase/tipos";
 import type { FilaOrdenada } from "@/lib/ranking/tabla";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 

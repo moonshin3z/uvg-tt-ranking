@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/server";
-import type { DivisionTipo, RankingRow, TablaPosicionesRow } from "@/lib/supabase/database.types";
+import type { DivisionTipo, RankingRow, TablaPosicionesRow } from "@/lib/supabase/tipos";
 import { asignarZonas, ordenarTabla, type EnfrentamientoDirecto, type FilaOrdenada } from "./tabla";
 
 /**
@@ -43,7 +43,20 @@ export async function tablaDeDivision(ranking: RankingRow, division: DivisionTip
       .eq("division.tipo", division),
   ]);
 
-  const ordenadas = ordenarTabla((filas ?? []) as TablaPosicionesRow[], (directos ?? []) as EnfrentamientoDirecto[]);
+  // Postgres no puede garantizar NOT NULL en columnas de una vista, así que
+  // los tipos generados salen nullable; la vista nunca devuelve nulos en la
+  // práctica (todo viene de joins internos y count/sum con coalesce).
+  const normalizadas = ((filas ?? []) as TablaPosicionesRow[]).map((f) => ({
+    usuario_id: f.usuario_id ?? "",
+    nombre: f.nombre ?? "",
+    carnet: f.carnet ?? "",
+    pj: f.pj ?? 0,
+    pg: f.pg ?? 0,
+    pp: f.pp ?? 0,
+    pts: f.pts ?? 0,
+    pg_desempate: f.pg_desempate ?? 0,
+  }));
+  const ordenadas = ordenarTabla(normalizadas, (directos ?? []) as EnfrentamientoDirecto[]);
   return asignarZonas(ordenadas, {
     division,
     n_premiados: ranking.n_premiados,

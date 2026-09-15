@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { UsuarioRow } from "@/lib/supabase/database.types";
+import type { UsuarioRow } from "@/lib/supabase/tipos";
 
 export type SesionActual = {
   authId: string;

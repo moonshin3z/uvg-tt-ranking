@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Solo desarrollo: permite abrir la app desde el celular en la misma red.
+  allowedDevOrigins: ["192.168.0.17", "192.168.0.*", "10.0.0.*"],
   reactStrictMode: true,
   poweredByHeader: false,
   typedRoutes: true,

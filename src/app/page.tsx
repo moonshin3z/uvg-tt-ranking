@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
 import { rankingVigente, tablaDeDivision, ultimosResultados } from "@/lib/ranking/consultas";
-import type { DivisionTipo } from "@/lib/supabase/database.types";
+import type { DivisionTipo } from "@/lib/supabase/tipos";
 import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
