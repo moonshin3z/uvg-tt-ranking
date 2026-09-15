@@ -7,9 +7,13 @@ import { Label } from "@/components/ui/label";
 import {
   abrirRanking,
   asignarManual,
+  cerrarFaseRegular,
+  cerrarRanking,
   crearRanking,
+  crearRankingSiguiente,
   crearSemestre,
   generarCalendario,
+  generarDesempates,
   sortear,
   type EstadoAccion,
 } from "./acciones";
@@ -223,6 +227,77 @@ export function BotonAccion({
         {pendiente ? etiquetaPendiente : etiqueta}
       </Button>
       <Mensaje estado={estado} />
+    </form>
+  );
+}
+
+export function BotonCierre({
+  accion,
+  rankingId,
+  etiqueta,
+  etiquetaPendiente,
+  variant = "default",
+}: {
+  accion: typeof cerrarFaseRegular | typeof generarDesempates | typeof cerrarRanking;
+  rankingId: string;
+  etiqueta: string;
+  etiquetaPendiente: string;
+  variant?: "default" | "accent" | "outline" | "destructive";
+}) {
+  const [estado, ejecutar, pendiente] = useActionState(accion, vacio);
+  return (
+    <form action={ejecutar} className="flex flex-col gap-2">
+      <input type="hidden" name="ranking_id" value={rankingId} />
+      <Button type="submit" variant={variant} disabled={pendiente} className="sm:self-start">
+        {pendiente ? etiquetaPendiente : etiqueta}
+      </Button>
+      <Mensaje estado={estado} />
+    </form>
+  );
+}
+
+export function FormularioSiguiente({
+  rankingAnterior,
+  semestres,
+  numeroSugerido,
+  semestreSugerido,
+}: {
+  rankingAnterior: string;
+  semestres: { id: string; nombre: string }[];
+  numeroSugerido: number;
+  semestreSugerido: string;
+}) {
+  const [estado, accion, pendiente] = useActionState(crearRankingSiguiente, vacio);
+  return (
+    <form action={accion} className="flex flex-col gap-4" noValidate>
+      <input type="hidden" name="ranking_anterior" value={rankingAnterior} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="sig-semestre">Semestre</Label>
+          <select id="sig-semestre" name="semestre_id" className={claseSelect} defaultValue={semestreSugerido}>
+            {semestres.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="sig-numero">Número</Label>
+          <select id="sig-numero" name="numero" className={claseSelect} defaultValue={String(numeroSugerido)}>
+            <option value="1">1 (inicio a mitad)</option>
+            <option value="2">2 (mitad a final)</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="sig-fecha">Fecha límite</Label>
+          <Input id="sig-fecha" name="fecha_limite" type="date" required />
+        </div>
+      </div>
+      <Mensaje estado={estado} />
+      <Button type="submit" variant="accent" disabled={pendiente} className="sm:self-start">
+        {pendiente ? "Creando..." : "Crear ranking siguiente"}
+      </Button>
     </form>
   );
 }

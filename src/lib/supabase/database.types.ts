@@ -93,6 +93,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -112,6 +113,7 @@ export type Database = {
           registrado_en?: string | null
           registrado_por?: string | null
           resolucion?: string | null
+          ronda?: number
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
@@ -131,6 +133,7 @@ export type Database = {
           registrado_en?: string | null
           registrado_por?: string | null
           resolucion?: string | null
+          ronda?: number
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
@@ -472,6 +475,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -488,6 +492,8 @@ export type Database = {
         Returns: number
       }
       autoconfirmar_vencidos: { Args: never; Returns: number }
+      cerrar_fase_regular: { Args: { p_ranking_id: string }; Returns: number }
+      cerrar_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
       confirmar_resultado: {
         Args: { p_partido_id: string }
         Returns: {
@@ -505,6 +511,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -531,6 +538,16 @@ export type Database = {
         }
         Returns: string
       }
+      crear_ranking_siguiente: {
+        Args: {
+          p_asignacion?: Json
+          p_fecha_limite: string
+          p_numero: number
+          p_ranking_anterior: string
+          p_semestre_id: string
+        }
+        Returns: string
+      }
       disputar_resultado: {
         Args: { p_motivo: string; p_partido_id: string }
         Returns: {
@@ -548,6 +565,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -559,12 +577,48 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      empates_relevantes: {
+        Args: { p_ranking_id: string }
+        Returns: {
+          division: Database["public"]["Enums"]["division_tipo"]
+          division_id: string
+          max_pos: number
+          min_pos: number
+          motivo: string
+          nombres: string[]
+          pts: number
+          usuarios: string[]
+        }[]
+      }
       es_coordinador: { Args: never; Returns: boolean }
       exigir_coordinador: { Args: never; Returns: undefined }
       generar_calendario: { Args: { p_ranking_id: string }; Returns: number }
+      generar_desempates: { Args: { p_ranking_id: string }; Returns: number }
       partido_a_json: {
         Args: { p: Database["public"]["Tables"]["partido"]["Row"] }
         Returns: Json
+      }
+      posiciones_division: {
+        Args: { p_division_id: string }
+        Returns: {
+          nombre: string
+          pg_desempate: number
+          posicion: number
+          pts: number
+          usuario_id: string
+        }[]
+      }
+      proponer_siguiente: {
+        Args: { p_ranking_id: string }
+        Returns: {
+          carnet: string
+          division_actual: Database["public"]["Enums"]["division_tipo"]
+          division_propuesta: Database["public"]["Enums"]["division_tipo"]
+          nombre: string
+          origen: Database["public"]["Enums"]["inscripcion_origen"]
+          posicion: number
+          usuario_id: string
+        }[]
       }
       ranking_de_partido: {
         Args: { p_partido_id: string }
@@ -613,6 +667,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -641,6 +696,7 @@ export type Database = {
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
+          ronda: number
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]

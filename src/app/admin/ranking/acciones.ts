@@ -158,3 +158,73 @@ export async function abrirRanking(_prev: EstadoAccion, formData: FormData): Pro
   revalidatePath("/");
   return { ok: "Ranking abierto. Ya aparece en la portada." };
 }
+
+// ---------------------------------------------------------------------------
+// Cierre del ranking (fase 4)
+// ---------------------------------------------------------------------------
+export async function cerrarFaseRegular(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("cerrar_fase_regular", {
+    p_ranking_id: String(formData.get("ranking_id") ?? ""),
+  });
+  if (error) return { error: mensaje(error, "No se pudo cerrar la fase regular") };
+  revalidatePath(RUTA);
+  revalidatePath("/");
+  return {
+    ok:
+      data && data > 0
+        ? `Fase regular cerrada. Hay ${data} empate${data === 1 ? "" : "s"} que romper.`
+        : "Fase regular cerrada, sin empates. Ya podés cerrar el ranking.",
+  };
+}
+
+export async function generarDesempates(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("generar_desempates", {
+    p_ranking_id: String(formData.get("ranking_id") ?? ""),
+  });
+  if (error) return { error: mensaje(error, "No se pudieron generar los desempates") };
+  revalidatePath(RUTA);
+  revalidatePath("/partidos");
+  return { ok: `${data} partidos de desempate creados. Ya les aparecen a los jugadores.` };
+}
+
+export async function cerrarRanking(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cerrar_ranking", {
+    p_ranking_id: String(formData.get("ranking_id") ?? ""),
+  });
+  if (error) return { error: mensaje(error, "No se pudo cerrar el ranking") };
+  revalidatePath(RUTA);
+  revalidatePath("/");
+  return { ok: "Ranking cerrado. Abajo está la propuesta para el siguiente." };
+}
+
+const esquemaSiguiente = z.object({
+  ranking_anterior: z.string().uuid(),
+  semestre_id: z.string().uuid("Elegí un semestre"),
+  numero: entero(1, 2),
+  fecha_limite: z.string().date("Fecha límite inválida"),
+});
+
+export async function crearRankingSiguiente(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const parsed = esquemaSiguiente.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const d = parsed.data;
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("crear_ranking_siguiente", {
+    p_ranking_anterior: d.ranking_anterior,
+    p_semestre_id: d.semestre_id,
+    p_numero: d.numero,
+    p_fecha_limite: d.fecha_limite,
+  });
+  if (error) return { error: mensaje(error, "No se pudo crear el ranking siguiente") };
+  revalidatePath(RUTA);
+  revalidatePath("/");
+  return { ok: "Ranking siguiente creado en borrador con los ascensos y descensos aplicados." };
+}
