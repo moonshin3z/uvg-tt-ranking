@@ -1,38 +1,99 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { redirect } from "next/navigation";
+import { obtenerSesion } from "@/lib/auth/sesion";
+import { rankingVigente, tablaDeDivision, ultimosResultados } from "@/lib/ranking/consultas";
+import type { DivisionTipo } from "@/lib/supabase/database.types";
+import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-/**
- * Portada provisional de la fase 0. En la fase 1 la reemplaza la tabla de
- * posiciones pública leída de Supabase.
- */
-export default function Home() {
+const ESTADO_RANKING: Record<string, string> = {
+  abierto: "En juego",
+  fase_regular_cerrada: "Fase regular cerrada",
+  en_desempates: "En desempates",
+  cerrado: "Cerrado",
+};
+
+function formatearFecha(iso: string) {
+  return new Intl.DateTimeFormat("es-GT", { day: "numeric", month: "short", timeZone: "America/Guatemala" }).format(
+    new Date(iso),
+  );
+}
+
+export default async function Portada({ searchParams }: PageProps<"/">) {
+  const [{ division: divisionParam }, sesion, ranking] = await Promise.all([
+    searchParams,
+    obtenerSesion(),
+    rankingVigente(),
+  ]);
+
+  if (sesion?.usuario.debe_cambiar_pin) redirect("/cambiar-pin");
+
+  const division: DivisionTipo = divisionParam === "menor" ? "menor" : "mayor";
+
+  if (!ranking) {
+    return (
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+        <h1 className="text-2xl font-bold tracking-tight">Tabla de posiciones</h1>
+        <p className="text-muted-foreground">
+          Todavía no hay un ranking abierto. Volvé cuando el coordinador lo publique.
+        </p>
+      </main>
+    );
+  }
+
+  const [filas, resultados] = await Promise.all([tablaDeDivision(ranking, division), ultimosResultados(ranking)]);
+
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
       <header className="flex flex-col gap-2">
-        <Badge variant="secondary" className="w-fit">
-          Fase 0 · cimientos
-        </Badge>
-        <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">Club de Tenis de Mesa UVG</h1>
-        <p className="text-pretty text-muted-foreground">
-          Ranking por divisiones, registro de resultados y torneos del club. El proyecto está en construcción.
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight">{ranking.nombre}</h1>
+          <Badge variant="secondary">{ESTADO_RANKING[ranking.estado] ?? ranking.estado}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Fecha límite: {formatearFecha(ranking.fecha_limite)}. Cada pareja juega una vez; victoria{" "}
+          {ranking.pts_victoria} pt.
         </p>
       </header>
 
+      <SelectorDivision actual={division} />
+
       <Card>
-        <CardHeader>
-          <CardTitle>Lo que ya existe</CardTitle>
-          <CardDescription>Base de datos y estructura del proyecto listas para la fase 1.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
-          <p>
-            Esquema del ranking en Postgres con reglas del reglamento aplicadas en la base: una sola vez por pareja,
-            un jugador por división y ningún resultado que sume sin estar confirmado.
-          </p>
-          <p>La tabla de posiciones se calcula, nunca se guarda, así que no puede quedar desincronizada.</p>
+        <CardContent className="p-0 sm:p-0">
+          <TablaPosiciones filas={filas} usuarioActualId={sesion?.authId} />
         </CardContent>
       </Card>
+      <LeyendaZonas division={division} />
 
-      <p className="mt-auto text-xs text-muted-foreground">Fase 1: tabla pública e ingreso con carnet y PIN.</p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Últimos resultados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {resultados.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aún no hay partidos confirmados.</p>
+          ) : (
+            <ul className="divide-y">
+              {resultados.map((r) => (
+                <li key={r.id} className="flex items-center gap-3 py-2 text-sm">
+                  <span className="w-12 shrink-0 text-xs text-muted-foreground">
+                    {r.fecha ? formatearFecha(r.fecha) : ""}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">
+                    <span className="font-medium">{r.ganador}</span>
+                    <span className="text-muted-foreground"> venció a </span>
+                    {r.perdedor}
+                  </span>
+                  {r.sets ? <span className="tabular shrink-0 font-medium">{r.sets}</span> : null}
+                  <Badge variant="outline" className="hidden shrink-0 capitalize sm:inline-flex">
+                    {r.division}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

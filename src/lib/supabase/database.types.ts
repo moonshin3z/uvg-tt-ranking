@@ -14,11 +14,27 @@ export type PartidoEstado = "pendiente" | "jugado" | "confirmado" | "disputado" 
 export type EventoAccion =
   "registro" | "confirmo" | "disputo" | "edito" | "resolvio" | "autoconfirmo" | "anulo" | "creo";
 
-type Tabla<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
+type Relacion = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
+type Tabla<Row, Insert = Partial<Row>, Update = Partial<Row>, Rels extends Relacion[] = []> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
-  Relationships: [];
+  Relationships: Rels;
+};
+
+type FK<Nombre extends string, Col extends string, Ref extends string, Uno extends boolean = false> = {
+  foreignKeyName: Nombre;
+  columns: [Col];
+  isOneToOne: Uno;
+  referencedRelation: Ref;
+  referencedColumns: ["id"];
 };
 
 export type UsuarioRow = {
@@ -138,18 +154,40 @@ export type Database = {
       semestre: Tabla<SemestreRow, Omit<SemestreRow, "id"> & { id?: string }>;
       ranking: Tabla<
         RankingRow,
-        Pick<RankingRow, "semestre_id" | "numero" | "nombre" | "fecha_limite"> & Partial<RankingRow>
+        Pick<RankingRow, "semestre_id" | "numero" | "nombre" | "fecha_limite"> & Partial<RankingRow>,
+        Partial<RankingRow>,
+        [FK<"ranking_semestre_id_fkey", "semestre_id", "semestre">]
       >;
-      division: Tabla<DivisionRow, Pick<DivisionRow, "ranking_id" | "tipo"> & Partial<DivisionRow>>;
+      division: Tabla<
+        DivisionRow,
+        Pick<DivisionRow, "ranking_id" | "tipo"> & Partial<DivisionRow>,
+        Partial<DivisionRow>,
+        [FK<"division_ranking_id_fkey", "ranking_id", "ranking">]
+      >;
       inscripcion: Tabla<
         InscripcionRow,
-        Pick<InscripcionRow, "division_id" | "usuario_id" | "origen"> & Partial<InscripcionRow>
+        Pick<InscripcionRow, "division_id" | "usuario_id" | "origen"> & Partial<InscripcionRow>,
+        Partial<InscripcionRow>,
+        [
+          FK<"inscripcion_division_id_fkey", "division_id", "division">,
+          FK<"inscripcion_usuario_id_fkey", "usuario_id", "usuario">,
+        ]
       >;
       sorteo: Tabla<
         SorteoRow,
         Pick<SorteoRow, "ranking_id" | "semilla" | "ejecutado_por" | "resultado"> & Partial<SorteoRow>
       >;
-      partido: Tabla<PartidoRow, Pick<PartidoRow, "division_id" | "jugador_a" | "jugador_b"> & Partial<PartidoRow>>;
+      partido: Tabla<
+        PartidoRow,
+        Pick<PartidoRow, "division_id" | "jugador_a" | "jugador_b"> & Partial<PartidoRow>,
+        Partial<PartidoRow>,
+        [
+          FK<"partido_division_id_fkey", "division_id", "division">,
+          FK<"partido_jugador_a_fkey", "jugador_a", "usuario">,
+          FK<"partido_jugador_b_fkey", "jugador_b", "usuario">,
+          FK<"partido_ganador_fkey", "ganador", "usuario">,
+        ]
+      >;
       set_partido: Tabla<
         SetPartidoRow,
         Pick<SetPartidoRow, "partido_id" | "numero" | "puntos_a" | "puntos_b"> & Partial<SetPartidoRow>

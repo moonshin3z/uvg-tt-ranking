@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
+import { Encabezado } from "@/components/encabezado";
 
 export const metadata: Metadata = {
   title: {
@@ -40,7 +41,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es-GT" className={`${GeistSans.variable} ${GeistMono.variable} h-full`} suppressHydrationWarning>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <Encabezado />
+        {children}
+      </body>
     </html>
   );
 }
