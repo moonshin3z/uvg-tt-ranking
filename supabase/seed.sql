@@ -1,7 +1,8 @@
 -- =============================================================================
 -- Seed de desarrollo local (solo `supabase db reset`; NUNCA en producción).
 -- Crea un coordinador y 8 jugadores con PIN 123456, un semestre con el
--- ranking 1 en estado abierto, dos divisiones de 4 y algunos partidos.
+-- ranking 1 (queda CERRADO) con dos divisiones y algunos partidos, para poder
+-- armar el ranking 2 desde el panel del coordinador.
 --
 -- Login local:  carnet 20001 / PIN 123456  (coordinador)
 --               carnet 20002 / PIN 123456  (jugador, división mayor)
@@ -59,7 +60,7 @@ begin
   values ('2026-2', '2026-07-13', '2026-11-27') returning id into sem;
 
   insert into public.ranking (semestre_id, numero, nombre, fecha_limite, estado)
-  values (sem, 1, 'Ranking 1 · 2026-2', '2026-09-30', 'abierto') returning id into rk;
+  values (sem, 1, 'Ranking 1 · 2026-2', '2026-08-30', 'abierto') returning id into rk;
 
   insert into public.division (ranking_id, tipo) values (rk, 'mayor') returning id into d_mayor;
   insert into public.division (ranking_id, tipo) values (rk, 'menor') returning id into d_menor;
@@ -105,5 +106,9 @@ begin
   a := least(j3, j4); b := greatest(j3, j4);
   update public.partido set estado = 'jugado', ganador = j3, registrado_por = j3, registrado_en = now()
   where division_id = d_mayor and jugador_a = a and jugador_b = b;
+
+  -- Se deja CERRADO para que en desarrollo se pueda crear y armar el
+  -- siguiente ranking desde el panel del coordinador (fase 2).
+  update public.ranking set estado = 'cerrado', cerrado_en = now() where id = rk;
 end;
 $$;

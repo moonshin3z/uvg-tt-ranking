@@ -73,8 +73,8 @@ src/
 | Fase | Entrega                                                            | Estado    |
 | ---- | ------------------------------------------------------------------ | --------- |
 | 0    | Repo, esquema del ranking, RLS, tipos, CI                          | listo     |
-| 1    | Ingreso con carnet + PIN, tabla pública                            | en prueba |
-| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario |           |
+| 1    | Ingreso con carnet + PIN, tabla pública                            | listo     |
+| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario | en prueba |
 | 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h |           |
 | 4    | Cierre: desempates, ascensos y descensos, exportar Excel           |           |
 | 5    | Torneos (eliminación, grupos + llave)                              |           |

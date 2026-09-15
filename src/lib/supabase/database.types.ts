@@ -451,7 +451,29 @@ export type Database = {
       }
     }
     Functions: {
+      abrir_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
+      armar_divisiones: {
+        Args: { p_asignacion: Json; p_ranking_id: string; p_semilla?: string }
+        Returns: number
+      }
+      crear_ranking: {
+        Args: {
+          p_fecha_limite: string
+          p_horas_autoconfirmacion?: number
+          p_n_ascienden?: number
+          p_n_descienden?: number
+          p_n_premiados?: number
+          p_nombre: string
+          p_numero: number
+          p_pts_derrota?: number
+          p_pts_victoria?: number
+          p_semestre_id: string
+        }
+        Returns: string
+      }
       es_coordinador: { Args: never; Returns: boolean }
+      exigir_coordinador: { Args: never; Returns: undefined }
+      generar_calendario: { Args: { p_ranking_id: string }; Returns: number }
     }
     Enums: {
       division_tipo: "mayor" | "menor"

@@ -16,6 +16,11 @@ export async function Encabezado() {
 
         {sesion ? (
           <div className="flex items-center gap-2">
+            {sesion.usuario.rol === "coordinador" ? (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/ranking">Panel</Link>
+              </Button>
+            ) : null}
             <span className="hidden text-sm text-muted-foreground sm:inline">{sesion.usuario.nombre}</span>
             <form action={salir}>
               <Button type="submit" variant="ghost" size="sm">
