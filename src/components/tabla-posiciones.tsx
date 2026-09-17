@@ -1,20 +1,23 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import type { FilaOrdenada } from "@/lib/ranking/tabla";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const ETIQUETA_ZONA: Record<NonNullable<FilaOrdenada["zona"]>, string> = {
-  premio: "Premio",
-  ascenso: "Sube",
-  descenso: "Baja",
-};
-
-const CLASE_ZONA: Record<NonNullable<FilaOrdenada["zona"]>, string> = {
-  premio: "border-l-zona-premio",
-  ascenso: "border-l-zona-ascenso",
-  descenso: "border-l-zona-descenso",
-};
+/**
+ * La tabla de posiciones, copiada de `docs/diseno/prototipo.html`.
+ *
+ * Es un `<table>` de verdad y no una rejilla de divs: con divs, un lector de
+ * pantalla no anuncia ni filas ni columnas, y esta es la pantalla principal
+ * de la aplicación.
+ *
+ * Las zonas se marcan con una barra de 3px en el borde izquierdo de la fila,
+ * y la leyenda de arriba dice qué significa cada color. Tu fila va en negrita,
+ * sin recuadro: un cuadro de color parecía un campo de formulario.
+ *
+ * Sin columna PP: con PJ y PG ya se sabe cuántos perdió, y en un teléfono
+ * angosto esa columna le come ancho al nombre.
+ */
 
 export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
   const opciones: { valor: DivisionTipo; etiqueta: string }[] = [
@@ -22,7 +25,7 @@ export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
     { valor: "menor", etiqueta: "Menor" },
   ];
   return (
-    <nav aria-label="División" className="grid grid-cols-2 rounded-lg bg-secondary p-1">
+    <nav aria-label="División" className="mt-3 mb-3.5 flex gap-0.5 rounded-md bg-linea-suave p-0.5 mx-4">
       {opciones.map((o) => (
         <Link
           key={o.valor}
@@ -30,10 +33,10 @@ export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
           scroll={false}
           aria-current={o.valor === actual ? "page" : undefined}
           className={cn(
-            "flex min-h-10 items-center justify-center rounded-md text-sm font-medium transition-colors",
+            "flex min-h-10 flex-1 items-center justify-center rounded-[6px] text-[14.5px] transition-colors",
             o.valor === actual
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgba(6,56,31,0.08)]"
+              : "font-medium text-muted-foreground",
           )}
         >
           {o.etiqueta}
@@ -43,70 +46,109 @@ export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
   );
 }
 
-export function TablaPosiciones({ filas, usuarioActualId }: { filas: FilaOrdenada[]; usuarioActualId?: string }) {
-  if (filas.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Todavía no hay jugadores inscritos.</p>;
-  }
-
+export function LeyendaZonas({ division }: { division: DivisionTipo }) {
+  const marca = (color: string, texto: string) => (
+    <span className="inline-flex items-center gap-[7px]">
+      <i aria-hidden className={cn("inline-block h-3.5 w-[3px] rounded-[2px]", color)} />
+      {texto}
+    </span>
+  );
   return (
-    <Table className="tabular">
-      <TableHeader>
-        <TableRow className="hover:bg-transparent">
-          <TableHead className="w-8 text-right">#</TableHead>
-          <TableHead>Jugador</TableHead>
-          <TableHead className="w-10 text-right">PJ</TableHead>
-          <TableHead className="w-10 text-right">PG</TableHead>
-          <TableHead className="w-10 text-right">PP</TableHead>
-          <TableHead className="w-12 text-right font-semibold text-foreground">Pts</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {filas.map((f) => (
-          <TableRow
-            key={f.usuario_id}
-            className={cn(
-              "border-l-4 border-l-transparent",
-              f.zona && CLASE_ZONA[f.zona],
-              f.usuario_id === usuarioActualId && "bg-primary/5 font-medium",
-            )}
-          >
-            <TableCell className="text-right text-muted-foreground">{f.posicion}</TableCell>
-            <TableCell className="max-w-0">
-              <div className="flex items-center gap-2">
-                <span className="truncate">{f.nombre}</span>
-                {f.zona ? (
-                  <span className="sr-only sm:not-sr-only sm:text-xs sm:text-muted-foreground">
-                    {ETIQUETA_ZONA[f.zona]}
-                  </span>
-                ) : null}
-              </div>
-            </TableCell>
-            <TableCell className="text-right">{f.pj}</TableCell>
-            <TableCell className="text-right">{f.pg}</TableCell>
-            <TableCell className="text-right">{f.pp}</TableCell>
-            <TableCell className="text-right font-semibold">{f.pts}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <p className="flex flex-wrap gap-x-[18px] gap-y-1.5 px-4 pt-0.5 pb-3 text-[12.5px] text-muted-foreground">
+      {division === "mayor" ? (
+        <>
+          {marca("bg-zona-premio", "Premian a los 3 primeros")}
+          {marca("bg-zona-descenso", "Bajan los 3 últimos")}
+        </>
+      ) : (
+        marca("bg-zona-ascenso", "Suben los 3 primeros a Mayor")
+      )}
+    </p>
   );
 }
 
-export function LeyendaZonas({ division }: { division: DivisionTipo }) {
+export function TablaPosiciones({
+  filas,
+  division,
+  usuarioActualId,
+}: {
+  filas: FilaOrdenada[];
+  division: DivisionTipo;
+  usuarioActualId?: string;
+}) {
+  if (filas.length === 0) {
+    return <p className="px-4 py-8 text-center text-sm text-muted-foreground">Todavía no hay jugadores inscritos.</p>;
+  }
+
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <li className="flex items-center gap-1.5">
-        <span className="inline-block h-3 w-1 rounded bg-zona-premio" /> Premio
-      </li>
-      {division === "menor" ? (
-        <li className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-1 rounded bg-zona-ascenso" /> Sube a Mayor
-        </li>
-      ) : (
-        <li className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-1 rounded bg-zona-descenso" /> Baja a Menor
-        </li>
-      )}
-    </ul>
+    <table className="w-full table-fixed border-collapse bg-card">
+      <caption className="sr-only">
+        Posiciones de la División {division === "mayor" ? "Mayor" : "Menor"}
+      </caption>
+      <colgroup>
+        <col className="w-11" />
+        <col />
+        <col className="w-8" />
+        <col className="w-8" />
+        <col className="w-12" />
+      </colgroup>
+      <thead>
+        <tr className="text-[12.5px] text-faint">
+          <th scope="col" className="px-1 pb-[9px] pl-4 text-right font-normal">
+            #
+          </th>
+          <th scope="col" className="px-1 pb-[9px] text-left font-normal">
+            Jugador
+          </th>
+          <th scope="col" className="px-1 pb-[9px] text-right font-normal">
+            PJ
+          </th>
+          <th scope="col" className="px-1 pb-[9px] text-right font-normal">
+            PG
+          </th>
+          <th scope="col" className="px-1 pb-[9px] pr-4 text-right font-normal">
+            Pts
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map((f) => {
+          const yo = f.usuario_id === usuarioActualId;
+          return (
+            <tr key={f.usuario_id} className={cn("border-t border-linea-suave", yo && "font-bold text-foreground")}>
+              <td
+                className={cn(
+                  "h-[46px] border-l-[3px] border-l-transparent px-1 pl-[13px] text-right text-[14px] text-faint",
+                  f.zona === "descenso" && "border-l-zona-descenso",
+                  f.zona === "premio" && "border-l-zona-premio",
+                  f.zona === "ascenso" && "border-l-zona-ascenso",
+                  yo && "text-foreground",
+                )}
+              >
+                {f.posicion}
+              </td>
+              <th scope="row" className="h-[46px] px-1 text-left text-[15.5px] font-[inherit]">
+                {/* El enlace ocupa la fila entera, no solo la línea de texto.
+                    Medía 23px de alto: para tocar el nombre había que apuntar
+                    a una franja más angosta que el dedo. */}
+                <Link
+                  href={`/jugador/${encodeURIComponent(f.carnet)}` as Route}
+                  className="flex h-[46px] items-center truncate"
+                >
+                  <span className="truncate">{f.nombre}</span>
+                </Link>
+              </th>
+              <td className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}>
+                {f.pj}
+              </td>
+              <td className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}>
+                {f.pg}
+              </td>
+              <td className="h-[46px] px-1 pr-4 text-right text-[16px] font-semibold">{f.pts}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

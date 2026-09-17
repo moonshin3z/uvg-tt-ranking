@@ -4,7 +4,15 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { crearJugador, reiniciarPin, type EstadoAlta, type EstadoReset } from "./acciones";
+import {
+  consultarImpacto,
+  crearJugador,
+  reiniciarPin,
+  retirarDelRanking,
+  type EstadoAlta,
+  type EstadoReset,
+  type EstadoRetiro,
+} from "./acciones";
 
 function BotonCopiar({ texto }: { texto: string }) {
   const [copiado, setCopiado] = useState(false);
@@ -136,5 +144,98 @@ export function BotonReiniciarPin({ id, carnet }: { id: string; carnet: string }
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Retiro del ranking en dos pasos: primero se consulta el impacto y se le
+ * muestra al coordinador a quién le cambia los puntos, y solo si confirma se
+ * ejecuta. Anular partidos ya jugados no debería poder hacerse de un clic.
+ */
+export function BotonRetirar({ id, nombre, rankingId }: { id: string; nombre: string; rankingId: string }) {
+  const [consulta, pedirImpacto, consultando] = useActionState(consultarImpacto, {} as EstadoRetiro);
+  const [resultado, ejecutar, ejecutando] = useActionState(retirarDelRanking, {} as EstadoRetiro);
+  const [cancelado, setCancelado] = useState(false);
+
+  if (resultado.ok)
+    return (
+      <p role="status" className="text-xs text-primary">
+        {resultado.ok}
+      </p>
+    );
+
+  const impacto = cancelado ? undefined : consulta.impacto;
+
+  if (!impacto)
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <form action={pedirImpacto}>
+          <input type="hidden" name="id" value={id} />
+          <input type="hidden" name="nombre" value={nombre} />
+          <input type="hidden" name="ranking_id" value={rankingId} />
+          <Button type="submit" variant="ghost" size="sm" disabled={consultando}>
+            {consultando ? "..." : "Retirar del ranking"}
+          </Button>
+        </form>
+        {consulta.error ? (
+          <p role="alert" className="text-xs text-destructive">
+            {consulta.error}
+          </p>
+        ) : null}
+      </div>
+    );
+
+  const total = impacto.filas.length;
+  const jugados = impacto.filas.filter((f) => f.estado === "confirmado" || f.estado === "resuelto").length;
+  const pierdenPuntos = impacto.filas.filter((f) => f.puntos_que_pierde > 0);
+
+  return (
+    <form action={ejecutar} className="w-full rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+      <input type="hidden" name="id" value={impacto.usuarioId} />
+      <input type="hidden" name="ranking_id" value={impacto.rankingId} />
+
+      <p className="text-sm font-medium">Retirar a {impacto.nombre} del ranking</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Se anulan sus {total} partido{total === 1 ? "" : "s"}
+        {jugados > 0 ? `, de los cuales ${jugados} ya se jugaron` : ""}, y sale de la tabla.
+      </p>
+
+      {pierdenPuntos.length > 0 ? (
+        <div className="mt-2 text-sm">
+          <p className="font-medium">Pierden puntos:</p>
+          <ul className="text-muted-foreground">
+            {pierdenPuntos.map((f) => (
+              <li key={f.rival}>
+                {f.rival}: −{f.puntos_que_pierde}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">Nadie pierde puntos: no le ganó ninguno.</p>
+      )}
+
+      <input
+        name="motivo"
+        placeholder="Motivo (queda registrado)"
+        className="mt-3 min-h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+      />
+
+      {resultado.error ? (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {resultado.error}
+        </p>
+      ) : null}
+
+      <div className="mt-3 flex gap-2">
+        <Button type="submit" variant="destructive" size="sm" disabled={ejecutando}>
+          {ejecutando ? "Retirando..." : "Confirmar retiro"}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setCancelado(true)}>
+          Cancelar
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">Esto no se puede deshacer desde la app.</p>
+    </form>
   );
 }

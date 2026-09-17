@@ -9,6 +9,58 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      desempate_manual: {
+        Row: {
+          decidido_en: string
+          decidido_por: string | null
+          division_id: string
+          id: string
+          motivo: string
+          orden: number
+          usuario_id: string
+        }
+        Insert: {
+          decidido_en?: string
+          decidido_por?: string | null
+          division_id: string
+          id?: string
+          motivo: string
+          orden: number
+          usuario_id: string
+        }
+        Update: {
+          decidido_en?: string
+          decidido_por?: string | null
+          division_id?: string
+          id?: string
+          motivo?: string
+          orden?: number
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desempate_manual_decidido_por_fkey"
+            columns: ["decidido_por"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desempate_manual_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "division"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desempate_manual_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       division: {
         Row: {
           cupo: number | null
@@ -77,6 +129,87 @@ export type Database = {
           },
         ]
       }
+      marcador: {
+        Row: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        Insert: {
+          actualizado_en?: string
+          aviso?: string | null
+          codigo: string
+          creado_en?: string
+          dueno: string
+          estado?: Database["public"]["Enums"]["marcador_estado"]
+          historial?: Json
+          id?: string
+          nombre_a: string
+          nombre_b: string
+          partido_id?: string | null
+          puntos_a?: number
+          puntos_b?: number
+          puntos_por_set?: number
+          saca?: string | null
+          sets_a?: number
+          sets_b?: number
+          sets_para_ganar?: number
+          version?: number
+        }
+        Update: {
+          actualizado_en?: string
+          aviso?: string | null
+          codigo?: string
+          creado_en?: string
+          dueno?: string
+          estado?: Database["public"]["Enums"]["marcador_estado"]
+          historial?: Json
+          id?: string
+          nombre_a?: string
+          nombre_b?: string
+          partido_id?: string | null
+          puntos_a?: number
+          puntos_b?: number
+          puntos_por_set?: number
+          saca?: string | null
+          sets_a?: number
+          sets_b?: number
+          sets_para_ganar?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marcador_dueno_fkey"
+            columns: ["dueno"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marcador_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partido: {
         Row: {
           actualizado_en: string
@@ -84,9 +217,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -97,6 +231,7 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         Insert: {
           actualizado_en?: string
@@ -104,9 +239,10 @@ export type Database = {
           confirmado_por?: string | null
           creado_en?: string
           disputa_motivo?: string | null
-          division_id: string
+          division_id?: string | null
           estado?: Database["public"]["Enums"]["partido_estado"]
           ganador?: string | null
+          grupo_id?: string | null
           id?: string
           jugador_a: string
           jugador_b: string
@@ -117,6 +253,7 @@ export type Database = {
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id?: string | null
         }
         Update: {
           actualizado_en?: string
@@ -124,9 +261,10 @@ export type Database = {
           confirmado_por?: string | null
           creado_en?: string
           disputa_motivo?: string | null
-          division_id?: string
+          division_id?: string | null
           estado?: Database["public"]["Enums"]["partido_estado"]
           ganador?: string | null
+          grupo_id?: string | null
           id?: string
           jugador_a?: string
           jugador_b?: string
@@ -137,6 +275,7 @@ export type Database = {
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id?: string | null
         }
         Relationships: [
           {
@@ -161,6 +300,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partido_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo_grupo"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partido_jugador_a_fkey"
             columns: ["jugador_a"]
             isOneToOne: false
@@ -179,6 +325,13 @@ export type Database = {
             columns: ["registrado_por"]
             isOneToOne: false
             referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partido_torneo_id_fkey"
+            columns: ["torneo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo"
             referencedColumns: ["id"]
           },
         ]
@@ -243,7 +396,9 @@ export type Database = {
           numero: number
           pts_derrota: number
           pts_victoria: number
+          puntos_por_set: number
           semestre_id: string
+          sets_para_ganar: number
         }
         Insert: {
           cerrado_en?: string | null
@@ -259,7 +414,9 @@ export type Database = {
           numero: number
           pts_derrota?: number
           pts_victoria?: number
+          puntos_por_set?: number
           semestre_id: string
+          sets_para_ganar?: number
         }
         Update: {
           cerrado_en?: string | null
@@ -275,7 +432,9 @@ export type Database = {
           numero?: number
           pts_derrota?: number
           pts_victoria?: number
+          puntos_por_set?: number
           semestre_id?: string
+          sets_para_ganar?: number
         }
         Relationships: [
           {
@@ -283,6 +442,61 @@ export type Database = {
             columns: ["semestre_id"]
             isOneToOne: false
             referencedRelation: "semestre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retiro: {
+        Row: {
+          division: Database["public"]["Enums"]["division_tipo"]
+          ejecutado_en: string
+          ejecutado_por: string | null
+          id: string
+          motivo: string | null
+          partidos_anulados: number
+          ranking_id: string
+          usuario_id: string
+        }
+        Insert: {
+          division: Database["public"]["Enums"]["division_tipo"]
+          ejecutado_en?: string
+          ejecutado_por?: string | null
+          id?: string
+          motivo?: string | null
+          partidos_anulados?: number
+          ranking_id: string
+          usuario_id: string
+        }
+        Update: {
+          division?: Database["public"]["Enums"]["division_tipo"]
+          ejecutado_en?: string
+          ejecutado_por?: string | null
+          id?: string
+          motivo?: string | null
+          partidos_anulados?: number
+          ranking_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retiro_ejecutado_por_fkey"
+            columns: ["ejecutado_por"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retiro_ranking_id_fkey"
+            columns: ["ranking_id"]
+            isOneToOne: false
+            referencedRelation: "ranking"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retiro_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
             referencedColumns: ["id"]
           },
         ]
@@ -382,6 +596,261 @@ export type Database = {
           },
         ]
       }
+      torneo: {
+        Row: {
+          actualizado_en: string
+          cant_grupos: number | null
+          clasifican_por_grupo: number
+          creado_en: string
+          creado_por: string | null
+          estado: Database["public"]["Enums"]["torneo_estado"]
+          fecha: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion: number | null
+          id: string
+          nombre: string
+          puntos_por_set: number
+          semestre_id: string
+          sets_para_ganar: number
+          tam_llave: number | null
+        }
+        Insert: {
+          actualizado_en?: string
+          cant_grupos?: number | null
+          clasifican_por_grupo?: number
+          creado_en?: string
+          creado_por?: string | null
+          estado?: Database["public"]["Enums"]["torneo_estado"]
+          fecha?: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion?: number | null
+          id?: string
+          nombre: string
+          puntos_por_set?: number
+          semestre_id: string
+          sets_para_ganar?: number
+          tam_llave?: number | null
+        }
+        Update: {
+          actualizado_en?: string
+          cant_grupos?: number | null
+          clasifican_por_grupo?: number
+          creado_en?: string
+          creado_por?: string | null
+          estado?: Database["public"]["Enums"]["torneo_estado"]
+          fecha?: string | null
+          formato?: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion?: number | null
+          id?: string
+          nombre?: string
+          puntos_por_set?: number
+          semestre_id?: string
+          sets_para_ganar?: number
+          tam_llave?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneo_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_semestre_id_fkey"
+            columns: ["semestre_id"]
+            isOneToOne: false
+            referencedRelation: "semestre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torneo_grupo: {
+        Row: {
+          id: string
+          nombre: string
+          torneo_id: string
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          torneo_id: string
+        }
+        Update: {
+          id?: string
+          nombre?: string
+          torneo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneo_grupo_torneo_id_fkey"
+            columns: ["torneo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torneo_inscripcion: {
+        Row: {
+          creado_en: string
+          grupo_id: string | null
+          id: string
+          siembra: number | null
+          torneo_id: string
+          usuario_id: string
+        }
+        Insert: {
+          creado_en?: string
+          grupo_id?: string | null
+          id?: string
+          siembra?: number | null
+          torneo_id: string
+          usuario_id: string
+        }
+        Update: {
+          creado_en?: string
+          grupo_id?: string | null
+          id?: string
+          siembra?: number | null
+          torneo_id?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneo_inscripcion_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo_grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_inscripcion_torneo_id_fkey"
+            columns: ["torneo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_inscripcion_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torneo_llave: {
+        Row: {
+          ganador: string | null
+          id: string
+          jugador_a: string | null
+          jugador_b: string | null
+          partido_id: string | null
+          posicion: number
+          ronda: number
+          torneo_id: string
+        }
+        Insert: {
+          ganador?: string | null
+          id?: string
+          jugador_a?: string | null
+          jugador_b?: string | null
+          partido_id?: string | null
+          posicion: number
+          ronda: number
+          torneo_id: string
+        }
+        Update: {
+          ganador?: string | null
+          id?: string
+          jugador_a?: string | null
+          jugador_b?: string | null
+          partido_id?: string | null
+          posicion?: number
+          ronda?: number
+          torneo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneo_llave_ganador_fkey"
+            columns: ["ganador"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_llave_jugador_a_fkey"
+            columns: ["jugador_a"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_llave_jugador_b_fkey"
+            columns: ["jugador_b"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_llave_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_llave_torneo_id_fkey"
+            columns: ["torneo_id"]
+            isOneToOne: false
+            referencedRelation: "torneo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torneo_sorteo: {
+        Row: {
+          ejecutado_en: string
+          ejecutado_por: string
+          id: string
+          resultado: Json
+          semilla: string
+          torneo_id: string
+        }
+        Insert: {
+          ejecutado_en?: string
+          ejecutado_por: string
+          id?: string
+          resultado: Json
+          semilla: string
+          torneo_id: string
+        }
+        Update: {
+          ejecutado_en?: string
+          ejecutado_por?: string
+          id?: string
+          resultado?: Json
+          semilla?: string
+          torneo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneo_sorteo_ejecutado_por_fkey"
+            columns: ["ejecutado_por"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "torneo_sorteo_torneo_id_fkey"
+            columns: ["torneo_id"]
+            isOneToOne: true
+            referencedRelation: "torneo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuario: {
         Row: {
           activo: boolean
@@ -420,6 +889,7 @@ export type Database = {
       tabla_posiciones: {
         Row: {
           carnet: string | null
+          dif_sets: number | null
           division: Database["public"]["Enums"]["division_tipo"] | null
           division_id: string | null
           nombre: string | null
@@ -429,6 +899,8 @@ export type Database = {
           pp: number | null
           pts: number | null
           ranking_id: string | null
+          sets_c: number | null
+          sets_f: number | null
           usuario_id: string | null
         }
         Relationships: [
@@ -457,7 +929,103 @@ export type Database = {
       }
     }
     Functions: {
+      abrir_inscripcion_torneo: {
+        Args: { p_torneo_id: string }
+        Returns: {
+          actualizado_en: string
+          cant_grupos: number | null
+          clasifican_por_grupo: number
+          creado_en: string
+          creado_por: string | null
+          estado: Database["public"]["Enums"]["torneo_estado"]
+          fecha: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion: number | null
+          id: string
+          nombre: string
+          puntos_por_set: number
+          semestre_id: string
+          sets_para_ganar: number
+          tam_llave: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torneo"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      abrir_marcador_de_partido: {
+        Args: {
+          p_partido_id: string
+          p_puntos_por_set?: number
+          p_sets_para_ganar?: number
+        }
+        Returns: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marcador"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      abrir_marcador_libre: {
+        Args: {
+          p_nombre_a: string
+          p_nombre_b: string
+          p_puntos_por_set: number
+          p_sets_para_ganar: number
+        }
+        Returns: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marcador"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       abrir_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
+      anulados_sin_retiro: { Args: { p_ranking_id: string }; Returns: number }
       anular_partido: {
         Args: { p_nota: string; p_partido_id: string }
         Returns: {
@@ -466,9 +1034,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -479,6 +1048,7 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -491,9 +1061,89 @@ export type Database = {
         Args: { p_asignacion: Json; p_ranking_id: string; p_semilla?: string }
         Returns: number
       }
+      armar_torneo: {
+        Args: {
+          p_cant_grupos: number
+          p_orden: string[]
+          p_semilla: string
+          p_torneo_id: string
+        }
+        Returns: {
+          actualizado_en: string
+          cant_grupos: number | null
+          clasifican_por_grupo: number
+          creado_en: string
+          creado_por: string | null
+          estado: Database["public"]["Enums"]["torneo_estado"]
+          fecha: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion: number | null
+          id: string
+          nombre: string
+          puntos_por_set: number
+          semestre_id: string
+          sets_para_ganar: number
+          tam_llave: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torneo"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      asignar_rol: {
+        Args: { p_rol: string; p_usuario_id: string }
+        Returns: {
+          activo: boolean
+          actualizado_en: string
+          carnet: string
+          creado_en: string
+          debe_cambiar_pin: boolean
+          id: string
+          nombre: string
+          rol: Database["public"]["Enums"]["rol"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "usuario"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       autoconfirmar_vencidos: { Args: never; Returns: number }
+      cambiar_mi_pin: { Args: { p_nuevo: string }; Returns: undefined }
+      campeon_de_torneo: { Args: { p_torneo_id: string }; Returns: string }
       cerrar_fase_regular: { Args: { p_ranking_id: string }; Returns: number }
+      cerrar_grupos: { Args: { p_torneo_id: string }; Returns: number }
       cerrar_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
+      cerrar_torneo: {
+        Args: { p_torneo_id: string }
+        Returns: {
+          actualizado_en: string
+          cant_grupos: number | null
+          clasifican_por_grupo: number
+          creado_en: string
+          creado_por: string | null
+          estado: Database["public"]["Enums"]["torneo_estado"]
+          fecha: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion: number | null
+          id: string
+          nombre: string
+          puntos_por_set: number
+          semestre_id: string
+          sets_para_ganar: number
+          tam_llave: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torneo"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      codigo_marcador: { Args: never; Returns: string }
       confirmar_resultado: {
         Args: { p_partido_id: string }
         Returns: {
@@ -502,9 +1152,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -515,6 +1166,7 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -523,21 +1175,52 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      crear_ranking: {
-        Args: {
-          p_fecha_limite: string
-          p_horas_autoconfirmacion?: number
-          p_n_ascienden?: number
-          p_n_descienden?: number
-          p_n_premiados?: number
-          p_nombre: string
-          p_numero: number
-          p_pts_derrota?: number
-          p_pts_victoria?: number
-          p_semestre_id: string
-        }
-        Returns: string
+      construir_llave: {
+        Args: { p_orden: string[]; p_torneo_id: string }
+        Returns: number
       }
+      contenedor_de_partido: {
+        Args: { p_partido_id: string }
+        Returns: {
+          clase: string
+          estado: string
+          horas_autoconfirmacion: number
+          nombre: string
+        }[]
+      }
+      crear_ranking:
+        | {
+            Args: {
+              p_fecha_limite: string
+              p_horas_autoconfirmacion?: number
+              p_n_ascienden?: number
+              p_n_descienden?: number
+              p_n_premiados?: number
+              p_nombre: string
+              p_numero: number
+              p_pts_derrota?: number
+              p_pts_victoria?: number
+              p_semestre_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_fecha_limite: string
+              p_horas_autoconfirmacion?: number
+              p_n_ascienden?: number
+              p_n_descienden?: number
+              p_n_premiados?: number
+              p_nombre: string
+              p_numero: number
+              p_pts_derrota?: number
+              p_pts_victoria?: number
+              p_puntos_por_set?: number
+              p_semestre_id: string
+              p_sets_para_ganar?: number
+            }
+            Returns: string
+          }
       crear_ranking_siguiente: {
         Args: {
           p_asignacion?: Json
@@ -548,6 +1231,48 @@ export type Database = {
         }
         Returns: string
       }
+      crear_torneo: {
+        Args: {
+          p_fecha: string
+          p_formato: string
+          p_horas_autoconfirmacion: number
+          p_nombre: string
+          p_puntos_por_set: number
+          p_semestre_id: string
+          p_sets_para_ganar: number
+        }
+        Returns: {
+          actualizado_en: string
+          cant_grupos: number | null
+          clasifican_por_grupo: number
+          creado_en: string
+          creado_por: string | null
+          estado: Database["public"]["Enums"]["torneo_estado"]
+          fecha: string | null
+          formato: Database["public"]["Enums"]["torneo_formato"]
+          horas_autoconfirmacion: number | null
+          id: string
+          nombre: string
+          puntos_por_set: number
+          semestre_id: string
+          sets_para_ganar: number
+          tam_llave: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torneo"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      decidir_empate: {
+        Args: { p_division_id: string; p_motivo: string; p_orden: string[] }
+        Returns: number
+      }
+      deshacer_retiro: {
+        Args: { p_ranking_id: string; p_usuario_id: string }
+        Returns: number
+      }
       disputar_resultado: {
         Args: { p_motivo: string; p_partido_id: string }
         Returns: {
@@ -556,9 +1281,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -569,6 +1295,7 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -580,6 +1307,7 @@ export type Database = {
       empates_relevantes: {
         Args: { p_ranking_id: string }
         Returns: {
+          accion: string
           division: Database["public"]["Enums"]["division_tipo"]
           division_id: string
           max_pos: number
@@ -591,9 +1319,110 @@ export type Database = {
         }[]
       }
       es_coordinador: { Args: never; Returns: boolean }
+      exigir_activo: { Args: never; Returns: string }
       exigir_coordinador: { Args: never; Returns: undefined }
+      exigir_partido_editable: {
+        Args: { p_partido_id: string }
+        Returns: undefined
+      }
+      exigir_partido_jugable: {
+        Args: { p_partido_id: string }
+        Returns: undefined
+      }
       generar_calendario: { Args: { p_ranking_id: string }; Returns: number }
       generar_desempates: { Args: { p_ranking_id: string }; Returns: number }
+      historial_jugador: {
+        Args: { p_usuario_id: string }
+        Returns: {
+          division: Database["public"]["Enums"]["division_tipo"]
+          jugadores_division: number
+          n_ascienden: number
+          n_descienden: number
+          n_premiados: number
+          pg: number
+          pj: number
+          posicion: number
+          pp: number
+          pts: number
+          ranking_estado: Database["public"]["Enums"]["ranking_estado"]
+          ranking_id: string
+          ranking_nombre: string
+        }[]
+      }
+      historial_valido: {
+        Args: {
+          p_historial: Json
+          p_sets_a: number
+          p_sets_b: number
+          p_tope: number
+        }
+        Returns: string
+      }
+      impacto_retiro: {
+        Args: { p_ranking_id: string; p_usuario_id: string }
+        Returns: {
+          estado: Database["public"]["Enums"]["partido_estado"]
+          gano_el_rival: boolean
+          puntos_que_pierde: number
+          rival: string
+          rival_id: string
+        }[]
+      }
+      inscribir_en_torneo: {
+        Args: { p_torneo_id: string; p_usuario_id: string }
+        Returns: {
+          creado_en: string
+          grupo_id: string | null
+          id: string
+          siembra: number | null
+          torneo_id: string
+          usuario_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torneo_inscripcion"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      limpiar_desde: {
+        Args: { p_posicion: number; p_ronda: number; p_torneo_id: string }
+        Returns: undefined
+      }
+      mi_perfil: {
+        Args: never
+        Returns: {
+          activo: boolean
+          actualizado_en: string
+          carnet: string
+          creado_en: string
+          debe_cambiar_pin: boolean
+          id: string
+          nombre: string
+          rol: Database["public"]["Enums"]["rol"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "usuario"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      orden_division: {
+        Args: { p_division_id: string }
+        Returns: {
+          dif_sets: number
+          dif_sets_desempate: number
+          gano_directo: number
+          nombre: string
+          orden_manual: number
+          pg_desempate: number
+          posicion: number
+          pts: number
+          usuario_id: string
+        }[]
+      }
+      orden_siembra: { Args: { p_tam: number }; Returns: number[] }
       partido_a_json: {
         Args: { p: Database["public"]["Tables"]["partido"]["Row"] }
         Returns: Json
@@ -607,6 +1436,30 @@ export type Database = {
           pts: number
           usuario_id: string
         }[]
+      }
+      posiciones_grupo: {
+        Args: { p_grupo_id: string }
+        Returns: {
+          dif_sets: number
+          empatado_sin_resolver: boolean
+          nombre: string
+          pg: number
+          pj: number
+          posicion: number
+          pp: number
+          sets_c: number
+          sets_f: number
+          usuario_id: string
+        }[]
+      }
+      propagar_llave: {
+        Args: {
+          p_ganador: string
+          p_posicion: number
+          p_ronda: number
+          p_torneo_id: string
+        }
+        Returns: undefined
       }
       proponer_siguiente: {
         Args: { p_ranking_id: string }
@@ -636,11 +1489,43 @@ export type Database = {
           numero: number
           pts_derrota: number
           pts_victoria: number
+          puntos_por_set: number
           semestre_id: string
+          sets_para_ganar: number
         }
         SetofOptions: {
           from: "*"
           to: "ranking"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reabrir_marcador: {
+        Args: { p_marcador_id: string }
+        Returns: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marcador"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -658,9 +1543,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -671,6 +1557,7 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         SetofOptions: {
           from: "*"
@@ -678,6 +1565,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reglas_de_partido: {
+        Args: { p_partido_id: string }
+        Returns: {
+          puntos_por_set: number
+          sets_para_ganar: number
+        }[]
       }
       resolver_partido: {
         Args: { p_ganador: string; p_nota: string; p_partido_id: string }
@@ -687,9 +1581,10 @@ export type Database = {
           confirmado_por: string | null
           creado_en: string
           disputa_motivo: string | null
-          division_id: string
+          division_id: string | null
           estado: Database["public"]["Enums"]["partido_estado"]
           ganador: string | null
+          grupo_id: string | null
           id: string
           jugador_a: string
           jugador_b: string
@@ -700,10 +1595,63 @@ export type Database = {
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
+          torneo_id: string | null
         }
         SetofOptions: {
           from: "*"
           to: "partido"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      retirar_del_ranking: {
+        Args: { p_motivo: string; p_ranking_id: string; p_usuario_id: string }
+        Returns: number
+      }
+      sacar_de_torneo: {
+        Args: { p_torneo_id: string; p_usuario_id: string }
+        Returns: undefined
+      }
+      set_valido: {
+        Args: { p_a: number; p_b: number; p_tope: number }
+        Returns: boolean
+      }
+      sincronizar_marcador: {
+        Args: {
+          p_estado: string
+          p_historial: Json
+          p_marcador_id: string
+          p_puntos_a: number
+          p_puntos_b: number
+          p_saca: string
+          p_sets_a: number
+          p_sets_b: number
+          p_version: number
+        }
+        Returns: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marcador"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -726,6 +1674,7 @@ export type Database = {
         | "descenso"
         | "permanece"
         | "manual"
+      marcador_estado: "en_juego" | "terminado" | "abandonado"
       partido_estado:
         | "pendiente"
         | "jugado"
@@ -733,7 +1682,7 @@ export type Database = {
         | "disputado"
         | "resuelto"
         | "anulado"
-      partido_tipo: "regular" | "desempate"
+      partido_tipo: "regular" | "desempate" | "grupo" | "llave"
       ranking_estado:
         | "borrador"
         | "abierto"
@@ -741,6 +1690,8 @@ export type Database = {
         | "en_desempates"
         | "cerrado"
       rol: "jugador" | "coordinador"
+      torneo_estado: "borrador" | "inscripcion" | "en_juego" | "cerrado"
+      torneo_formato: "llave" | "grupos_y_llave"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -886,6 +1837,7 @@ export const Constants = {
         "permanece",
         "manual",
       ],
+      marcador_estado: ["en_juego", "terminado", "abandonado"],
       partido_estado: [
         "pendiente",
         "jugado",
@@ -894,7 +1846,7 @@ export const Constants = {
         "resuelto",
         "anulado",
       ],
-      partido_tipo: ["regular", "desempate"],
+      partido_tipo: ["regular", "desempate", "grupo", "llave"],
       ranking_estado: [
         "borrador",
         "abierto",
@@ -903,6 +1855,8 @@ export const Constants = {
         "cerrado",
       ],
       rol: ["jugador", "coordinador"],
+      torneo_estado: ["borrador", "inscripcion", "en_juego", "cerrado"],
+      torneo_formato: ["llave", "grupos_y_llave"],
     },
   },
 } as const

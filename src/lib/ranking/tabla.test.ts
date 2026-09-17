@@ -10,6 +10,7 @@ const fila = (id: string, nombre: string, pg: number, pp: number, extra: Partial
   pp,
   pts: pg,
   pg_desempate: 0,
+  dif_sets: 0,
   ...extra,
 });
 
@@ -55,5 +56,26 @@ describe("asignarZonas", () => {
   it("menor: 3 ascensos arriba, sin descensos", () => {
     const z = asignarZonas(seis, { division: "menor", n_premiados: 3, n_ascienden: 3, n_descienden: 3 });
     expect(z.map((f) => f.zona)).toEqual(["ascenso", "ascenso", "ascenso", null, null, null]);
+  });
+});
+
+describe("diferencia de sets", () => {
+  it("ordena por diferencia de sets cuando el directo no decide", () => {
+    // Tres empatados en puntos: el enfrentamiento directo no aplica (solo
+    // decide entre dos), así que manda la diferencia de sets y no el nombre.
+    const r = ordenarTabla([
+      fila("a", "Ana", 1, 1, { dif_sets: 0 }),
+      fila("b", "Bruno", 1, 1, { dif_sets: 3 }),
+      fila("c", "Carla", 1, 1, { dif_sets: -3 }),
+    ]);
+    expect(r.map((f) => f.usuario_id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("el enfrentamiento directo pesa más que la diferencia de sets", () => {
+    const r = ordenarTabla(
+      [fila("a", "Ana", 1, 1, { dif_sets: 5 }), fila("b", "Bruno", 1, 1, { dif_sets: -5 })],
+      [{ jugador_a: "a", jugador_b: "b", ganador: "b" }],
+    );
+    expect(r.map((f) => f.usuario_id)).toEqual(["b", "a"]);
   });
 });

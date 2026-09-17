@@ -8,8 +8,8 @@
   "orientation": "any",
   "lang": "es-GT",
   "dir": "ltr",
-  "background_color": "#ffffff",
-  "theme_color": "#1b4a8a",
+  "background_color": "#f1f4f0",
+  "theme_color": "#f1f4f0",
   "categories": ["sports"],
   "icons": [
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },

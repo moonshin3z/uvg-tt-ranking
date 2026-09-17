@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { createClient } from "@/lib/supabase/server";
+import { datos } from "@/lib/supabase/errores";
+import { formatearFecha, textoFechaLimite } from "@/lib/fechas";
 import type { DivisionTipo, RankingRow } from "@/lib/supabase/tipos";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { abrirRanking, cerrarFaseRegular, cerrarRanking, generarCalendario, gene
 import {
   BotonAccion,
   BotonCierre,
+  FormularioDecidirEmpate,
   FormularioDivisiones,
   FormularioRanking,
   FormularioSemestre,
@@ -68,7 +71,8 @@ function Encabezado({ ranking, extra }: { ranking: RankingRow; extra?: string })
         </Badge>
       </div>
       <p className="text-sm text-muted-foreground">
-        Fecha límite {ranking.fecha_limite}. {extra}
+        Fecha límite {formatearFecha(ranking.fecha_limite)}
+        {ranking.estado === "abierto" ? ` (${textoFechaLimite(ranking.fecha_limite)})` : ""}. {extra}
       </p>
     </header>
   );
@@ -114,7 +118,10 @@ export default async function PaginaRanking() {
   // ===========================================================================
   if (!enCurso) {
     const propuesta = ultimoCerrado
-      ? (await supabase.rpc("proponer_siguiente", { p_ranking_id: ultimoCerrado.id })).data
+      ? datos(
+          await supabase.rpc("proponer_siguiente", { p_ranking_id: ultimoCerrado.id }),
+          "la propuesta del ranking siguiente",
+        )
       : null;
 
     return (
@@ -308,7 +315,7 @@ export default async function PaginaRanking() {
   }
 
   // --- Fase regular cerrada o en desempates ------------------------------
-  const { data: empates } = await supabase.rpc("empates_relevantes", { p_ranking_id: enCurso.id });
+  const empates = datos(await supabase.rpc("empates_relevantes", { p_ranking_id: enCurso.id }), "los empates");
   const hayEmpates = (empates?.length ?? 0) > 0;
 
   return (
@@ -336,6 +343,9 @@ export default async function PaginaRanking() {
                     puestos {e.min_pos}
                     {e.max_pos !== e.min_pos ? `-${e.max_pos}` : ""}: {e.nombres.join(", ")} ({e.pts} pts)
                   </span>
+                  <span className="text-muted-foreground">
+                    {e.accion === "jugar" ? "se juega un desempate" : "lo decide el coordinador"}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -345,12 +355,23 @@ export default async function PaginaRanking() {
             </p>
           )}
 
+          {/* Los que ya se jugaron y siguieron empatados: acá se deciden. */}
+          {(empates ?? [])
+            .filter((e) => e.accion === "decidir")
+            .map((e) => (
+              <FormularioDecidirEmpate
+                key={e.division_id + e.min_pos}
+                divisionId={e.division_id}
+                jugadores={e.usuarios.map((id, i) => ({ id, nombre: e.nombres[i] }))}
+              />
+            ))}
+
           {conteo.desempatePendiente > 0 ? (
             <p className="text-sm">
               Hay {conteo.desempatePendiente} desempate{conteo.desempatePendiente === 1 ? "" : "s"} sin jugar. Les
               aparecen a los jugadores en Mis partidos.
             </p>
-          ) : hayEmpates ? (
+          ) : (empates ?? []).some((e) => e.accion === "jugar") ? (
             <BotonCierre
               accion={generarDesempates}
               rankingId={enCurso.id}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { resolverPartido, type EstadoResolver } from "./acciones";
 
@@ -14,9 +14,13 @@ export function FormularioResolver({
   b: { id: string; nombre: string };
 }) {
   const [estado, accion, pendiente] = useActionState(resolverPartido, {} as EstadoResolver);
+  const [decision, setDecision] = useState("");
+  const [confirmando, setConfirmando] = useState(false);
+  const anula = decision === "anular";
+
   if (estado.ok)
     return (
-      <p role="status" className="text-sm text-zona-ascenso">
+      <p role="status" className="text-sm text-primary">
         {estado.ok}
       </p>
     );
@@ -28,8 +32,12 @@ export function FormularioResolver({
         <select
           name="decision"
           required
+          value={decision}
+          onChange={(e) => {
+            setDecision(e.target.value);
+            setConfirmando(false);
+          }}
           className="min-h-10 rounded-md border border-input bg-background px-2 text-sm"
-          defaultValue=""
         >
           <option value="" disabled>
             Decisión...
@@ -41,12 +49,28 @@ export function FormularioResolver({
         <input
           name="nota"
           placeholder="Nota (queda en la bitácora)"
-          className="min-h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+          className="min-h-10 w-full min-w-10 flex-1 rounded-md border border-input bg-background px-3 text-sm"
         />
-        <Button type="submit" size="sm" disabled={pendiente}>
-          {pendiente ? "..." : "Resolver"}
-        </Button>
+        {anula && !confirmando ? (
+          <Button type="button" variant="destructive" size="sm" onClick={() => setConfirmando(true)}>
+            Anular
+          </Button>
+        ) : (
+          <Button type="submit" variant={anula ? "destructive" : "default"} size="sm" disabled={pendiente}>
+            {pendiente ? "..." : anula ? "Sí, anular" : "Resolver"}
+          </Button>
+        )}
+        {anula && confirmando ? (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmando(false)}>
+            Cancelar
+          </Button>
+        ) : null}
       </div>
+      {anula && confirmando ? (
+        <p className="text-xs text-muted-foreground">
+          El partido deja de contar para los dos y no se puede deshacer desde la app.
+        </p>
+      ) : null}
       {estado.error ? (
         <p role="alert" className="text-sm text-destructive">
           {estado.error}

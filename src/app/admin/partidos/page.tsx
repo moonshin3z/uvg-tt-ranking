@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { createClient } from "@/lib/supabase/server";
+import { datos } from "@/lib/supabase/errores";
 import { rankingVigente } from "@/lib/ranking/consultas";
 import { autoconfirmarVencidos } from "@/lib/partidos/consultas";
 import { Badge } from "@/components/ui/badge";
@@ -51,13 +52,16 @@ export default async function PaginaPartidosAdmin() {
   await autoconfirmarVencidos();
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("partido")
-    .select(
-      "id, estado, tipo, ganador, sets_a, sets_b, registrado_en, disputa_motivo, division!inner(tipo, ranking_id), a:usuario!partido_jugador_a_fkey(id, nombre), b:usuario!partido_jugador_b_fkey(id, nombre)",
-    )
-    .eq("division.ranking_id", ranking.id)
-    .order("registrado_en", { ascending: false, nullsFirst: false });
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(
+        "id, estado, tipo, ganador, sets_a, sets_b, registrado_en, disputa_motivo, division!inner(tipo, ranking_id), a:usuario!partido_jugador_a_fkey(id, nombre), b:usuario!partido_jugador_b_fkey(id, nombre)",
+      )
+      .eq("division.ranking_id", ranking.id)
+      .order("registrado_en", { ascending: false, nullsFirst: false }),
+    "los partidos",
+  );
 
   const todos = (data ?? []) as unknown as Fila[];
   const disputados = todos.filter((p) => p.estado === "disputado");
@@ -157,7 +161,7 @@ export default async function PaginaPartidosAdmin() {
                     </p>
                     <Link
                       href={`/partidos/${p.id}`}
-                      className="shrink-0 text-primary underline-offset-4 hover:underline"
+                      className="shrink-0 inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline"
                     >
                       Registrar
                     </Link>

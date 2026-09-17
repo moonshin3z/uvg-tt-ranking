@@ -2,6 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { UsuarioRow } from "@/lib/supabase/tipos";
+import { datos } from "@/lib/supabase/errores";
 
 export type SesionActual = {
   authId: string;
@@ -19,15 +20,21 @@ export const obtenerSesion = cache(async (): Promise<SesionActual | null> => {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: usuario } = await supabase.from("usuario").select("*").eq("id", user.id).maybeSingle();
+  // Por `mi_perfil` y no por un select a `usuario`: `debe_cambiar_pin` dejó de
+  // ser legible desde el cliente. Antes cualquiera, incluso sin sesión, podía
+  // pedir la lista de quién todavía tiene el PIN que repartió el coordinador.
+  const usuario = datos(await supabase.rpc("mi_perfil"), "tu perfil");
   if (!usuario || !usuario.activo) return null;
 
   return { authId: user.id, usuario };
 });
 
-/** Para páginas que requieren sesión. Redirige a /ingresar si no hay. */
+/**
+ * Para páginas que requieren sesión. Si no hay (o venció), manda a /ingresar
+ * con un motivo para poder explicarlo en vez de mostrar el formulario pelado.
+ */
 export async function requerirSesion(): Promise<SesionActual> {
   const sesion = await obtenerSesion();
-  if (!sesion) redirect("/ingresar");
+  if (!sesion) redirect("/ingresar?motivo=sesion");
   return sesion;
 }

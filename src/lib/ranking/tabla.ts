@@ -3,7 +3,14 @@
  * Supabase para poder testearla con vitest.
  *
  * Orden del reglamento: puntos, resultado de desempate, enfrentamiento
- * directo (solo entre dos), nombre.
+ * directo (solo entre dos), diferencia de sets, nombre.
+ *
+ * Es exactamente el mismo orden que aplica `orden_division` en la base. Antes
+ * eran dos órdenes distintos para la misma tabla: la base no miraba el
+ * enfrentamiento directo, así que la portada y el cierre podían discrepar.
+ *
+ * La diferencia de puntos no entra: el detalle por set es opcional, así que no
+ * siempre está y no puede decidir posiciones.
  */
 
 export type FilaTabla = {
@@ -15,6 +22,7 @@ export type FilaTabla = {
   pp: number;
   pts: number;
   pg_desempate: number;
+  dif_sets: number;
 };
 
 export type EnfrentamientoDirecto = {
@@ -54,6 +62,7 @@ export function ordenarTabla(filas: FilaTabla[], directos: EnfrentamientoDirecto
       if (g === x.usuario_id) return -1;
       if (g === y.usuario_id) return 1;
     }
+    if (y.dif_sets !== x.dif_sets) return y.dif_sets - x.dif_sets;
     return x.nombre.localeCompare(y.nombre, "es");
   });
 }

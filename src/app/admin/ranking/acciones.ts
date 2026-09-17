@@ -228,3 +228,34 @@ export async function crearRankingSiguiente(_prev: EstadoAccion, formData: FormD
   revalidatePath("/");
   return { ok: "Ranking siguiente creado en borrador con los ascensos y descensos aplicados." };
 }
+
+/**
+ * Último recurso de un desempate: el coordinador ordena a mano.
+ *
+ * Solo se puede usar cuando ya se jugaron los partidos de desempate y ni el
+ * resultado, ni la diferencia de sets, ni el enfrentamiento directo separaron
+ * a los empatados. La base lo verifica; esto solo pasa el orden y el motivo.
+ */
+export async function decidirEmpate(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const divisionId = String(formData.get("division_id") ?? "");
+  const motivo = String(formData.get("motivo") ?? "").trim();
+  const orden = formData
+    .getAll("orden")
+    .map((v) => String(v).trim())
+    .filter(Boolean);
+
+  if (orden.length < 2) return { error: "Faltan los jugadores en el orden que quedan." };
+  if (new Set(orden).size !== orden.length) return { error: "Hay un jugador repetido en el orden." };
+  if (motivo.length < 10) return { error: "Escribí por qué se decidió así; esto reparte premios y descensos." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decidir_empate", {
+    p_division_id: divisionId,
+    p_orden: orden,
+    p_motivo: motivo,
+  });
+  if (error) return { error: mensaje(error, "No se pudo registrar la decisión") };
+  revalidatePath(RUTA);
+  return { ok: "Empate decidido. Queda anotado quién lo decidió y por qué." };
+}

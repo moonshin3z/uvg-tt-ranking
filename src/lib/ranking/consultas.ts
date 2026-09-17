@@ -1,6 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/server";
 import type { DivisionTipo, RankingRow, TablaPosicionesRow } from "@/lib/supabase/tipos";
 import { asignarZonas, ordenarTabla, type EnfrentamientoDirecto, type FilaOrdenada } from "./tabla";
+import { datos } from "@/lib/supabase/errores";
 
 /**
  * Consultas públicas de solo lectura para la portada. Usan el cliente anónimo
@@ -10,8 +11,8 @@ import { asignarZonas, ordenarTabla, type EnfrentamientoDirecto, type FilaOrdena
 export type ResultadoReciente = {
   id: string;
   division: DivisionTipo;
-  ganador: string;
-  perdedor: string;
+  ganador: { nombre: string; carnet: string };
+  perdedor: { nombre: string; carnet: string };
   sets: string | null;
   fecha: string;
 };
@@ -19,20 +20,22 @@ export type ResultadoReciente = {
 /** El ranking que se muestra en portada: el último que no esté en borrador. */
 export async function rankingVigente(): Promise<RankingRow | null> {
   const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("ranking")
-    .select("*")
-    .neq("estado", "borrador")
-    .order("creado_en", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
+  return datos(
+    await supabase
+      .from("ranking")
+      .select("*")
+      .neq("estado", "borrador")
+      .order("creado_en", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    "el ranking vigente",
+  );
 }
 
 export async function tablaDeDivision(ranking: RankingRow, division: DivisionTipo): Promise<FilaOrdenada[]> {
   const supabase = createPublicClient();
 
-  const [{ data: filas }, { data: directos }] = await Promise.all([
+  const [respuestaFilas, respuestaDirectos] = await Promise.all([
     supabase.from("tabla_posiciones").select("*").eq("ranking_id", ranking.id).eq("division", division),
     supabase
       .from("partido")
@@ -42,6 +45,8 @@ export async function tablaDeDivision(ranking: RankingRow, division: DivisionTip
       .eq("division.ranking_id", ranking.id)
       .eq("division.tipo", division),
   ]);
+  const filas = datos(respuestaFilas, "la tabla de posiciones");
+  const directos = datos(respuestaDirectos, "los enfrentamientos directos");
 
   // Postgres no puede garantizar NOT NULL en columnas de una vista, así que
   // los tipos generados salen nullable; la vista nunca devuelve nulos en la
@@ -55,6 +60,7 @@ export async function tablaDeDivision(ranking: RankingRow, division: DivisionTip
     pp: f.pp ?? 0,
     pts: f.pts ?? 0,
     pg_desempate: f.pg_desempate ?? 0,
+    dif_sets: f.dif_sets ?? 0,
   }));
   const ordenadas = ordenarTabla(normalizadas, (directos ?? []) as EnfrentamientoDirecto[]);
   return asignarZonas(ordenadas, {
@@ -67,21 +73,24 @@ export async function tablaDeDivision(ranking: RankingRow, division: DivisionTip
 
 export async function ultimosResultados(ranking: RankingRow, limite = 8): Promise<ResultadoReciente[]> {
   const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("partido")
-    .select(
-      "id, ganador, sets_a, sets_b, confirmado_en, jugador_a, jugador_b, division!inner(ranking_id, tipo), a:usuario!partido_jugador_a_fkey(nombre), b:usuario!partido_jugador_b_fkey(nombre)",
-    )
-    .eq("tipo", "regular")
-    .in("estado", ["confirmado", "resuelto"])
-    .eq("division.ranking_id", ranking.id)
-    .order("confirmado_en", { ascending: false, nullsFirst: false })
-    .limit(limite);
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(
+        "id, ganador, sets_a, sets_b, confirmado_en, jugador_a, jugador_b, division!inner(ranking_id, tipo), a:usuario!partido_jugador_a_fkey(nombre, carnet), b:usuario!partido_jugador_b_fkey(nombre, carnet)",
+      )
+      .eq("tipo", "regular")
+      .in("estado", ["confirmado", "resuelto"])
+      .eq("division.ranking_id", ranking.id)
+      .order("confirmado_en", { ascending: false, nullsFirst: false })
+      .limit(limite),
+    "los últimos resultados",
+  );
 
   return (data ?? []).map((p) => {
     const ganoA = p.ganador === p.jugador_a;
-    const ganador = ganoA ? p.a.nombre : p.b.nombre;
-    const perdedor = ganoA ? p.b.nombre : p.a.nombre;
+    const ganador = ganoA ? p.a : p.b;
+    const perdedor = ganoA ? p.b : p.a;
     const sets =
       p.sets_a != null && p.sets_b != null ? (ganoA ? `${p.sets_a}-${p.sets_b}` : `${p.sets_b}-${p.sets_a}`) : null;
     return {
@@ -93,4 +102,77 @@ export async function ultimosResultados(ranking: RankingRow, limite = 8): Promis
       fecha: p.confirmado_en ?? "",
     };
   });
+}
+
+/** Todos los rankings publicados, del más reciente al más viejo. */
+export async function todosLosRankings(): Promise<RankingRow[]> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase.from("ranking").select("*").neq("estado", "borrador").order("creado_en", { ascending: false }),
+    "la lista de rankings",
+  );
+  return data ?? [];
+}
+
+export async function rankingPorId(id: string): Promise<RankingRow | null> {
+  const supabase = createPublicClient();
+  return datos(await supabase.from("ranking").select("*").eq("id", id).maybeSingle(), "el ranking");
+}
+
+export type PartidoDeCalendario = {
+  id: string;
+  division: DivisionTipo;
+  tipo: "regular" | "desempate";
+  estado: string;
+  a: { nombre: string; carnet: string };
+  b: { nombre: string; carnet: string };
+  ganador: string | null;
+  jugador_a: string;
+  sets_a: number | null;
+  sets_b: number | null;
+  fecha: string | null;
+};
+
+/** Calendario completo de un ranking: quién juega contra quién y cómo va. */
+export async function calendarioDeRanking(rankingId: string): Promise<PartidoDeCalendario[]> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(
+        "id, tipo, estado, ganador, jugador_a, sets_a, sets_b, confirmado_en, division!inner(tipo, ranking_id), a:usuario!partido_jugador_a_fkey(nombre, carnet), b:usuario!partido_jugador_b_fkey(nombre, carnet)",
+      )
+      .eq("division.ranking_id", rankingId),
+    "el calendario",
+  );
+
+  type Cruda = {
+    id: string;
+    tipo: "regular" | "desempate";
+    estado: string;
+    ganador: string | null;
+    jugador_a: string;
+    sets_a: number | null;
+    sets_b: number | null;
+    confirmado_en: string | null;
+    division: { tipo: DivisionTipo };
+    a: { nombre: string; carnet: string };
+    b: { nombre: string; carnet: string };
+  };
+
+  return ((data ?? []) as unknown as Cruda[])
+    .map((p) => ({
+      id: p.id,
+      division: p.division.tipo,
+      tipo: p.tipo,
+      estado: p.estado,
+      a: p.a,
+      b: p.b,
+      ganador: p.ganador,
+      jugador_a: p.jugador_a,
+      sets_a: p.sets_a,
+      sets_b: p.sets_b,
+      fecha: p.confirmado_en,
+    }))
+    .sort((x, y) => x.a.nombre.localeCompare(y.a.nombre) || x.b.nombre.localeCompare(y.b.nombre));
 }

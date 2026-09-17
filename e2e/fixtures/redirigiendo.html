@@ -1,0 +1,10 @@
+<!doctype html>
+<!--
+  Caso real: mientras una ruta con sesión redirige a /cambiar-pin, Chromium
+  reemplaza el título por "Loading http://...". El guardia de identidad llegó a
+  leer eso y a declarar impostora a la app correcta. Esta página reproduce ese
+  estado: marca presente, título inservible.
+-->
+<html lang="es" data-app="uvgtt"><head><meta charset="utf-8">
+<title>Loading http://localhost:3001/cambiar-pin</title>
+</head><body><p>redirigiendo</p></body></html>

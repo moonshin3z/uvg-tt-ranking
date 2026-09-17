@@ -1,0 +1,894 @@
+<title>Club TM UVG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Onest:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   Club de Tenis de Mesa UVG-prototipo navegable, versión 2
+   Una sola familia tipográfica. Sin monoespaciada. Sin rótulos en mayúsculas
+   espaciadas. Las cifras se alinean con tabular-nums, no con otra fuente.
+   =========================================================================== */
+:root{
+  --ground:#f1f4f0;
+  --surface:#ffffff;
+  --ink:#131714;
+  --muted:#5d6a61;
+  --faint:#6f7973;   /* 4.51:1 sobre blanco; el anterior daba 3.10 */
+  --line:#dde3dc;
+  --line-soft:#e9eee8;
+
+  /* El verde institucional de la UVG se queda intacto donde NO lleva texto
+     encima: barras de zona, el punto del torneo, marcas. Con blanco encima
+     da 3.49:1 y AA pide 4.50, así que los controles con texto usan
+     --acc-fuerte, que es el mismo tono tres pasos más oscuro (4.66:1) y al
+     lado no se distingue. La identidad no cambia; cambia dónde se apoya. */
+  --acc:#0b9e51;
+  --acc-fuerte:#098645;
+  --acc-deep:#06381f;
+  --acc-wash:#eaf5ee;
+
+  /* Zonas: verde es bueno (premio y ascenso), rojo es malo (descenso).
+     Un solo rojo en toda la app, el mismo del aviso. */
+  --bueno:#0b9e51;
+  --malo:#ab3f2b;
+  --alerta:#ab3f2b;
+
+  /* Escala de radios. Círculos y píldoras nunca usan un px arbitrario. */
+  --r-xs:6px;    /* control dentro de otro control */
+  --r-sm:8px;    /* botones secundarios */
+  --r-md:10px;   /* botones y cajas */
+  --r-lg:14px;   /* contenedores */
+  --r-pill:999px;
+  --r-marco:26px;/* el teléfono del prototipo, no de la app */
+
+  --fuente:"Outfit","Outfit Fallback",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{
+  -webkit-text-size-adjust:100%;   /* iOS infla el texto en horizontal sin esto */
+  overscroll-behavior:none;        /* el tirón para recargar no secuestra el scroll */
+}
+/* Solo en controles: en texto corrido, impedir la selección es un defecto. */
+button,a,[role="button"]{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--fuente);font-size:15px;line-height:1.5;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc-fuerte);outline-offset:2px;border-radius:var(--r-xs)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- armazón ---------- */
+.escena{min-height:100%;max-width:100%;display:flex;gap:28px;align-items:flex-start;justify-content:center;
+  padding-block:28px;padding-left:16px;padding-right:16px}
+.riel{width:252px;flex:0 0 252px;min-width:0;padding-top:6px}
+.riel h1{margin:0 0 6px;font-size:19px;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.riel .lead{margin:0 0 18px;font-size:13px;color:var(--muted);text-wrap:pretty}
+.riel h2{margin:18px 0 8px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.riel .grupo{display:flex;flex-direction:column;gap:2px}
+.riel .grupo button{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 10px;
+  background:none;border:0;border-radius:var(--r-sm);text-align:left;font-size:13.5px;color:var(--muted);cursor:pointer}
+@media (hover:hover) and (pointer:fine){
+  .riel .grupo button:hover{background:var(--surface);color:var(--ink)}
+}
+.riel .grupo button[aria-current="true"]{background:var(--surface);color:var(--ink);font-weight:600;
+  box-shadow:0 1px 2px rgba(6,56,31,.07)}
+.riel .nota{margin-top:18px;padding:12px 13px;border-left:2px solid var(--acc);background:var(--acc-wash);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:12.5px;color:var(--acc-deep);text-wrap:pretty}
+.muestra{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.muestra b{font-weight:700;color:var(--acc-fuerte);font-variant-numeric:tabular-nums;margin-left:2px}
+.muestra small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);letter-spacing:0}
+.grupo-tit{margin:12px 0 5px;font-size:11.5px;color:var(--faint)}
+.grupo-tit:first-of-type{margin-top:4px}
+
+.marco{width:390px;max-width:100%;flex:0 0 390px;height:824px;max-height:calc(100vh - 56px);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-marco);overflow:hidden;
+  box-shadow:0 24px 48px -28px rgba(6,56,31,.35);display:flex;flex-direction:column;position:relative}
+.app{flex:1;display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--ground)}
+
+@media (max-width:900px){
+  .escena{flex-direction:column;align-items:stretch;gap:16px;padding-block:16px}
+  .marco{order:1;width:auto;flex:none;height:min(780px,calc(100dvh - 40px));min-height:560px;margin:0 auto;max-width:430px}
+  .riel{order:2;width:auto;flex:none;max-width:430px;margin:0 auto;padding-top:0}
+  .riel .lead{display:none}
+  .riel h1{font-size:15px;margin-bottom:12px}
+  .riel .grupo{flex-direction:row;flex-wrap:wrap;gap:7px}
+  .riel .grupo button{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-pill);padding:0 14px}
+}
+@media (max-width:520px){
+  .escena{padding:0;gap:0}
+  .riel{padding:18px 16px 28px;max-width:none}
+  .marco{width:100%;margin:0;border:0;border-radius:0;box-shadow:none;max-width:none;height:100dvh;min-height:520px}
+}
+
+/* ---------- tope ---------- */
+.tope{display:flex;align-items:center;gap:10px;min-height:56px;padding:9px 16px;
+  background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto}
+.tope .bloque{flex:1;min-width:0}
+.tope .titulo{font-size:17px;font-weight:600;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tope .sub{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tope .atras{display:inline-flex;align-items:center;min-height:40px;min-width:40px;padding:0 8px;margin-left:-8px;
+  background:none;border:0;color:var(--acc-fuerte);font-size:15px;font-weight:500;cursor:pointer}
+.tope .yo{font-size:13px;color:var(--muted);white-space:nowrap}
+
+.lienzo{flex:1;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;background:var(--surface)}
+
+/* Rótulos en caja y tono, no en mayúsculas espaciadas. */
+.rotulo{padding:20px 16px 8px;font-size:13px;font-weight:600;color:var(--muted)}
+.rotulo.urge{color:var(--alerta)}
+
+/* ---------- la fila ---------- */
+.fila{display:flex;align-items:center;gap:12px;width:100%;min-width:0;padding:11px 16px;min-height:62px;
+  background:var(--surface);border:0;border-bottom:1px solid var(--line-soft);text-align:left;cursor:pointer}
+.fila:active{background:var(--acc-wash)}
+.fila.quieta{cursor:default}.fila.quieta:active{background:var(--surface)}
+.ini{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:var(--acc-wash);color:var(--acc-deep);
+  display:grid;place-items:center;font-size:13px;font-weight:600}
+.medio{flex:1;min-width:0;display:block}
+.nombre{display:block;font-size:15.5px;font-weight:500;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{display:block;font-size:13px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.derecha{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+.flecha{color:var(--faint);font-size:19px;line-height:1}
+.res{font-size:15px;font-weight:600;color:var(--muted)}
+.res.gano{color:var(--acc-fuerte)}
+
+/* ---------- botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 18px;
+  border:0;border-radius:var(--r-md);background:var(--acc-fuerte);color:#fff;font-size:15.5px;font-weight:600;cursor:pointer;
+  transition:transform .12s ease}
+.btn:active{transform:scale(.975)}
+/* Todo lo que se presiona responde al presionarlo, no al soltarlo. */
+.seg button,.pestanas button,.tope .atras,.contador .mando button,
+.centro button,.mbot button,.riel .grupo button{transition:transform .14s ease-out}
+.seg button:active,.pestanas button:active,.tope .atras:active,
+.contador .mando button:active:not(:disabled),.centro button:active:not(:disabled),
+.mbot button:active,.riel .grupo button:active{transform:scale(.96)}
+.btn.chico{min-height:40px;padding:0 14px;font-size:14px}
+.btn.quieto{background:none;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.peligro{background:none;color:var(--alerta);border:0;font-weight:500;font-size:14.5px}
+.btn.bloque{width:100%}
+.pila{display:flex;flex-direction:column;gap:9px}
+
+/* ---------- tabla ---------- */
+.seg{display:flex;gap:2px;margin:12px 16px 14px;padding:2px;background:var(--line-soft);border-radius:var(--r-md)}
+.seg button{flex:1;min-height:40px;border:0;border-radius:var(--r-xs);background:none;
+  font-size:14.5px;font-weight:500;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(6,56,31,.08)}
+
+/* Una tabla de posiciones es una tabla. Con divs, un lector de pantalla no
+   anuncia ni filas ni columnas, y esta es la pantalla principal de la app. */
+.tabla{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--surface)}
+.tabla col.c-pos{width:44px}.tabla col.c-n{width:32px}.tabla col.c-pts{width:48px}
+.tabla th,.tabla td{padding:0 4px;text-align:right;font-weight:400}
+.tabla thead th{padding-bottom:9px;font-size:12.5px;color:var(--faint)}
+.tabla thead th:first-child{padding-left:16px}
+.tabla th:last-child,.tabla td:last-child{padding-right:16px}
+.tabla tbody tr{border-top:1px solid var(--line-soft)}
+.tabla tbody td,.tabla tbody th{height:46px}
+.tabla tbody td:first-child{border-left:3px solid transparent;padding-left:13px}
+.tabla tbody tr.z-bueno td:first-child{border-left-color:var(--bueno)}
+.tabla tbody tr.z-malo td:first-child{border-left-color:var(--malo)}
+.tabla .tpos{font-size:14px;color:var(--faint)}
+.tabla .tnom{text-align:left;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabla .tnum{font-size:14px;color:var(--muted)}
+.tabla .tpts{font-size:16px;font-weight:600}
+/* Tu fila: negrita, sin recuadro. Un cuadro de color parecía un campo de formulario. */
+.tabla tr.yo th,.tabla tr.yo td{font-weight:700;color:var(--ink)}
+.solo-lector{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* estados vacío, cargando y error */
+.estado{padding:44px 24px;text-align:center}
+.estado .t{font-size:18px;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.estado .d{margin-top:8px;font-size:14.5px;color:var(--muted);text-wrap:pretty}
+.estado .btn{margin-top:20px}
+.esq{padding:0 16px}
+.esq div{height:46px;border-top:1px solid var(--line-soft);display:flex;align-items:center}
+.esq i{display:block;height:11px;border-radius:var(--r-xs);background:var(--line-soft);
+  animation:latir 1.4s ease-in-out infinite}
+@keyframes latir{0%,100%{opacity:1}50%{opacity:.45}}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 18px;padding:2px 16px 12px;font-size:12.5px;color:var(--muted)}
+.leyenda span{display:inline-flex;align-items:center;gap:7px}
+.leyenda i{width:3px;height:14px;border-radius:2px;display:inline-block}
+.pie{padding:14px 16px 20px;font-size:13px;color:var(--muted);line-height:1.65;text-wrap:pretty}
+
+/* franja del torneo en curso, arriba de la tabla */
+.franja{display:flex;align-items:center;gap:12px;width:100%;padding:11px 16px;min-height:56px;
+  background:var(--surface);color:var(--ink);border:0;border-bottom:1px solid var(--line);text-align:left;cursor:pointer}
+.franja:active{background:var(--acc-wash)}
+.franja .punto{width:9px;height:9px;border-radius:50%;background:var(--acc);flex:0 0 9px;margin-left:14px}
+.franja .txt{flex:1;min-width:0}
+.franja .t1{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.franja .t2{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
+.franja .fl{color:var(--faint);font-size:19px}
+
+/* ---------- detalle ---------- */
+.detalle{padding:24px 16px 28px;background:var(--surface)}
+.detalle .enc{font-size:22px;font-weight:600;letter-spacing:-.025em;text-wrap:balance}
+.detalle .meta{font-size:14px;color:var(--muted);margin-top:5px;text-wrap:pretty}
+.caja-num{margin:20px 0;padding:20px 16px;border:1px solid var(--line);border-radius:var(--r-lg);text-align:center}
+.caja-num .gr{font-size:44px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.caja-num .sets{font-size:14px;color:var(--muted);margin-top:9px}
+.aviso{margin-top:16px;font-size:13.5px;color:var(--muted);text-align:center;text-wrap:pretty}
+
+/* ---------- anotar sets ---------- */
+.anotar{padding:22px 16px 26px;background:var(--surface)}
+.contador{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+.contador .quien{flex:1;min-width:0;font-size:16px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contador .mando{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.contador .mando button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  font-size:20px;font-weight:500;color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.contador .mando button:disabled{opacity:.35;cursor:default}
+.contador .val{min-width:34px;text-align:center;font-size:26px;font-weight:700}
+.resumen{margin:18px 0 20px;padding:14px;border-radius:var(--r-md);background:var(--acc-wash);
+  color:var(--acc-deep);font-size:15px;text-align:center;font-weight:500}
+.resumen.malo{background:#fbf0ec;color:#8d3a24}
+
+/* ---------- perfil ---------- */
+.perfil-cab{padding:24px 16px 20px;background:var(--acc-deep);color:#fff}
+.perfil-cab .nom{font-size:24px;font-weight:600;letter-spacing:-.03em}
+.perfil-cab .car{font-size:13.5px;color:rgba(255,255,255,.66);margin-top:2px}
+.puesto{display:flex;align-items:baseline;gap:10px;margin-top:18px}
+.puesto .n{font-size:52px;font-weight:700;letter-spacing:-.05em;line-height:.9}
+.puesto .de{font-size:14.5px;color:rgba(255,255,255,.78);text-wrap:pretty}
+.cifras{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-bottom:1px solid var(--line)}
+.cifras div{padding:15px 4px;text-align:center;border-right:1px solid var(--line-soft)}
+.cifras div:last-child{border-right:0}
+.cifras b{display:block;font-size:21px;font-weight:700;letter-spacing:-.02em}
+.cifras span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* ---------- cuadro ---------- */
+.cuadro{display:flex;gap:10px;padding:16px;overflow-x:auto;background:var(--surface)}
+.ronda{display:flex;flex-direction:column;justify-content:space-around;gap:12px;min-width:136px;flex:1}
+.ronda .rh{font-size:13px;color:var(--muted);text-align:center;font-weight:500}
+.llave{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.llave .lado{display:flex;justify-content:space-between;gap:6px;align-items:center;padding:9px 11px;font-size:13.5px}
+.llave .lado+.lado{border-top:1px solid var(--line-soft)}
+.llave .lado.gana{font-weight:600;background:var(--acc-wash)}
+.llave .lado.vacio{color:var(--faint)}
+.llave .lado b{font-weight:700}
+
+/* ---------- marcador ---------- */
+.marcador{position:absolute;inset:0;background:#07200f;color:#fff;display:flex;flex-direction:column;z-index:5}
+.mitad{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:none;border:0;color:#fff;cursor:pointer;padding:8px;min-height:0;overflow:hidden}
+.mitad:active{background:rgba(255,255,255,.06)}
+.mitad.girada{transform:rotate(180deg)}
+.mitad .quien{font-size:15px;color:rgba(255,255,255,.7);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mitad .pts{font-size:96px;font-weight:700;line-height:.84;letter-spacing:-.06em}
+.mitad .pips{display:flex;gap:7px}
+.mitad .pips i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.22);display:block}
+.mitad .pips i.on{background:#7ad14f}
+.centro{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 14px;background:rgba(255,255,255,.07);border-block:1px solid rgba(255,255,255,.12)}
+.centro .lado-izq,.centro .lado-der{display:flex;align-items:center;gap:6px}
+.centro button{min-height:40px;min-width:40px;padding:0 12px;border-radius:var(--r-sm);border:0;background:none;
+  color:rgba(255,255,255,.82);font-size:14px;font-weight:500;cursor:pointer}
+.centro button:disabled{opacity:.35}
+.centro .marca{font-size:15px;font-weight:600;letter-spacing:.02em}
+.centro .marca small{font-weight:400;color:rgba(255,255,255,.55);font-size:12.5px;display:block;text-align:center}
+.mtop{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;
+  padding-top:calc(10px + env(safe-area-inset-top,0px));font-size:13px;color:rgba(255,255,255,.6)}
+.mtop button{min-height:40px;padding:0 10px;background:none;border:0;color:#fff;font-size:15px;cursor:pointer}
+.mbot{flex:0 0 auto;padding:10px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.mbot button{width:100%;min-height:48px;border-radius:var(--r-md);border:0;background:#7ad14f;color:#07220a;
+  font-size:16px;font-weight:600;cursor:pointer}
+
+/* ---------- ingreso ---------- */
+.ingreso{padding:34px 20px;display:flex;flex-direction:column;gap:16px;background:var(--surface);min-height:100%}
+.ingreso .marca{font-size:26px;font-weight:600;letter-spacing:-.035em}
+.ingreso .marca span{color:var(--acc-fuerte)}
+.ingreso p{margin:0;font-size:14.5px;color:var(--muted);text-wrap:pretty}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label{font-size:13.5px;font-weight:600;color:var(--muted)}
+.campo input{min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:var(--surface);font-size:16px;color:var(--ink);font-family:inherit}
+.campo input:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:var(--acc)}
+
+/* ---------- pestañas ---------- */
+.pestanas{display:flex;background:var(--surface);border-top:1px solid var(--line);flex:0 0 auto;
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.pestanas button{flex:1;min-height:54px;padding:8px 2px 7px;background:none;border:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.pestanas button[aria-current="true"]{color:var(--acc-fuerte)}
+.pestanas .ic{font-size:18px;line-height:1.1}
+.pestanas .bolita{display:inline-block;min-width:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--alerta);
+  color:#fff;font-size:10.5px;font-weight:700;line-height:18px;margin-left:4px;vertical-align:1px}
+
+.dato{display:flex;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line-soft);font-size:15px}
+.dato span{color:var(--muted)}
+.dato b{font-weight:600}
+.panel-nota{padding:15px 16px;background:var(--acc-wash);border-bottom:1px solid var(--line);
+  font-size:14px;color:var(--acc-deep);text-wrap:pretty}
+</style>
+
+<div class="escena">
+  <aside class="riel">
+    <h1>Club TM UVG</h1>
+    <p class="lead">Prototipo navegable. Abre en la tabla, que es lo que la gente viene a ver.</p>
+
+    <h2>Tipografía</h2>
+    <p class="grupo-tit">Cercanas</p>
+    <div class="grupo fuentes">
+      <button data-fuente="Outfit" aria-current="true"><span class="muestra" style="font-family:'Outfit',system-ui,sans-serif">Outfit <b>3-1</b> <b>16</b><small>geométrica, cercana</small></span></button>
+      <button data-fuente="DM Sans"><span class="muestra" style="font-family:'DM Sans',system-ui,sans-serif">DM Sans <b>3-1</b> <b>16</b><small>simple, amable</small></span></button>
+      <button data-fuente="Onest"><span class="muestra" style="font-family:'Onest',system-ui,sans-serif">Onest <b>3-1</b> <b>16</b><small>moderna, redondeada</small></span></button>
+    </div>
+    <p class="grupo-tit">Deportivas</p>
+    <div class="grupo fuentes">
+      <button data-fuente="Figtree"><span class="muestra" style="font-family:'Figtree',system-ui,sans-serif">Figtree <b>3-1</b> <b>16</b><small>abierta, muy legible</small></span></button>
+      <button data-fuente="Archivo"><span class="muestra" style="font-family:'Archivo',system-ui,sans-serif">Archivo <b>3-1</b> <b>16</b><small>firme, de cartel</small></span></button>
+      <button data-fuente="Barlow"><span class="muestra" style="font-family:'Barlow',system-ui,sans-serif">Barlow <b>3-1</b> <b>16</b><small>atlética, angosta</small></span></button>
+    </div>
+    <p class="grupo-tit">Serias</p>
+    <div class="grupo fuentes">
+      <button data-fuente="Plus Jakarta Sans"><span class="muestra" style="font-family:'Plus Jakarta Sans',system-ui,sans-serif">Plus Jakarta Sans <b>3-1</b> <b>16</b><small>neutra, de producto</small></span></button>
+      <button data-fuente="Schibsted Grotesk"><span class="muestra" style="font-family:'Schibsted Grotesk',system-ui,sans-serif">Schibsted Grotesk <b>3-1</b> <b>16</b><small>editorial, de diario</small></span></button>
+      <button data-fuente="Manrope"><span class="muestra" style="font-family:'Manrope',system-ui,sans-serif">Manrope <b>3-1</b> <b>16</b><small>técnica, precisa</small></span></button>
+    </div>
+
+    <h2>Estado de los datos</h2>
+    <div class="grupo" id="datos">
+      <button data-datos="normal" aria-current="true">Con datos</button>
+      <button data-datos="cargando">Cargando</button>
+      <button data-datos="sin-ranking">Sin ranking abierto</button>
+      <button data-datos="sin-red">Sin conexión</button>
+    </div>
+
+    <h2>Estado del club</h2>
+    <div class="grupo" id="torneos">
+      <button data-torneo-activo="si" aria-current="true">Con un torneo en curso</button>
+      <button data-torneo-activo="no">Sin torneos (lo normal)</button>
+    </div>
+
+    <h2>Ver como</h2>
+    <div class="grupo" id="roles">
+      <button data-rol="jugador" aria-current="true">Jugador · Iván Roble</button>
+      <button data-rol="coordinador">Coordinador</button>
+    </div>
+
+    <h2>Ir a</h2>
+    <div class="grupo" id="atajos">
+      <button data-ir="tabla">Tabla</button>
+      <button data-ir="partidos">Mis partidos</button>
+      <button data-ir="anotar">Anotar un resultado</button>
+      <button data-ir="marcador">Marcador en vivo</button>
+      <button data-ir="perfil">Perfil</button>
+      <button data-ir="torneo">Cuadro del torneo</button>
+      <button data-ir="ingresar">Pantalla de ingreso</button>
+    </div>
+
+    <p class="nota">En el marcador, la mitad de arriba está girada para que se lea desde el otro lado de la mesa. Se puede desactivar con el botón del centro.</p>
+  </aside>
+
+  <div class="marco">
+    <div class="app">
+      <header class="tope" id="tope"></header>
+      <main class="lienzo" id="lienzo"></main>
+      <nav class="pestanas" id="pestanas"></nav>
+    </div>
+
+    <section class="marcador" id="marcador" hidden>
+      <div class="mtop">
+        <button id="m-cerrar">Cerrar</button>
+        <span id="m-contexto">Copa UVG · semifinal</span>
+        <span></span>
+      </div>
+      <button class="mitad girada" id="m-b">
+        <span class="quien" id="m-nombre-b">Kevin Coj</span>
+        <span class="pts" id="m-pts-b">0</span>
+        <span class="pips" id="m-pips-b"></span>
+      </button>
+      <div class="centro">
+        <span class="lado-izq">
+          <button id="m-deshacer" disabled>Deshacer</button>
+        </span>
+        <span class="marca" id="m-sets">0-0<small id="m-saque">saca Iván</small></span>
+        <span class="lado-der">
+          <button id="m-girar" title="Girar la mitad de arriba">⇅</button>
+        </span>
+      </div>
+      <button class="mitad" id="m-a">
+        <span class="quien" id="m-nombre-a">Iván Roble</span>
+        <span class="pts" id="m-pts-a">0</span>
+        <span class="pips" id="m-pips-a"></span>
+      </button>
+      <div class="mbot"><button id="m-terminar">Terminar</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Datos de ejemplo, internamente coherentes: la victoria vale 2 puntos,
+   así que Pts siempre es PG por 2.
+   --------------------------------------------------------------------------- */
+const MAYOR = [
+  { pos:1, nom:"Kevin Coj",         pj:9, pg:8, pp:1, pts:16, zona:"bueno" },
+  { pos:2, nom:"Andrés Sandoval",   pj:9, pg:7, pp:2, pts:14, zona:"bueno" },
+  { pos:3, nom:"Diego Menchú",      pj:9, pg:6, pp:3, pts:12, zona:"bueno" },
+  { pos:4, nom:"Iván Roble",        pj:8, pg:6, pp:2, pts:12, yo:true },
+  { pos:5, nom:"Rodrigo Estrada",   pj:9, pg:4, pp:5, pts:8 },
+  { pos:6, nom:"Fernanda Ixcot",    pj:8, pg:3, pp:5, pts:6 },
+  { pos:7, nom:"José Luis Arriola", pj:9, pg:3, pp:6, pts:6 },
+  { pos:8, nom:"Lucía Paz",         pj:8, pg:2, pp:6, pts:4, zona:"malo" },
+  { pos:9, nom:"Sofía Marroquín",   pj:9, pg:1, pp:8, pts:2, zona:"malo" },
+  { pos:10,nom:"Mateo Quiñónez",    pj:9, pg:0, pp:9, pts:0, zona:"malo" },
+];
+const MENOR = [
+  { pos:1, nom:"Pablo Estrada",     pj:8, pg:7, pp:1, pts:14, zona:"bueno" },
+  { pos:2, nom:"Valeria Cotí",      pj:8, pg:6, pp:2, pts:12, zona:"bueno" },
+  { pos:3, nom:"Marco Villagrán",   pj:8, pg:5, pp:3, pts:10, zona:"bueno" },
+  { pos:4, nom:"Ana Lucía Set",     pj:8, pg:4, pp:4, pts:8 },
+  { pos:5, nom:"Héctor Ramírez",    pj:8, pg:3, pp:5, pts:6 },
+  { pos:6, nom:"Gaby Chun",         pj:8, pg:2, pp:6, pts:4 },
+  { pos:7, nom:"Luis Pedro Roldán", pj:8, pg:1, pp:7, pts:2 },
+  { pos:8, nom:"Camila Ordóñez",    pj:8, pg:0, pp:8, pts:0 },
+];
+
+const PARTIDOS = {
+  responder:[{ id:"p1", rival:"Diego Menchú", ini:"DM", sub:"Dice que te ganó 3-1",
+    ctx:"Ranking, División Mayor", cuando:"ayer a las 4:40 p.m.",
+    sets:"11-7 · 9-11 · 8-11 · 6-11", marcador:"1-3", tipo:"confirmar" }],
+  jugar:[
+    { id:"p2", rival:"Kevin Coj", ini:"KC", sub:"Semifinal de la Copa UVG",
+      ctx:"Copa UVG, semifinal", cuando:"al mejor de 5", tipo:"registrar" },
+    { id:"p3", rival:"Fernanda Ixcot", ini:"FI", sub:"Ranking, División Mayor",
+      ctx:"Ranking, División Mayor", cuando:"al mejor de 5", tipo:"registrar" },
+  ],
+  jugados:[
+    { id:"p4", rival:"Andrés Sandoval",   ini:"AS", sub:"14 de septiembre", res:"0-3", gano:false },
+    { id:"p5", rival:"Rodrigo Estrada",   ini:"RE", sub:"12 de septiembre", res:"3-2", gano:true },
+    { id:"p6", rival:"José Luis Arriola", ini:"JA", sub:"9 de septiembre",  res:"3-0", gano:true },
+    { id:"p7", rival:"Mateo Quiñónez",    ini:"MQ", sub:"6 de septiembre",  res:"3-1", gano:true },
+  ],
+};
+
+const estado = {
+  rol:"jugador", vista:"tabla", division:"mayor", vistaTorneo:"cuadro",
+  confirmado:false, partidoAbierto:null, m:null, girado:true, hayTorneo:true, datos:"normal", pendiente:"",
+  sets:{ a:0, b:0 },
+};
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const fila = ({ ini, nombre, sub, derecha = "", accion = "", quieta = false }) => `
+  <button class="fila${quieta ? " quieta" : ""}"${accion ? ` data-accion="${accion}"` : ""}>
+    ${ini ? `<span class="ini">${esc(ini)}</span>` : ""}
+    <span class="medio"><span class="nombre">${esc(nombre)}</span><span class="sub">${esc(sub)}</span></span>
+    <span class="derecha">${derecha}</span>
+  </button>`;
+
+const PANTALLAS = {
+
+  /* ---- LA TABLA: es la pantalla que abre ---- */
+  tabla(){
+    // Las tres pantallas que la app va a mostrar el primer día, antes de que
+    // exista un solo dato, y cuando la red falle.
+    if (estado.datos === "cargando") {
+      return { titulo:"Ranking II · 2026", sub:"Cargando", cuerpo:`
+        <div class="esq" aria-busy="true" aria-label="Cargando la tabla">
+          ${[62,78,54,70,58,74,50,66].map((w, i) => `
+            <div><i style="width:${w}%;animation-delay:${i * 90}ms"></i></div>`).join("")}
+        </div>` };
+    }
+    if (estado.datos === "sin-ranking") {
+      return { titulo:"Club TM UVG", sub:"Sin ranking en juego", cuerpo:`
+        <div class="estado">
+          <p class="t">Todavía no arrancó el ranking</p>
+          <p class="d">Cuando el coordinador arme las divisiones y haga el sorteo,
+             la tabla aparece acá y te avisamos qué partidos te tocan.</p>
+          <button class="btn quieto" data-accion="pendiente:Cómo funciona el ranking">Cómo funciona</button>
+        </div>` };
+    }
+    if (estado.datos === "sin-red") {
+      return { titulo:"Ranking II · 2026", sub:"No se pudo cargar", cuerpo:`
+        <div class="estado">
+          <p class="t">No pudimos traer la tabla</p>
+          <p class="d">Revisá tu conexión. Los resultados que registraste no se perdieron;
+             se mandan solos cuando vuelva la señal.</p>
+          <button class="btn" data-accion="reintentar">Reintentar</button>
+        </div>` };
+    }
+    const filas = estado.division === "mayor" ? MAYOR : MENOR;
+    // La franja del torneo solo existe mientras hay uno en curso. El resto del
+    // año no ocupa ni un pixel y la tabla arranca con el selector de división.
+    let h = estado.hayTorneo ? `
+      <button class="franja" data-accion="torneo">
+        <span class="punto"></span>
+        <span class="txt">
+          <span class="t1">Copa UVG</span>
+          <span class="t2">Semifinales · quedan 2 partidos</span>
+        </span>
+        <span class="fl">›</span>
+      </button>` : "";
+    h += `
+      <div class="seg" role="group" aria-label="División">
+        <button data-div="mayor" aria-pressed="${estado.division === "mayor"}">Mayor</button>
+        <button data-div="menor" aria-pressed="${estado.division === "menor"}">Menor</button>
+      </div>
+      ${estado.division === "mayor"
+        ? `<div class="leyenda">
+             <span><i style="background:var(--bueno)"></i> Premian a los 3 primeros</span>
+             <span><i style="background:var(--malo)"></i> Bajan los 3 últimos</span>
+           </div>`
+        : `<div class="leyenda"><span><i style="background:var(--bueno)"></i> Suben los 3 primeros a Mayor</span></div>`}
+      <table class="tabla">
+        <caption class="solo-lector">Posiciones de la División ${estado.division === "mayor" ? "Mayor" : "Menor"}</caption>
+        <colgroup><col class="c-pos"><col><col class="c-n"><col class="c-n"><col class="c-pts"></colgroup>
+        <thead><tr>
+          <th scope="col">#</th><th scope="col" class="tnom">Jugador</th>
+          <th scope="col">PJ</th><th scope="col">PG</th><th scope="col">Pts</th>
+        </tr></thead><tbody>`;
+    filas.forEach((f) => {
+      h += `<tr class="${f.zona ? "z-" + f.zona : ""}${f.yo ? " yo" : ""}">
+        <td class="tpos">${f.pos}</td>
+        <th scope="row" class="tnom">${esc(f.nom)}</th>
+        <td class="tnum">${f.pj}</td>
+        <td class="tnum">${f.pg}</td>
+        <td class="tpts">${f.pts}</td>
+      </tr>`;
+    });
+    h += `</tbody></table>`;
+    h += `<p class="pie">Cada pareja juega una vez. La victoria vale 2 puntos.<br>El ranking cierra el 24 de octubre, en 38 días.</p>`;
+    return { titulo:"Ranking II · 2026", sub:"En juego · División " + (estado.division === "mayor" ? "Mayor" : "Menor"), cuerpo:h };
+  },
+
+  partidos(){
+    const porResponder = estado.confirmado ? [] : PARTIDOS.responder;
+    const jugados = estado.confirmado
+      ? [{ rival:"Diego Menchú", ini:"DM", sub:"hoy", res:"1-3", gano:false }, ...PARTIDOS.jugados]
+      : PARTIDOS.jugados;
+    let h = "";
+    if (porResponder.length) {
+      h += `<p class="rotulo urge">Te toca responder</p>`;
+      h += porResponder.map((p) => fila({ ini:p.ini, nombre:p.rival, sub:p.sub,
+        derecha:`<span class="btn chico">Confirmar</span>`, accion:`abrir:${p.id}` })).join("");
+    }
+    h += `<p class="rotulo">Por jugar</p>`;
+    h += PARTIDOS.jugar.map((p) => fila({ ini:p.ini, nombre:p.rival, sub:p.sub,
+      derecha:`<span class="flecha">›</span>`, accion:`abrir:${p.id}` })).join("");
+    h += `<p class="rotulo">Jugados</p>`;
+    h += jugados.map((p) => fila({ ini:p.ini, nombre:p.rival, sub:p.sub, quieta:true,
+      derecha:`<span class="res${p.gano ? " gano" : ""}">${esc(p.res)}</span>` })).join("");
+    h += `<p class="pie">Vas 4.º con 12 puntos. Te quedan 2 partidos del ranking.</p>`;
+    return { titulo:"Mis partidos", yo:"Iván R.", cuerpo:h };
+  },
+
+  detalle(){
+    const p = estado.partidoAbierto;
+    if (!p) return PANTALLAS.partidos();
+    if (p.tipo === "confirmar") {
+      return { atras:true, titulo:p.rival, cuerpo:`
+        <div class="detalle">
+          <p class="enc">${esc(p.rival.split(" ")[0])} dice que te ganó</p>
+          <p class="meta">${esc(p.ctx)} · lo registró ${esc(p.cuando)}</p>
+          <div class="caja-num"><div class="gr">${esc(p.marcador)}</div><div class="sets">${esc(p.sets)}</div></div>
+          <div class="pila">
+            <button class="btn bloque" data-accion="confirmar">Confirmar</button>
+            <button class="btn peligro bloque" data-accion="disputar">No fue así</button>
+          </div>
+          <p class="aviso">Si no respondés, se confirma solo mañana a las 9:40 p.m.</p>
+        </div>` };
+    }
+    return { atras:true, titulo:p.rival, cuerpo:`
+      <div class="detalle">
+        <p class="enc">vs. ${esc(p.rival)}</p>
+        <p class="meta">${esc(p.ctx)} · ${esc(p.cuando)}</p>
+        <div class="pila" style="margin-top:22px">
+          <button class="btn bloque" data-accion="anotar">Anotar el resultado</button>
+          <button class="btn quieto bloque" data-accion="marcador">Llevar el marcador en vivo</button>
+        </div>
+        <p class="aviso">Cualquiera de los dos puede registrarlo. El otro lo confirma.</p>
+      </div>` };
+  },
+
+  /* ---- ANOTAR: solo sets, que es el camino corto ---- */
+  anotar(){
+    const p = estado.partidoAbierto || PARTIDOS.jugar[0];
+    const { a, b } = estado.sets;
+    const total = a + b;
+    let msg = "Poné cuántos sets ganó cada uno.", malo = false;
+    if (a === b && total > 0) { msg = "Un partido no puede terminar empatado."; malo = true; }
+    else if (total > 7)       { msg = "Son máximo 7 sets en total."; malo = true; }
+    else if (total > 0)       { msg = a > b ? `Ganaste ${a}-${b}.` : `Ganó ${p.rival.split(" ")[0]} ${b}-${a}.`; }
+    const listo = total > 0 && a !== b && total <= 7;
+
+    const mando = (lado, v) => `
+      <span class="mando">
+        <button data-set="${lado}:-" ${v === 0 ? "disabled" : ""} aria-label="Quitar un set">−</button>
+        <span class="val">${v}</span>
+        <button data-set="${lado}:+" ${v === 4 ? "disabled" : ""} aria-label="Sumar un set">+</button>
+      </span>`;
+
+    return { atras:true, titulo:"Anotar resultado", cuerpo:`
+      <div class="anotar">
+        <p class="meta" style="margin:0 0 6px;color:var(--muted);font-size:14px">${esc(p.ctx)}</p>
+        <div class="contador"><span class="quien">Iván Roble</span>${mando("a", a)}</div>
+        <div class="contador"><span class="quien">${esc(p.rival)}</span>${mando("b", b)}</div>
+        <p class="resumen${malo ? " malo" : ""}">${esc(msg)}</p>
+        <div class="pila">
+          <button class="btn bloque" data-accion="guardar" ${listo ? "" : "disabled style=opacity:.45"}>Registrar</button>
+          <button class="btn quieto bloque" data-accion="marcador">Mejor llevo el marcador en vivo</button>
+        </div>
+        <p class="aviso">Los puntos de cada set son opcionales. Si llevás el marcador en vivo se llenan solos.</p>
+      </div>` };
+  },
+
+  /* ---- PERFIL: reconstruido ---- */
+  perfil(){
+    return { sinTope:true, cuerpo:`
+      <div class="perfil-cab">
+        <div class="nom">Iván Roble</div>
+        <div class="car">Carnet 24003 · División Mayor</div>
+        <div class="puesto">
+          <span class="n">4.º</span>
+          <span class="de">de 10 en Mayor<br>12 puntos, 2 partidos por jugar</span>
+        </div>
+      </div>
+      <div class="cifras">
+        <div><b>8</b><span>Jugados</span></div>
+        <div><b>6</b><span>Ganados</span></div>
+        <div><b>2</b><span>Perdidos</span></div>
+        <div><b>+8</b><span>Sets</span></div>
+      </div>
+      <p class="rotulo">Historial</p>
+      ${fila({ nombre:"Ranking I · 2026", sub:"Cerrado · terminaste 6.º en Mayor", derecha:`<span class="flecha">›</span>`, accion:"pendiente:Ranking I · 2026" })}
+      ${fila({ nombre:"Copa de Bienvenida", sub:"Marzo 2026 · perdiste en cuartos", derecha:`<span class="flecha">›</span>`, accion:"pendiente:Copa de Bienvenida" })}
+      <p class="rotulo">Cara a cara</p>
+      ${fila({ ini:"KC", nombre:"Kevin Coj", sub:"1 jugado", quieta:true, derecha:`<span class="res">0-1</span>` })}
+      ${fila({ ini:"AS", nombre:"Andrés Sandoval", sub:"1 jugado", quieta:true, derecha:`<span class="res">0-1</span>` })}
+      ${fila({ ini:"DM", nombre:"Diego Menchú", sub:"1 jugado", quieta:true, derecha:`<span class="res gano">1-0</span>` })}
+      <p class="rotulo">Cuenta</p>
+      ${fila({ nombre:"Cambiar mi PIN", sub:"El que usás para ingresar", derecha:`<span class="flecha">›</span>`, accion:"pendiente:Cambiar mi PIN" })}
+      ${fila({ nombre:"Salir", sub:"Cerrar sesión en este teléfono", derecha:`<span class="flecha">›</span>`, accion:"ingresar" })}
+      <p class="pie">&nbsp;</p>` };
+  },
+
+  torneo(){
+    const cuadro = `
+      <div class="cuadro">
+        <div class="ronda">
+          <p class="rh">Semifinales</p>
+          <div class="llave">
+            <div class="lado gana"><span>Kevin Coj</span><b>3</b></div>
+            <div class="lado"><span>Iván Roble</span><b>1</b></div>
+          </div>
+          <div class="llave">
+            <div class="lado"><span>Andrés Sandoval</span><b>-</b></div>
+            <div class="lado"><span>Diego Menchú</span><b>-</b></div>
+          </div>
+        </div>
+        <div class="ronda">
+          <p class="rh">Final</p>
+          <div class="llave">
+            <div class="lado"><span>Kevin Coj</span><b>-</b></div>
+            <div class="lado vacio"><span>por definir</span><b></b></div>
+          </div>
+        </div>
+      </div>
+      <p class="pie">Se desliza a lo ancho. El ganador sube cuando el rival confirma, o solo a las 72 horas.</p>`;
+    const grupos = `
+      <p class="rotulo">Grupo A</p>
+      <table class="tabla"><caption class="solo-lector">Grupo A</caption><colgroup><col class="c-pos"><col><col class="c-n"><col class="c-n"><col class="c-pts"></colgroup><thead><tr><th scope="col">#</th><th scope="col" class="tnom">Jugador</th><th scope="col">PJ</th><th scope="col">PG</th><th scope="col">Dif</th></tr></thead><tbody><tr class="z-bueno"><td class="tpos">1</td><th scope="row" class="tnom">Kevin Coj</th><td class="tnum">3</td><td class="tnum">3</td><td class="tpts">+6</td></tr><tr class="z-bueno"><td class="tpos">2</td><th scope="row" class="tnom">Diego Menchú</th><td class="tnum">3</td><td class="tnum">2</td><td class="tpts">+2</td></tr><tr class=""><td class="tpos">3</td><th scope="row" class="tnom">Fernanda Ixcot</th><td class="tnum">3</td><td class="tnum">1</td><td class="tpts">−2</td></tr><tr class=""><td class="tpos">4</td><th scope="row" class="tnom">José Luis Arriola</th><td class="tnum">3</td><td class="tnum">0</td><td class="tpts">−6</td></tr></tbody></table>
+      <p class="rotulo">Grupo B</p>
+      <table class="tabla"><caption class="solo-lector">Grupo B</caption><colgroup><col class="c-pos"><col><col class="c-n"><col class="c-n"><col class="c-pts"></colgroup><thead><tr><th scope="col">#</th><th scope="col" class="tnom">Jugador</th><th scope="col">PJ</th><th scope="col">PG</th><th scope="col">Dif</th></tr></thead><tbody><tr class="z-bueno"><td class="tpos">1</td><th scope="row" class="tnom">Andrés Sandoval</th><td class="tnum">3</td><td class="tnum">3</td><td class="tpts">+7</td></tr><tr class="z-bueno yo"><td class="tpos">2</td><th scope="row" class="tnom">Iván Roble</th><td class="tnum">3</td><td class="tnum">2</td><td class="tpts">+1</td></tr><tr class=""><td class="tpos">3</td><th scope="row" class="tnom">Rodrigo Estrada</th><td class="tnum">3</td><td class="tnum">1</td><td class="tpts">−3</td></tr><tr class=""><td class="tpos">4</td><th scope="row" class="tnom">Lucía Paz</th><td class="tnum">3</td><td class="tnum">0</td><td class="tpts">−5</td></tr></tbody></table>
+      <div class="leyenda"><span><i style="background:var(--bueno)"></i> Clasifican a la llave</span></div>
+      <p class="pie">&nbsp;</p>`;
+    return { atras:true, titulo:"Copa UVG", sub:"Semifinales", cuerpo:`
+      <div class="seg" role="group" aria-label="Vista del torneo">
+        <button data-torneo="grupos" aria-pressed="${estado.vistaTorneo === "grupos"}">Grupos</button>
+        <button data-torneo="cuadro" aria-pressed="${estado.vistaTorneo === "cuadro"}">Cuadro</button>
+      </div>
+      ${estado.vistaTorneo === "cuadro" ? cuadro : grupos}` };
+  },
+
+  panel(){
+    return { titulo:"Panel", yo:"Coordinador", cuerpo:`
+      <p class="panel-nota">Ranking II en juego. Faltan 6 partidos y hay 1 resultado en disputa.</p>
+      <p class="rotulo urge">Necesita que decidas</p>
+      ${fila({ ini:"!", nombre:"Lucía Paz vs. Sofía Marroquín", sub:"En disputa desde ayer",
+        derecha:`<span class="btn chico">Resolver</span>`, accion:"pendiente:Resolver la disputa" })}
+      <p class="rotulo">Ranking II · 2026</p>
+      <div class="dato"><span>Inscritos</span><b>18</b></div>
+      <div class="dato"><span>Partidos jugados</span><b>75 de 81</b></div>
+      <div class="dato"><span>Cierra</span><b>24 de octubre</b></div>
+      <p class="rotulo">Torneos</p>
+      ${fila({ ini:"CU", nombre:"Copa UVG", sub:"En juego · semifinales", derecha:`<span class="flecha">›</span>`, accion:"torneo" })}
+      ${fila({ ini:"+", nombre:"Crear un torneo", sub:"Llave directa o grupos y llave", accion:"pendiente:Crear un torneo", derecha:`<span class="flecha">›</span>` })}
+      <p class="rotulo">Club</p>
+      ${fila({ ini:"18", nombre:"Jugadores", sub:"18 activos · 2 dados de baja", accion:"pendiente:Jugadores", derecha:`<span class="flecha">›</span>` })}
+      ${fila({ ini:"↓", nombre:"Exportar a CSV", sub:"Tabla, partidos y bitácora", accion:"pendiente:Exportar a CSV", derecha:`<span class="flecha">›</span>` })}
+      <p class="pie">&nbsp;</p>` };
+  },
+
+  pendiente(){
+    return { atras:true, titulo:estado.pendiente, cuerpo:`
+      <div class="estado">
+        <p class="t">${esc(estado.pendiente)}</p>
+        <p class="d">Esta pantalla existe en la estructura pero todavía no está dibujada.
+           La puse acá para que ninguna flecha del prototipo lleve a la nada.</p>
+      </div>` };
+  },
+
+  ingresar(){
+    return { sinTope:true, sinPestanas:true, cuerpo:`
+      <div class="ingreso">
+        <p class="marca">Club TM <span>UVG</span></p>
+        <p>Con tu carnet y el PIN que te dio el coordinador.</p>
+        <div class="campo"><label for="carnet">Carnet</label><input id="carnet" inputmode="numeric" value="24003"></div>
+        <div class="campo"><label for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" value="123456"></div>
+        <button class="btn bloque" data-accion="entrar">Ingresar</button>
+        <p style="text-align:center"><button class="btn peligro" data-accion="ver-tabla">Ver la tabla sin ingresar</button></p>
+      </div>` };
+  },
+};
+
+function pintar(){
+  const p = (PANTALLAS[estado.vista] || PANTALLAS.tabla)();
+  const tope = $("#tope"), pest = $("#pestanas");
+
+  tope.hidden = !!p.sinTope;
+  if (!p.sinTope) {
+    tope.innerHTML = `
+      ${p.atras ? `<button class="atras" data-accion="atras" aria-label="Volver">‹</button>` : ""}
+      <span class="bloque">
+        <span class="titulo">${esc(p.titulo || "")}</span>
+        ${p.sub ? `<span class="sub">${esc(p.sub)}</span>` : ""}
+      </span>
+      ${p.yo ? `<span class="yo">${esc(p.yo)}</span>` : ""}`;
+  }
+  $("#lienzo").innerHTML = p.cuerpo;
+  $("#lienzo").scrollTop = 0;
+
+  pest.hidden = !!p.sinPestanas;
+  if (!p.sinPestanas) {
+    const pend = estado.confirmado ? 0 : 1;
+    const tabs = estado.rol === "coordinador"
+      ? [["tabla","▤","Tabla"],["partidos","◆","Partidos"],["panel","⬚","Panel"],["perfil","◐","Perfil"]]
+      : [["tabla","▤","Tabla"],["partidos","◆","Partidos"],["perfil","◐","Perfil"]];
+    const raiz = { detalle:"partidos", anotar:"partidos", torneo:"tabla", pendiente:"perfil" }[estado.vista] || estado.vista;
+    pest.innerHTML = tabs.map(([id, ic, txt]) => `
+      <button data-tab="${id}" aria-current="${raiz === id}">
+        <span class="ic">${ic}</span>
+        <span>${txt}${id === "partidos" && pend ? `<span class="bolita">${pend}</span>` : ""}</span>
+      </button>`).join("");
+  }
+  document.querySelectorAll("#atajos button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.ir === estado.vista)));
+}
+const ir = (v) => { estado.vista = v; pintar(); };
+
+/* ---- marcador ---- */
+function abrirMarcador(rival, contexto){
+  if (!estado.m || estado.m.rival !== rival) estado.m = { rival, a:0, b:0, sa:0, sb:0, hist:[], puntos:0, pasos:[] };
+  $("#m-nombre-b").textContent = rival;
+  $("#m-contexto").textContent = contexto;
+  $("#marcador").hidden = false;
+  pintarMarcador();
+}
+function pips(n){ return [0,1,2].map((i) => `<i class="${i < n ? "on" : ""}"></i>`).join(""); }
+function pintarMarcador(){
+  const m = estado.m;
+  $("#m-pts-a").textContent = m.a;
+  $("#m-pts-b").textContent = m.b;
+  $("#m-pips-a").innerHTML = pips(m.sa);
+  $("#m-pips-b").innerHTML = pips(m.sb);
+  const fin = m.sa === 3 || m.sb === 3;
+  $("#m-sets").innerHTML = `${m.sa}-${m.sb}<small>${fin ? "partido terminado" : (Math.floor(m.puntos / 2) % 2 === 0 ? "saca Iván" : "saca " + m.rival.split(" ")[0])}</small>`;
+  $("#m-deshacer").disabled = m.pasos.length === 0;
+  $("#m-terminar").textContent = fin ? "Registrar el resultado" : "Terminar";
+  $("#m-b").classList.toggle("girada", estado.girado);
+}
+function sumar(lado){
+  const m = estado.m;
+  if (m.sa === 3 || m.sb === 3) return;
+  m.pasos.push(JSON.stringify({ a:m.a, b:m.b, sa:m.sa, sb:m.sb, hist:m.hist, puntos:m.puntos }));
+  if (lado === "a") m.a++; else m.b++;
+  m.puntos++;
+  if (Math.max(m.a, m.b) >= 11 && Math.abs(m.a - m.b) >= 2) {
+    m.hist.push([m.a, m.b]);
+    if (m.a > m.b) m.sa++; else m.sb++;
+    m.a = 0; m.b = 0; m.puntos = 0;
+  }
+  pintarMarcador();
+}
+
+document.addEventListener("click", (e) => {
+  const f = e.target.closest(".fuentes button");
+  if (f) {
+    document.documentElement.style.setProperty("--fuente", `"${f.dataset.fuente}",ui-sans-serif,system-ui,sans-serif`);
+    document.querySelectorAll(".fuentes button").forEach((b) => b.setAttribute("aria-current", String(b === f)));
+    return;
+  }
+  const dd = e.target.closest("#datos button");
+  if (dd) {
+    estado.datos = dd.dataset.datos;
+    document.querySelectorAll("#datos button").forEach((b) => b.setAttribute("aria-current", String(b === dd)));
+    estado.vista = "tabla";
+    return pintar();
+  }
+
+  const tg = e.target.closest("#torneos button");
+  if (tg) {
+    estado.hayTorneo = tg.dataset.torneoActivo === "si";
+    document.querySelectorAll("#torneos button").forEach((b) => b.setAttribute("aria-current", String(b === tg)));
+    if (!estado.hayTorneo && estado.vista === "torneo") estado.vista = "tabla";
+    return pintar();
+  }
+
+  const rol = e.target.closest("#roles button");
+  if (rol) {
+    estado.rol = rol.dataset.rol;
+    document.querySelectorAll("#roles button").forEach((b) => b.setAttribute("aria-current", String(b === rol)));
+    if (estado.rol === "jugador" && estado.vista === "panel") estado.vista = "tabla";
+    return pintar();
+  }
+  const at = e.target.closest("#atajos button");
+  if (at) {
+    if (at.dataset.ir === "marcador") return abrirMarcador("Kevin Coj", "Copa UVG · semifinal");
+    if (at.dataset.ir === "torneo") estado.hayTorneo = true;
+    if (at.dataset.ir === "anotar") { estado.partidoAbierto = PARTIDOS.jugar[0]; estado.sets = { a:0, b:0 }; }
+    return ir(at.dataset.ir);
+  }
+  const tab = e.target.closest("#pestanas button");
+  if (tab) return ir(tab.dataset.tab);
+
+  const dv = e.target.closest("[data-div]");   if (dv) { estado.division = dv.dataset.div; return pintar(); }
+  const vt = e.target.closest("[data-torneo]"); if (vt) { estado.vistaTorneo = vt.dataset.torneo; return pintar(); }
+
+  const st = e.target.closest("[data-set]");
+  if (st) {
+    const [lado, signo] = st.dataset.set.split(":");
+    estado.sets[lado] = Math.max(0, Math.min(4, estado.sets[lado] + (signo === "+" ? 1 : -1)));
+    return pintar();
+  }
+
+  const acc = e.target.closest("[data-accion]");
+  if (!acc || acc.disabled) return;
+  const corte = acc.dataset.accion.indexOf(":");
+  const verbo = corte < 0 ? acc.dataset.accion : acc.dataset.accion.slice(0, corte);
+  const arg   = corte < 0 ? "" : acc.dataset.accion.slice(corte + 1);
+  if (verbo === "abrir") {
+    estado.partidoAbierto = [...PARTIDOS.responder, ...PARTIDOS.jugar].find((p) => p.id === arg) || null;
+    return ir("detalle");
+  }
+  if (verbo === "atras")     return ir({ torneo:"tabla", anotar:"detalle", detalle:"partidos", pendiente:"perfil" }[estado.vista] || "tabla");
+  if (verbo === "confirmar" || verbo === "disputar") { estado.confirmado = true; return ir("partidos"); }
+  if (verbo === "anotar")    { estado.sets = { a:0, b:0 }; return ir("anotar"); }
+  if (verbo === "guardar")   { estado.m = null; estado.confirmado = true; return ir("partidos"); }
+  if (verbo === "torneo")    return ir("torneo");
+  if (verbo === "pendiente") { estado.pendiente = arg || "Pendiente"; return ir("pendiente"); }
+  if (verbo === "reintentar"){ estado.datos = "normal";
+    document.querySelectorAll("#datos button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.datos === "normal")));
+    return ir("tabla"); }
+  if (verbo === "entrar")    return ir("tabla");
+  if (verbo === "ver-tabla") return ir("tabla");
+  if (verbo === "marcador") {
+    const p = estado.partidoAbierto;
+    return abrirMarcador(p ? p.rival : "Kevin Coj", p ? p.ctx : "Copa UVG · semifinal");
+  }
+});
+
+$("#m-a").addEventListener("click", () => sumar("a"));
+$("#m-b").addEventListener("click", () => sumar("b"));
+$("#m-deshacer").addEventListener("click", () => {
+  const m = estado.m, prev = m.pasos.pop();
+  if (prev) { Object.assign(m, JSON.parse(prev)); pintarMarcador(); }
+});
+$("#m-girar").addEventListener("click", () => { estado.girado = !estado.girado; pintarMarcador(); });
+$("#m-cerrar").addEventListener("click", () => { $("#marcador").hidden = true; });
+$("#m-terminar").addEventListener("click", () => {
+  $("#marcador").hidden = true;
+  const m = estado.m;
+  if (m && m.sa + m.sb > 0) {
+    estado.partidoAbierto = PARTIDOS.jugar.find((p) => p.rival === m.rival) || PARTIDOS.jugar[0];
+    estado.sets = { a:m.sa, b:m.sb };
+    return ir("anotar");
+  }
+  ir("partidos");
+});
+
+pintar();
+</script>

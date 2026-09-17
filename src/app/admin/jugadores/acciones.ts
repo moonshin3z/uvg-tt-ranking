@@ -23,11 +23,11 @@ export async function crearJugador(_prev: EstadoAlta, formData: FormData): Promi
 
   const pin = generarPin();
   const admin = createAdminClient();
-  const { error } = await admin.auth.admin.createUser({
+  const { data: creado, error } = await admin.auth.admin.createUser({
     email: emailDesdeCarnet(carnet),
     password: pin,
     email_confirm: true,
-    user_metadata: { carnet, nombre, rol },
+    user_metadata: { carnet, nombre },
   });
 
   if (error) {
@@ -35,6 +35,23 @@ export async function crearJugador(_prev: EstadoAlta, formData: FormData): Promi
     return {
       error: yaExiste ? `El carnet ${carnet} ya tiene cuenta.` : `No se pudo crear la cuenta: ${error.message}`,
     };
+  }
+
+  // El rol ya no viaja en el metadata de auth. Ese metadata es lo que manda
+  // quien se registra, así que con el registro abierto alcanzaba para darse de
+  // alta como coordinador. Ahora todo perfil nace jugador y el ascenso pasa
+  // por una función que exige ser coordinador.
+  if (rol === "coordinador" && creado.user) {
+    const supabase = await createClient();
+    const { error: errorRol } = await supabase.rpc("asignar_rol", {
+      p_usuario_id: creado.user.id,
+      p_rol: "coordinador",
+    });
+    if (errorRol) {
+      return {
+        error: `La cuenta de ${carnet} quedó creada como jugador; no se pudo nombrarla coordinadora: ${errorRol.message}`,
+      };
+    }
   }
 
   revalidatePath("/admin/jugadores");
@@ -69,4 +86,61 @@ export async function cambiarActivo(formData: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.from("usuario").update({ activo }).eq("id", id);
   revalidatePath("/admin/jugadores");
+}
+
+// ---------------------------------------------------------------------------
+// Retiro de un jugador del ranking en curso
+// ---------------------------------------------------------------------------
+export type ImpactoRetiro = {
+  rival: string;
+  estado: string;
+  gano_el_rival: boolean;
+  puntos_que_pierde: number;
+};
+
+export type EstadoRetiro = {
+  error?: string;
+  ok?: string;
+  /** Paso 1: lo que se va a anular, para que el coordinador lo confirme. */
+  impacto?: { usuarioId: string; nombre: string; rankingId: string; filas: ImpactoRetiro[] };
+};
+
+/** Paso 1: no cambia nada, solo calcula y muestra las consecuencias. */
+export async function consultarImpacto(_prev: EstadoRetiro, formData: FormData): Promise<EstadoRetiro> {
+  await requerirCoordinador();
+  const usuarioId = String(formData.get("id") ?? "");
+  const nombre = String(formData.get("nombre") ?? "");
+  const rankingId = String(formData.get("ranking_id") ?? "");
+  if (!usuarioId || !rankingId) return { error: "Falta información del jugador o del ranking" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("impacto_retiro", {
+    p_ranking_id: rankingId,
+    p_usuario_id: usuarioId,
+  });
+  if (error) return { error: error.message.replace(/^.*?:\s*/, "") };
+
+  return { impacto: { usuarioId, nombre, rankingId, filas: (data ?? []) as ImpactoRetiro[] } };
+}
+
+/** Paso 2: ejecuta. Anula todos sus partidos y lo saca de la tabla. */
+export async function retirarDelRanking(_prev: EstadoRetiro, formData: FormData): Promise<EstadoRetiro> {
+  await requerirCoordinador();
+  const usuarioId = String(formData.get("id") ?? "");
+  const rankingId = String(formData.get("ranking_id") ?? "");
+  const motivo = String(formData.get("motivo") ?? "").trim();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("retirar_del_ranking", {
+    p_ranking_id: rankingId,
+    p_usuario_id: usuarioId,
+    p_motivo: motivo,
+  });
+  if (error) return { error: error.message.replace(/^.*?:\s*/, "") };
+
+  revalidatePath("/admin/jugadores");
+  revalidatePath("/admin/ranking");
+  revalidatePath("/admin/partidos");
+  revalidatePath("/");
+  return { ok: `Retirado. Se anularon ${data} partidos.` };
 }

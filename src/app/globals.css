@@ -1,84 +1,79 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (@media (prefers-color-scheme: dark));
-
 /*
-  Paleta del club: azul de mesa + naranja de pelota.
-  Variables con nombres de shadcn/ui para que `npx shadcn add ...` funcione
-  sin ajustes cuando se agreguen componentes nuevos.
+  Paleta del club.
+
+  Un solo modo. El club es oficialmente de la UVG y la aplicación se ve igual
+  en todos lados; dos modos serían dos diseños que mantener y solo uno que
+  alguien revisa.
+
+  Los nombres son los de shadcn/ui para que `npx shadcn add ...` siga
+  funcionando sin ajustes.
+
+  El verde: el institucional es #0b9e51 y está en `--uvg`, pero con texto
+  blanco encima solo da 3.49:1 y como texto sobre el fondo, 3.11:1. Así que
+  donde hay letras va `#0a7d40`, que es el mismo verde un paso más oscuro:
+  4.71:1 como texto sobre el fondo, 5.22:1 con blanco encima, 4.67:1 sobre el
+  verde lavado. El institucional se usa donde no hay texto: el punto del
+  encabezado, las barras de zona, un borde.
 */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.99 0.003 250);
-  --foreground: oklch(0.21 0.03 255);
+  /* Fondo apenas verdoso, para que el blanco de las tarjetas se note */
+  --background: #f1f4f0;
+  --foreground: #131714; /* 16.3:1 sobre el fondo */
 
-  --card: oklch(1 0 0);
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
 
-  /* Azul de mesa */
-  --primary: oklch(0.46 0.13 250);
-  --primary-foreground: oklch(0.99 0.005 250);
+  --primary: #098645;
+  --primary-foreground: #ffffff; /* 4.66:1 sobre el verde */
 
-  --secondary: oklch(0.96 0.01 250);
-  --secondary-foreground: oklch(0.3 0.04 255);
+  --secondary: #e9eee8;
+  --secondary-foreground: #131714;
 
-  --muted: oklch(0.96 0.008 250);
-  --muted-foreground: oklch(0.52 0.02 255);
+  --muted: #e9eee8;
+  --muted-foreground: #5d6a61; /* 5.12:1 sobre el fondo */
 
-  /* Naranja de pelota */
-  --accent: oklch(0.72 0.17 52);
-  --accent-foreground: oklch(0.22 0.05 45);
+  --accent: #098645;
+  --accent-foreground: #ffffff;
 
-  --destructive: oklch(0.58 0.21 27);
-  --destructive-foreground: oklch(0.99 0.005 250);
+  --destructive: #ab3f2b;
+  --destructive-foreground: #ffffff; /* 6.04:1 */
 
-  --border: oklch(0.91 0.01 250);
-  --input: oklch(0.91 0.01 250);
-  --ring: oklch(0.46 0.13 250);
+  /* Gris claro del prototipo, para rótulos de tabla y flechas. Va siempre
+     sobre el blanco de una fila o de la tabla, donde da 4.51:1. */
+  --faint: #6f7973;
+  /* La línea entre filas de una misma lista, más suave que la del borde. */
+  --linea-suave: #e9eee8;
 
-  /* Zonas de la tabla de posiciones */
-  --zona-premio: oklch(0.72 0.17 52);
-  --zona-ascenso: oklch(0.65 0.15 155);
-  --zona-descenso: oklch(0.6 0.19 25);
-}
+  --border: #dde3dc;
+  --input: #dde3dc;
+  --ring: #098645;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.19 0.02 255);
-    --foreground: oklch(0.97 0.005 250);
+  /* Verde institucional, solo relleno: nunca lleva texto encima */
+  --uvg: #0b9e51;
+  --uvg-suave: #eaf5ee;
+  /* El aviso de "esto está mal" del prototipo: mismo rojo de la app, en
+     versión lavada para un bloque de texto. */
+  --malo-suave: #fbf0ec;
+  --malo-hondo: #8d3a24;
+  --uvg-profundo: #06381f; /* 13.2:1 con blanco, 11.9:1 sobre el fondo */
 
-    --card: oklch(0.24 0.025 255);
-    --card-foreground: var(--foreground);
-    --popover: oklch(0.24 0.025 255);
-    --popover-foreground: var(--foreground);
-
-    --primary: oklch(0.7 0.13 250);
-    --primary-foreground: oklch(0.19 0.03 255);
-
-    --secondary: oklch(0.28 0.025 255);
-    --secondary-foreground: oklch(0.97 0.005 250);
-
-    --muted: oklch(0.28 0.025 255);
-    --muted-foreground: oklch(0.71 0.02 255);
-
-    --accent: oklch(0.75 0.16 52);
-    --accent-foreground: oklch(0.2 0.05 45);
-
-    --destructive: oklch(0.66 0.19 25);
-    --destructive-foreground: oklch(0.19 0.03 255);
-
-    --border: oklch(1 0 0 / 14%);
-    --input: oklch(1 0 0 / 18%);
-    --ring: oklch(0.7 0.13 250);
-
-    --zona-premio: oklch(0.75 0.16 52);
-    --zona-ascenso: oklch(0.7 0.14 155);
-    --zona-descenso: oklch(0.66 0.18 25);
-  }
+  /*
+    Zonas de la tabla de posiciones. Sin dorado: quedó feo y cargado, y tres
+    colores fuertes en una tabla de diez filas la vuelven ilegible.
+    El premio es el verde profundo, el ascenso el verde normal, el descenso el
+    rojo. Los dos verdes se parecen; en la tabla la diferencia real la hace la
+    etiqueta, no la barra.
+  */
+  --zona-premio: #0b9e51;
+  --zona-ascenso: #0b9e51;
+  --zona-descenso: #ab3f2b; /* 5.45:1 como texto */
 }
 
 @theme inline {
@@ -102,12 +97,23 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-uvg: var(--uvg);
+  --color-uvg-suave: var(--uvg-suave);
+  --color-uvg-profundo: var(--uvg-profundo);
+  --color-malo-suave: var(--malo-suave);
+  --color-malo-hondo: var(--malo-hondo);
+  --color-faint: var(--faint);
+  --color-linea-suave: var(--linea-suave);
+
   --color-zona-premio: var(--zona-premio);
   --color-zona-ascenso: var(--zona-ascenso);
   --color-zona-descenso: var(--zona-descenso);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  /* No hay monoespaciada en el diseño: las cifras se alinean con
+     font-variant-numeric, no cambiando de familia. Esta queda solo por si
+     alguna vez hay que mostrar un código o un identificador. */
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -125,6 +131,7 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     -webkit-text-size-adjust: 100%;
+    background: var(--background);
   }
 
   body {

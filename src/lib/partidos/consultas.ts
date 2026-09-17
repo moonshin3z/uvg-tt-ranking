@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { PartidoEstado, PartidoTipo, DivisionTipo } from "@/lib/supabase/tipos";
+import { datos } from "@/lib/supabase/errores";
 
 /** Un partido visto desde un jugador concreto ("yo"). */
 export type PartidoMio = {
@@ -79,19 +80,27 @@ export type MisPartidos = {
 
 export async function misPartidos(yo: string, rankingId: string): Promise<MisPartidos> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("partido")
-    .select(SELECT_PARTIDO)
-    .eq("division.ranking_id", rankingId)
-    .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
-    .order("registrado_en", { ascending: false, nullsFirst: false });
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(SELECT_PARTIDO)
+      .eq("division.ranking_id", rankingId)
+      .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
+      .order("registrado_en", { ascending: false, nullsFirst: false }),
+    "tus partidos",
+  );
 
   const todos = ((data ?? []) as unknown as FilaPartido[]).map((p) => desdeMiPerspectiva(p, yo));
   return {
     porConfirmar: todos.filter((p) => p.estado === "jugado" && !p.loRegistreYo),
+    // Los desempates tienen plazo corto y definen premios: van primero.
     pendientes: todos
       .filter((p) => p.estado === "pendiente")
-      .sort((x, y) => x.rival.nombre.localeCompare(y.rival.nombre)),
+      .sort(
+        (x, y) =>
+          Number(y.tipo === "desempate") - Number(x.tipo === "desempate") ||
+          x.rival.nombre.localeCompare(y.rival.nombre),
+      ),
     esperandoRival: todos.filter((p) => p.estado === "jugado" && p.loRegistreYo),
     enDisputa: todos.filter((p) => p.estado === "disputado"),
     historial: todos.filter((p) => ["confirmado", "resuelto", "anulado"].includes(p.estado)),
@@ -100,22 +109,26 @@ export async function misPartidos(yo: string, rankingId: string): Promise<MisPar
 
 export async function partidoPorId(id: string): Promise<FilaPartido | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("partido").select(SELECT_PARTIDO).eq("id", id).maybeSingle();
+  const data = datos(await supabase.from("partido").select(SELECT_PARTIDO).eq("id", id).maybeSingle(), "el partido");
   return (data as unknown as FilaPartido | null) ?? null;
 }
 
 export async function setsDePartido(id: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("set_partido")
-    .select("numero, puntos_a, puntos_b")
-    .eq("partido_id", id)
-    .order("numero");
+  const data = datos(
+    await supabase.from("set_partido").select("numero, puntos_a, puntos_b").eq("partido_id", id).order("numero"),
+    "los sets del partido",
+  );
   return data ?? [];
 }
 
-/** Corre la autoconfirmación de vencidos. Barata e idempotente. */
+/**
+ * Corre la autoconfirmación de vencidos. Barata e idempotente.
+ * Si falla no rompe la página: es una tarea de fondo, no lo que vino a ver
+ * el usuario. Queda en el log del servidor.
+ */
 export async function autoconfirmarVencidos() {
   const supabase = await createClient();
-  await supabase.rpc("autoconfirmar_vencidos");
+  const { error } = await supabase.rpc("autoconfirmar_vencidos");
+  if (error) console.error("autoconfirmar_vencidos falló:", error.message);
 }

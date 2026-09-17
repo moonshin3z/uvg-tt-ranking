@@ -1,0 +1,50 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>buena</title>
+<!--
+  Contenido correcto: el auditor no debe marcar NADA acá.
+
+  Además del caso base, esta página junta los tres falsos positivos que el
+  auditor llegó a reportar en pantallas que estaban bien. Cada uno costó una
+  corrida entera de confusión, así que quedan clavados acá para que no vuelvan.
+-->
+<style>
+body{margin:0;font-family:system-ui}
+.tabla{width:100%;max-width:100%}
+.fila{display:flex;gap:8px;padding:10px;align-items:center}
+.nombre{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mini{font-size:12.5px}
+button.ok{min-width:44px;min-height:44px}
+
+/* Falso positivo 1: texto solo para lectores de pantalla. Mide 1x1 y está
+   recortado a propósito, no es texto cortado por un defecto de diseño. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Falso positivo 2: la casilla mide 16px, pero lo que se toca es la etiqueta
+   entera, que pasa de sobra el mínimo táctil. */
+.casilla{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px}
+.casilla input{width:16px;height:16px}
+
+/* Falso positivo 3: una tabla ancha dentro de un contenedor que se desliza a
+   propósito. El hijo se sale del contenedor porque así se navega, y el
+   contenedor no se sale de la pantalla. */
+.deslizante{overflow-x:auto;max-width:100%}
+.deslizante table{border-collapse:collapse;white-space:nowrap}
+.deslizante td{padding:10px 16px}
+</style></head><body>
+<div class="tabla">
+  <div class="fila"><span class="nombre">Jose Luis Arriola Menchu de la Cruz Sandoval</span><span>16</span></div>
+  <div class="fila"><span class="mini">letra legible</span><button class="ok">x</button></div>
+
+  <p><span class="sr-only">Posición 3 de 10 en la división mayor</span>3</p>
+
+  <label class="casilla"><input type="checkbox"> Anotar solo los sets</label>
+
+  <div class="deslizante">
+    <table><tbody><tr>
+      <td>Jugador</td><td>PJ</td><td>PG</td><td>PP</td>
+      <td>Sets a favor</td><td>Sets en contra</td><td>Diferencia</td><td>Puntos</td>
+    </tr></tbody></table>
+  </div>
+</div>
+</body></html>

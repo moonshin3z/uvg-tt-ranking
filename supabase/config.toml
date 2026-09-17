@@ -155,11 +155,11 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:3000"
+site_url = "http://localhost:3100"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]
+additional_redirect_urls = ["http://localhost:3100", "http://127.0.0.1:3100"]
 # 1 semana: los jugadores entran pocas veces y no deben tener que reingresar el PIN.
 jwt_expiry = 604800
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -216,8 +216,10 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = true
+# También en false, aunque el `enable_signup` de [auth] ya cierra el registro:
+# dos interruptores que dicen lo mismo es más difícil de abrir por accidente.
+# Las cuentas las crea el coordinador con la API admin, que no pasa por acá.
+enable_signup = false
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true

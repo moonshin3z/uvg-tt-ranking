@@ -1,14 +1,20 @@
+import type { Route } from "next";
+import { torneoEnCurso } from "@/lib/torneos/consultas";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
 import { rankingVigente, tablaDeDivision, ultimosResultados } from "@/lib/ranking/consultas";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
+import { Franja, Lista, Pie, Rotulo } from "@/components/fila";
 import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
+import { Tope } from "@/components/tope";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { EnVivo } from "@/components/en-vivo";
 import { misPartidos } from "@/lib/partidos/consultas";
+
+import { formatearFecha } from "@/lib/fechas";
 
 const ESTADO_RANKING: Record<string, string> = {
   abierto: "En juego",
@@ -17,14 +23,8 @@ const ESTADO_RANKING: Record<string, string> = {
   cerrado: "Cerrado",
 };
 
-function formatearFecha(iso: string) {
-  return new Intl.DateTimeFormat("es-GT", { day: "numeric", month: "short", timeZone: "America/Guatemala" }).format(
-    new Date(iso),
-  );
-}
-
 export default async function Portada({ searchParams }: PageProps<"/">) {
-  const [{ division: divisionParam }, sesion, ranking] = await Promise.all([
+  const [{ division: divisionParam, motivo }, sesion, ranking] = await Promise.all([
     searchParams,
     obtenerSesion(),
     rankingVigente(),
@@ -36,99 +36,129 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
 
   if (!ranking) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
-        <h1 className="text-2xl font-bold tracking-tight">Tabla de posiciones</h1>
-        <p className="text-muted-foreground">
-          Todavía no hay un ranking abierto. Volvé cuando el coordinador lo publique.
-        </p>
-      </main>
+      <>
+        <Tope titulo="Club TM UVG" sub="Sin ranking en juego" />
+        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+          <p className="text-muted-foreground">
+            Todavía no hay un ranking abierto. Volvé cuando el coordinador lo publique.
+          </p>
+        </main>
+      </>
     );
   }
 
-  const [filas, resultados, mios] = await Promise.all([
+  const [filas, resultados, mios, torneo] = await Promise.all([
     tablaDeDivision(ranking, division),
     ultimosResultados(ranking),
     sesion && ["abierto", "en_desempates"].includes(ranking.estado) ? misPartidos(sesion.authId, ranking.id) : null,
+    torneoEnCurso(),
   ]);
   const pendientesMios = mios ? mios.porConfirmar.length + mios.pendientes.length : 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
-      <header className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">{ranking.nombre}</h1>
-          <Badge variant="secondary">{ESTADO_RANKING[ranking.estado] ?? ranking.estado}</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Fecha límite: {formatearFecha(ranking.fecha_limite)}. Cada pareja juega una vez; victoria{" "}
-          {ranking.pts_victoria} pt.
-        </p>
-      </header>
+    // Sin padding horizontal: el selector, la tabla y las listas llegan hasta
+    // el borde y traen el suyo, como en el prototipo.
+    <>
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+        <Tope
+          titulo={ranking.nombre}
+          sub={`${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · División ${division === "mayor" ? "Mayor" : "Menor"}`}
+        />
 
-      {mios && pendientesMios > 0 ? (
-        <Card className="border-accent/40 bg-accent/10">
-          <CardContent className="flex items-center justify-between gap-3 p-4 sm:p-4">
-            <p className="text-sm">
-              {mios.porConfirmar.length > 0 ? (
-                <>
-                  Tenés <span className="font-semibold">{mios.porConfirmar.length}</span> resultado
-                  {mios.porConfirmar.length === 1 ? "" : "s"} por confirmar
-                  {mios.pendientes.length > 0 ? " y " : "."}
-                </>
-              ) : null}
-              {mios.pendientes.length > 0 ? (
-                <>
-                  <span className="font-semibold">{mios.pendientes.length}</span> partido
-                  {mios.pendientes.length === 1 ? "" : "s"} por jugar.
-                </>
-              ) : null}
-            </p>
-            <Button asChild size="sm">
-              <Link href="/partidos">Ver</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
+        {motivo === "solo-coordinador" ? (
+          <p role="status" className="mx-4 mt-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground">
+            Esa sección es solo para el coordinador.
+          </p>
+        ) : null}
 
-      <SelectorDivision actual={division} />
-      <EnVivo />
+        {mios && pendientesMios > 0 ? (
+          <Card className="mx-4 mt-3 border-uvg bg-uvg-suave">
+            <CardContent className="flex items-center justify-between gap-3 p-4 sm:p-4">
+              <p className="text-sm">
+                {mios.porConfirmar.length > 0 ? (
+                  <>
+                    Tenés <span className="font-semibold">{mios.porConfirmar.length}</span> resultado
+                    {mios.porConfirmar.length === 1 ? "" : "s"} por confirmar
+                    {mios.pendientes.length > 0 ? " y " : "."}
+                  </>
+                ) : null}
+                {mios.pendientes.length > 0 ? (
+                  <>
+                    <span className="font-semibold">{mios.pendientes.length}</span> partido
+                    {mios.pendientes.length === 1 ? "" : "s"} por jugar.
+                  </>
+                ) : null}
+              </p>
+              <Button asChild size="sm">
+                <Link href="/partidos">Ver</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
-      <Card>
-        <CardContent className="p-0 sm:p-0">
-          <TablaPosiciones filas={filas} usuarioActualId={sesion?.authId} />
-        </CardContent>
-      </Card>
-      <LeyendaZonas division={division} />
+        {/* La franja del torneo solo existe mientras hay uno en curso. */}
+        {torneo ? (
+          <Franja
+            nombre={torneo.torneo.nombre}
+            sub={
+              torneo.porJugar > 0
+                ? `En juego · quedan ${torneo.porJugar} partido${torneo.porJugar === 1 ? "" : "s"}`
+                : "En juego"
+            }
+            href={`/torneos/${torneo.torneo.id}` as Route}
+          />
+        ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Últimos resultados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {resultados.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no hay partidos confirmados.</p>
-          ) : (
-            <ul className="divide-y">
-              {resultados.map((r) => (
-                <li key={r.id} className="flex items-center gap-3 py-2 text-sm">
-                  <span className="w-12 shrink-0 text-xs text-muted-foreground">
-                    {r.fecha ? formatearFecha(r.fecha) : ""}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    <span className="font-medium">{r.ganador}</span>
-                    <span className="text-muted-foreground"> venció a </span>
-                    {r.perdedor}
-                  </span>
-                  {r.sets ? <span className="tabular shrink-0 font-medium">{r.sets}</span> : null}
-                  <Badge variant="outline" className="hidden shrink-0 capitalize sm:inline-flex">
-                    {r.division}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+        <SelectorDivision actual={division} />
+        <EnVivo />
+
+        <LeyendaZonas division={division} />
+        <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
+
+        <Pie>
+          {ranking.nombre}. Cada pareja juega una vez; la victoria vale {ranking.pts_victoria}{" "}
+          {ranking.pts_victoria === 1 ? "punto" : "puntos"}.
+          <br />
+          Cierra el {formatearFecha(ranking.fecha_limite)}.
+        </Pie>
+
+        <Rotulo>Últimos resultados</Rotulo>
+        {resultados.length === 0 ? (
+          <Pie>Aún no hay partidos confirmados.</Pie>
+        ) : (
+          <Lista>
+            {resultados.map((r) => (
+              <li
+                key={r.id}
+                className="flex min-h-[46px] items-center gap-3 border-b border-linea-suave px-4 py-2 text-sm last:border-b-0"
+              >
+                <span className="w-12 shrink-0 text-xs text-muted-foreground">
+                  {r.fecha ? formatearFecha(r.fecha) : ""}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  <Link
+                    href={`/jugador/${encodeURIComponent(r.ganador.carnet)}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {r.ganador.nombre}
+                  </Link>
+                  <span className="text-muted-foreground"> venció a </span>
+                  <Link
+                    href={`/jugador/${encodeURIComponent(r.perdedor.carnet)}`}
+                    className="underline-offset-4 hover:underline"
+                  >
+                    {r.perdedor.nombre}
+                  </Link>
+                </span>
+                {r.sets ? <span className="tabular shrink-0 font-medium">{r.sets}</span> : null}
+                <Badge variant="outline" className="hidden shrink-0 capitalize sm:inline-flex">
+                  {r.division}
+                </Badge>
+              </li>
+            ))}
+          </Lista>
+        )}
+      </main>
+    </>
   );
 }

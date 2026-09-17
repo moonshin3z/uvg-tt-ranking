@@ -21,14 +21,9 @@ export async function ingresar(_prev: EstadoIngreso, formData: FormData): Promis
     return { error: "Carnet o PIN incorrectos. Si no tenés cuenta, pedila al coordinador.", carnet };
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: perfil } = await supabase
-    .from("usuario")
-    .select("debe_cambiar_pin, activo")
-    .eq("id", user!.id)
-    .maybeSingle();
+  // `debe_cambiar_pin` solo se lee por `mi_perfil`: dejó de ser una columna
+  // legible desde el cliente, y la función ya resuelve sola de quién habla.
+  const { data: perfil } = await supabase.rpc("mi_perfil");
 
   if (!perfil?.activo) {
     await supabase.auth.signOut();

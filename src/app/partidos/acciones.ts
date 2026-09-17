@@ -93,3 +93,59 @@ export async function disputarResultado(_prev: EstadoResultado, formData: FormDa
   revalidar(partidoId);
   return { ok: "Disputa enviada al coordinador" };
 }
+
+// ---------------------------------------------------------------------------
+// Marcador en vivo
+// ---------------------------------------------------------------------------
+
+/**
+ * Abre el marcador de un partido y manda a la pantalla del marcador.
+ *
+ * Si ya hay uno en juego para ese partido, la base devuelve el mismo en vez de
+ * crear otro, así que entrar dos veces no duplica nada.
+ */
+export async function abrirMarcador(formData: FormData): Promise<void> {
+  await requerirSesion();
+  const partidoId = String(formData.get("partido_id") ?? "");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("abrir_marcador_de_partido", { p_partido_id: partidoId });
+  if (error || !data) redirect(`/partidos/${partidoId}?marcador=no`);
+  redirect(`/marcador/${data.id}`);
+}
+
+/**
+ * Manda una foto del marcador.
+ *
+ * El protocolo es de foto completa con versión: el teléfono que anota lleva su
+ * propio contador y manda el estado entero. El servidor descarta las fotos
+ * viejas, así que si una llega tarde no retrocede el marcador. Por eso acá no
+ * se hace nada si falla: el punto siguiente manda una foto más nueva y se
+ * pone al día solo.
+ */
+export async function sincronizarMarcador(entrada: {
+  marcadorId: string;
+  version: number;
+  puntosA: number;
+  puntosB: number;
+  setsA: number;
+  setsB: number;
+  historial: [number, number][];
+  saca: "a" | "b";
+  estado: "en_juego" | "terminado";
+}): Promise<{ error?: string; aviso?: string | null }> {
+  await requerirSesion();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sincronizar_marcador", {
+    p_marcador_id: entrada.marcadorId,
+    p_version: entrada.version,
+    p_puntos_a: entrada.puntosA,
+    p_puntos_b: entrada.puntosB,
+    p_sets_a: entrada.setsA,
+    p_sets_b: entrada.setsB,
+    p_historial: entrada.historial,
+    p_saca: entrada.saca,
+    p_estado: entrada.estado,
+  });
+  if (error) return { error: error.message };
+  return { aviso: data?.aviso ?? null };
+}

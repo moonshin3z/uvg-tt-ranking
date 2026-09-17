@@ -7,6 +7,13 @@ import { esPinValido } from "@/lib/auth/carnet";
 
 export type EstadoCambioPin = { error?: string };
 
+/** La base valida lo mismo que el formulario; si igual rebota, se muestra tal cual. */
+function mensajeDeCambioDePin(mensaje: string): string {
+  if (/menos obvio/i.test(mensaje)) return "Elegí un PIN menos obvio.";
+  if (/6 d/i.test(mensaje)) return "El PIN nuevo debe tener 6 dígitos.";
+  return "No se pudo cambiar el PIN. Intentá de nuevo.";
+}
+
 export async function cambiarPin(_prev: EstadoCambioPin, formData: FormData): Promise<EstadoCambioPin> {
   const sesion = await requerirSesion();
   const pin = String(formData.get("pin") ?? "").trim();
@@ -18,15 +25,16 @@ export async function cambiarPin(_prev: EstadoCambioPin, formData: FormData): Pr
     return { error: "Elegí un PIN menos obvio." };
   }
 
+  // Un solo paso, del lado del servidor. Antes eran dos (cambiar la
+  // contraseña y después bajar la bandera), y al ser dos el segundo se podía
+  // hacer sin el primero: un jugador se quitaba la obligación de cambiar el
+  // PIN y seguía con el que el coordinador le había dictado.
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password: pin });
-  if (error) return { error: "No se pudo cambiar el PIN. Intentá de nuevo." };
+  const { error } = await supabase.rpc("cambiar_mi_pin", { p_nuevo: pin });
+  if (error) return { error: mensajeDeCambioDePin(error.message) };
 
-  const { error: errorPerfil } = await supabase
-    .from("usuario")
-    .update({ debe_cambiar_pin: false })
-    .eq("id", sesion.authId);
-  if (errorPerfil) return { error: "El PIN cambió pero no se pudo actualizar tu perfil. Avisale al coordinador." };
-
-  redirect("/");
+  // Primer ingreso: al jugador le mostramos qué hacer ahora; al coordinador,
+  // su panel.
+  if (sesion.usuario.rol === "coordinador") redirect("/admin/ranking");
+  redirect(sesion.usuario.debe_cambiar_pin ? "/partidos?bienvenida=1" : "/partidos");
 }

@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="es-GT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estructura de la App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pg-bg:#fafaf9; --pg-fg:#14171a; --pg-dim:#5f686e; --pg-line:#e3e5e3; --pg-card:#fff;
+  --uvg:#0b9e51; --uvg-ink:#07301d; --alerta:#b8452f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --pg-bg:#0f1113; --pg-fg:#e9ebec; --pg-dim:#98a0a6; --pg-line:#242829; --pg-card:#171a1c;
+  }
+}
+:root[data-theme="dark"]{
+  --pg-bg:#0f1113; --pg-fg:#e9ebec; --pg-dim:#98a0a6; --pg-line:#242829; --pg-card:#171a1c;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--pg-bg);color:var(--pg-fg);
+  font-family:"Outfit",ui-sans-serif,system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px 100px}
+
+.top{padding:56px 0 30px;border-bottom:1px solid var(--pg-line);margin-bottom:12px}
+.top h1{margin:0 0 14px;font-size:clamp(28px,6vw,44px);line-height:1.04;letter-spacing:-.035em;font-weight:600;text-wrap:balance}
+.top h1 b{font-weight:700;color:var(--uvg)}
+.top p{margin:0 0 10px;max-width:64ch;color:var(--pg-dim);font-size:15px;text-wrap:pretty}
+.note{margin-top:20px;padding:13px 15px;border-left:3px solid var(--uvg);background:color-mix(in oklab,var(--uvg) 7%,transparent);font-size:13.5px;max-width:70ch;text-wrap:pretty}
+
+.prop{padding:44px 0;border-bottom:1px solid var(--pg-line)}
+.prop:last-of-type{border-bottom:0}
+.ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.ph h2{margin:0;font-size:clamp(21px,4vw,29px);letter-spacing:-.025em;font-weight:600}
+.ph .tag{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-dim);border:1px solid var(--pg-line);padding:3px 9px;border-radius:4px}
+.ph .tag.now{color:var(--uvg);border-color:color-mix(in oklab,var(--uvg) 45%,transparent)}
+.lead{margin:0 0 6px;max-width:66ch;color:var(--pg-dim);font-size:14.5px;text-wrap:pretty}
+
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,330px);gap:34px;align-items:start;margin-top:24px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+
+.screens{display:flex;gap:18px;flex-wrap:wrap}
+.phone{width:292px;border:1px solid var(--pg-line);border-radius:22px;overflow:hidden;background:#f7f8f6;
+  box-shadow:0 14px 30px -18px rgba(0,0,0,.35)}
+.cap{font-size:12px;color:var(--pg-dim);margin:8px 0 0;width:292px;text-wrap:pretty}
+
+.side h3{margin:0 0 9px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-dim)}
+.map{font-family:"IBM Plex Mono",monospace;font-size:12.2px;line-height:1.85;color:var(--pg-dim);
+  border:1px solid var(--pg-line);border-radius:9px;padding:13px 15px;background:var(--pg-card);white-space:pre;overflow-x:auto}
+.map b{color:var(--pg-fg);font-weight:500}
+.pros{margin:20px 0 0;padding:0;list-style:none;font-size:13.5px}
+.pros li{padding:7px 0 7px 22px;position:relative;border-top:1px solid var(--pg-line);text-wrap:pretty}
+.pros li:first-child{border-top:0}
+.pros li::before{position:absolute;left:0;top:7px;font-weight:700}
+.pros li.y::before{content:"+";color:var(--uvg)}
+.pros li.n::before{content:"-";color:var(--alerta)}
+
+/* ============ SKIN ÚNICA (para que la variable sea la estructura) ============ */
+.s{--bg:#f7f8f6;--sf:#fff;--fg:#16191a;--dim:#636c6d;--line:#e1e5e1;--acc:#0b9e51;--ink:#07301d;--al:#b8452f;
+   background:var(--bg);color:var(--fg);font-size:14.5px;position:relative;min-height:520px;display:flex;flex-direction:column}
+.s .bleed{background:var(--acc);color:#fff;padding:13px 16px}
+.s .bleed .r1{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.s .brand{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+.s .gh{font:inherit;font-size:12px;font-weight:500;color:#fff;background:rgba(255,255,255,.18);border:0;padding:5px 11px;border-radius:20px}
+.s .bleed h1{margin:0;font-size:20px;font-weight:600;letter-spacing:-.025em;line-height:1.12}
+.s .bleed .sb{font-size:12.5px;opacity:.85;margin-top:3px}
+.s .plain{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--sf)}
+.s .plain .brand{color:var(--fg)}
+.s .plain .gh{color:var(--dim);background:none;border:1px solid var(--line)}
+.s .body{flex:1;overflow:hidden}
+
+.s .sec{padding:14px 16px;border-bottom:1px solid var(--line)}
+.s .sec.white{background:var(--sf)}
+.s .lbl{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.s .lbl.hot{color:var(--al)}
+.s .who{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.s .det{font-size:12.5px;color:var(--dim);margin-top:2px;text-wrap:pretty}
+.s .acts{display:flex;gap:7px;margin-top:11px}
+.s .acts button{font:inherit;font-size:13px;font-weight:600;padding:9px 15px;border-radius:8px;border:0;
+  background:var(--acc);color:#fff;transition:transform .12s ease}
+.s .acts button:active{transform:scale(.97)}
+.s .acts .sec2{background:none;color:var(--dim);border:1px solid var(--line);font-weight:500}
+.s .acts .quiet{background:none;color:var(--acc);border:1px solid color-mix(in oklab,var(--acc) 40%,transparent)}
+
+.s .seg{display:flex;gap:2px;margin:13px 16px 0;background:#eaece9;padding:3px;border-radius:8px}
+.s .seg a{flex:1;text-align:center;padding:7px;font-size:12.5px;font-weight:600;color:var(--dim);text-decoration:none;border-radius:6px}
+.s .seg a.on{background:#fff;color:var(--ink)}
+.s .txtnav{display:flex;gap:18px;padding:11px 16px 0;font-size:13px}
+.s .txtnav a{color:var(--acc);text-decoration:none;border-bottom:1px solid color-mix(in oklab,var(--acc) 30%,transparent);padding-bottom:1px}
+
+.s .th{display:grid;grid-template-columns:18px 1fr 22px 22px 32px;gap:8px;padding:13px 16px 5px;font-size:10.5px;font-weight:600;color:var(--dim)}
+.s .tr{display:grid;grid-template-columns:18px 1fr 22px 22px 32px;gap:8px;align-items:center;padding:9px 16px;
+  border-top:1px solid var(--line);font-variant-numeric:tabular-nums;border-left:3px solid transparent}
+.s .tr.up{border-left-color:var(--acc)}
+.s .tr.dn{border-left-color:var(--al)}
+.s .tr.me{background:var(--sf)}
+.s .tr .p{text-align:right;font-size:12.5px;color:var(--dim)}
+.s .tr .nm{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s .tr.me .nm{font-weight:700}
+.s .tr .n{text-align:right;font-size:12.5px;color:var(--dim)}
+.s .tr .pt{text-align:right;font-size:14.5px;font-weight:700;color:var(--ink)}
+
+/* barra inferior */
+.s .tabbar{display:flex;border-top:1px solid var(--line);background:var(--sf);padding-bottom:4px}
+.s .tabbar a{flex:1;text-align:center;padding:9px 0 7px;text-decoration:none;color:var(--dim);font-size:10.5px;font-weight:600;letter-spacing:.01em}
+.s .tabbar a.on{color:var(--acc)}
+.s .tabbar .ic{display:block;font-size:17px;line-height:1.15;margin-bottom:1px}
+.s .tabbar .badge{display:inline-block;min-width:15px;padding:0 4px;background:var(--al);color:#fff;border-radius:9px;
+  font-size:9.5px;font-weight:700;line-height:15px;margin-left:3px;vertical-align:top}
+
+/* fila de rival (cuadro) */
+.s .rival{display:flex;align-items:center;gap:11px;padding:11px 16px;border-top:1px solid var(--line);background:var(--sf)}
+.s .rival .ini{width:32px;height:32px;border-radius:8px;background:#eef1ee;color:var(--ink);display:grid;place-items:center;
+  font-size:12px;font-weight:700;flex:0 0 32px}
+.s .rival .mid{flex:1;min-width:0}
+.s .rival .rn{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s .rival .rs{font-size:11.5px;color:var(--dim);margin-top:1px}
+.s .rival .rr{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.s .rival .rr.w{color:var(--acc)}
+.s .rival .rr.l{color:var(--dim)}
+.s .rival .go{font-size:11.5px;font-weight:600;color:var(--acc);border:1px solid color-mix(in oklab,var(--acc) 40%,transparent);
+  padding:5px 10px;border-radius:7px;flex:0 0 auto}
+.s .rival .go.hot{background:var(--al);border-color:var(--al);color:#fff}
+.s .prog{height:4px;background:#e6e9e6;border-radius:3px;overflow:hidden;margin-top:10px}
+.s .prog i{display:block;height:100%;background:var(--acc);border-radius:3px}
+
+/* FAB */
+.s .fab{position:absolute;right:15px;bottom:68px;background:var(--ink);color:#fff;border:0;font:inherit;
+  font-size:13px;font-weight:600;padding:12px 17px;border-radius:24px;box-shadow:0 8px 20px -6px rgba(7,48,29,.5);
+  display:flex;align-items:center;gap:7px}
+.s .fab.low{bottom:16px}
+
+/* marcador en vivo */
+.s .live{flex:1;background:var(--ink);color:#fff;display:flex;flex-direction:column}
+.s .live .lh{padding:11px 16px;font-size:11.5px;opacity:.7;display:flex;justify-content:space-between}
+.s .live .grid{flex:1;display:grid;grid-template-rows:1fr 1fr}
+.s .live .half{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-top:1px solid rgba(255,255,255,.12)}
+.s .live .half.on{background:rgba(122,209,79,.1)}
+.s .live .pn{font-size:12.5px;opacity:.75}
+.s .live .big{font-size:62px;font-weight:700;line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.s .live .sets{font-size:11.5px;opacity:.6;letter-spacing:.12em}
+.s .live .lf{padding:11px 16px;display:flex;gap:8px;border-top:1px solid rgba(255,255,255,.12)}
+.s .live .lf button{flex:1;font:inherit;font-size:12.5px;font-weight:600;padding:9px;border-radius:7px;border:1px solid rgba(255,255,255,.22);
+  background:none;color:#fff}
+.s .live .lf button.pri{background:#7ad14f;border-color:#7ad14f;color:#0b140a}
+
+/* scroll único */
+.s .scrollhint{text-align:center;font-size:11px;color:var(--dim);padding:9px 0;letter-spacing:.05em}
+.s .mini{padding:12px 16px;border-bottom:1px solid var(--line)}
+.s .mini .mrow{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;color:var(--dim)}
+.s .mini .mrow b{color:var(--fg);font-weight:500}
+
+.foottbl{margin-top:54px}
+.foottbl h2{margin:0 0 15px;font-size:20px;font-weight:600;letter-spacing:-.02em}
+.tw{overflow-x:auto;border:1px solid var(--pg-line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:700px;font-size:13.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--pg-line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-dim);font-weight:600;background:var(--pg-card)}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;white-space:nowrap}
+.good{color:var(--uvg);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Estructura: <b>dónde vive cada cosa</b></h1>
+  <p>Cuatro maneras de organizar la app. La pregunta no es cómo se ve sino qué aparece primero cuando alguien la abre parado junto a la mesa, y cuántos toques le cuesta hacer lo que vino a hacer.</p>
+  <p>Todas están pintadas con la misma piel (verde UVG, claro, sin tarjetas) a propósito, para que lo único que cambie entre ellas sea la estructura. La paleta se decide aparte.</p>
+  <div class="note">Las tres cosas que la gente va a hacer, en orden de frecuencia real: <b>confirmar un resultado que el rival registró</b>, <b>registrar un resultado recién jugado</b>, y <b>ver en qué puesto va</b>. Todo lo demás (calendario, perfiles, rankings viejos, panel) es ocasional.</div>
+</header>
+
+<!-- ===================== A ===================== -->
+<section class="prop">
+  <div class="ph"><h2>A · Tabla primero</h2><span class="tag now">Lo que hay hoy</span></div>
+  <p class="lead">La portada es la tabla de posiciones. Lo que te toca hacer aparece como un aviso encima de ella, con un botón que te lleva a otra pantalla. La navegación son links de texto debajo del título.</p>
+  <div class="cols">
+    <div>
+      <div class="screens">
+        <div>
+        <div class="phone"><div class="s">
+          <div class="plain"><span class="brand">Club TM UVG</span><button class="gh">Mis partidos</button></div>
+          <div class="body">
+            <div class="sec white" style="border-bottom:0;padding-bottom:6px">
+              <div style="font-size:18px;font-weight:600;letter-spacing:-.02em">Ranking II · 2026</div>
+              <div class="det">Fecha límite 24 oct. Victoria 2 pts.</div>
+              <div class="txtnav" style="padding-left:0"><a href="#">Ver calendario</a><a href="#">Anteriores</a><a href="#">Cómo funciona</a></div>
+            </div>
+            <div class="sec" style="background:#fff4ec;border-left:3px solid #e08b3a">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div style="font-size:13px">Tenés <b>1</b> resultado por confirmar y <b>2</b> partidos por jugar.</div>
+                <button style="font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border:0;border-radius:7px;background:var(--acc);color:#fff">Ver</button>
+              </div>
+            </div>
+            <div class="seg"><a href="#" class="on">Mayor</a><a href="#">Menor</a></div>
+            <div class="th"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+            <div class="tr up"><span class="p">1</span><span class="nm">Kevin Coj</span><span class="n">9</span><span class="n">8</span><span class="pt">16</span></div>
+            <div class="tr"><span class="p">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="n">7</span><span class="pt">14</span></div>
+            <div class="tr me"><span class="p">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="n">6</span><span class="pt">12</span></div>
+            <div class="tr"><span class="p">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="n">5</span><span class="pt">10</span></div>
+            <div class="tr"><span class="p">5</span><span class="nm">Fernanda Ixcot</span><span class="n">8</span><span class="n">3</span><span class="pt">6</span></div>
+            <div class="tr dn"><span class="p">6</span><span class="nm">Mateo Quiñónez</span><span class="n">9</span><span class="n">1</span><span class="pt">2</span></div>
+          </div>
+        </div></div>
+        <p class="cap">Portada. Lo tuyo es un aviso, no el contenido.</p>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Mapa</h3>
+      <div class="map">/            <b>tabla</b>
+/partidos    <b>lo tuyo</b>
+/partidos/id registrar
+/jugador/x   perfil
+/rankings    historial
+/reglas      reglamento
+/admin/*     coordinador</div>
+      <ul class="pros">
+        <li class="y">Quien entra sin cuenta ve lo importante de una: la tabla es pública.</li>
+        <li class="y">Ya está construido. Cero trabajo.</li>
+        <li class="n">Lo más frecuente (confirmar) queda a 2 toques y detrás de un aviso que se ignora rápido.</li>
+        <li class="n">La navegación por links de texto se pierde entre el contenido en pantalla chica.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== B ===================== -->
+<section class="prop">
+  <div class="ph"><h2>B · Lo tuyo primero</h2><span class="tag">Barra inferior</span></div>
+  <p class="lead">Si estás con sesión, la portada es "qué te toca". La tabla pasa a ser una de tres pestañas fijas abajo, siempre alcanzables con el pulgar. Sin sesión, la portada sigue siendo la tabla, así que lo público no se pierde.</p>
+  <div class="cols">
+    <div>
+      <div class="screens">
+        <div>
+        <div class="phone"><div class="s">
+          <div class="plain"><span class="brand">Hoy</span><button class="gh">Iván R.</button></div>
+          <div class="body">
+            <div class="sec white">
+              <div class="lbl hot">Te toca confirmar · vence mañana 9:40 p.m.</div>
+              <div class="who">Diego Menchú te ganó 3-1</div>
+              <div class="det">Lo registró él hace 5 horas.</div>
+              <div class="acts"><button>Confirmar</button><button class="sec2">No fue así</button></div>
+            </div>
+            <div class="sec">
+              <div class="lbl">Te faltan 2 partidos</div>
+              <div style="display:flex;align-items:center;gap:11px;margin-bottom:9px">
+                <span class="ini" style="width:30px;height:30px;border-radius:8px;background:#eef1ee;color:#07301d;display:grid;place-items:center;font-size:11.5px;font-weight:700">FI</span>
+                <span style="flex:1;font-size:14px;font-weight:500">Fernanda Ixcot</span>
+                <span class="go" style="font-size:11.5px;font-weight:600;color:var(--acc);border:1px solid color-mix(in oklab,var(--acc) 40%,transparent);padding:5px 10px;border-radius:7px">Registrar</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:11px">
+                <span class="ini" style="width:30px;height:30px;border-radius:8px;background:#eef1ee;color:#07301d;display:grid;place-items:center;font-size:11.5px;font-weight:700">KC</span>
+                <span style="flex:1;font-size:14px;font-weight:500">Kevin Coj</span>
+                <span class="go" style="font-size:11.5px;font-weight:600;color:var(--acc);border:1px solid color-mix(in oklab,var(--acc) 40%,transparent);padding:5px 10px;border-radius:7px">Registrar</span>
+              </div>
+            </div>
+            <div class="mini">
+              <div class="lbl">Dónde vas</div>
+              <div class="mrow"><span>Puesto</span><b>3.º de 10 en Mayor</b></div>
+              <div class="mrow"><span>Puntos</span><b>12</b></div>
+              <div class="mrow"><span>Para alcanzar el 2.º</span><b>ganar 1 más</b></div>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <a href="#" class="on"><span class="ic">◆</span>Hoy<span class="badge">1</span></a>
+            <a href="#"><span class="ic">▤</span>Tabla</a>
+            <a href="#"><span class="ic">◐</span>Perfil</a>
+          </nav>
+        </div></div>
+        <p class="cap">Con sesión: la acción es el contenido, no un aviso.</p>
+        </div>
+        <div>
+        <div class="phone"><div class="s">
+          <div class="plain"><span class="brand">Tabla</span><button class="gh">Iván R.</button></div>
+          <div class="body">
+            <div class="seg" style="margin-top:12px"><a href="#" class="on">Mayor</a><a href="#">Menor</a></div>
+            <div class="th"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+            <div class="tr up"><span class="p">1</span><span class="nm">Kevin Coj</span><span class="n">9</span><span class="n">8</span><span class="pt">16</span></div>
+            <div class="tr"><span class="p">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="n">7</span><span class="pt">14</span></div>
+            <div class="tr me"><span class="p">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="n">6</span><span class="pt">12</span></div>
+            <div class="tr"><span class="p">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="n">5</span><span class="pt">10</span></div>
+            <div class="tr"><span class="p">5</span><span class="nm">Fernanda Ixcot</span><span class="n">8</span><span class="n">3</span><span class="pt">6</span></div>
+            <div class="tr"><span class="p">6</span><span class="nm">Rodrigo Estrada</span><span class="n">8</span><span class="n">3</span><span class="pt">6</span></div>
+            <div class="tr"><span class="p">7</span><span class="nm">José Luis Arriola</span><span class="n">9</span><span class="n">2</span><span class="pt">4</span></div>
+            <div class="tr dn"><span class="p">8</span><span class="nm">Mateo Quiñónez</span><span class="n">9</span><span class="n">1</span><span class="pt">2</span></div>
+          </div>
+          <nav class="tabbar">
+            <a href="#"><span class="ic">◆</span>Hoy<span class="badge">1</span></a>
+            <a href="#" class="on"><span class="ic">▤</span>Tabla</a>
+            <a href="#"><span class="ic">◐</span>Perfil</a>
+          </nav>
+        </div></div>
+        <p class="cap">La tabla, limpia, sin avisos encima peleando por el espacio.</p>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Mapa</h3>
+      <div class="map">con sesión
+  /          <b>hoy</b>  ← pestaña
+  /tabla     <b>posiciones</b>
+  /yo        <b>perfil</b>
+  + /admin   (4.ª pestaña
+             solo coordinador)
+
+sin sesión
+  /          <b>tabla</b>
+  (sin barra inferior)</div>
+      <ul class="pros">
+        <li class="y">Lo más frecuente queda a cero toques. El contador rojo lo hace imposible de ignorar.</li>
+        <li class="y">Barra inferior es lo que la gente ya sabe usar en el celular. Nada que aprender.</li>
+        <li class="y">La tabla queda limpia, sin banners peleando arriba.</li>
+        <li class="n">Dos portadas distintas según si hay sesión. Más lógica y más que probar.</li>
+        <li class="n">La barra come 56px de alto permanentes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== C ===================== -->
+<section class="prop">
+  <div class="ph"><h2>C · Mi cuadro</h2><span class="tag">Round robin como centro</span></div>
+  <p class="lead">La unidad de la app deja de ser "la tabla" o "mis partidos" y pasa a ser <b>tu fila del round robin</b>: los 9 rivales que te tocan, con el estado de cada uno. Es el objeto real de una liga de todos contra todos, y es la pregunta que de verdad se hace la gente ("¿con quién me falta jugar?").</p>
+  <div class="cols">
+    <div>
+      <div class="screens">
+        <div>
+        <div class="phone"><div class="s">
+          <div class="bleed">
+            <div class="r1"><span class="brand">Club TM UVG</span><button class="gh">Tabla</button></div>
+            <h1>Tu cuadro</h1>
+            <div class="sb">Mayor · 6 de 9 jugados · vas 3.º con 12 pts</div>
+            <div class="prog" style="background:rgba(255,255,255,.22)"><i style="width:67%;background:#fff"></i></div>
+          </div>
+          <div class="body">
+            <div class="rival"><span class="ini">DM</span><span class="mid"><span class="rn">Diego Menchú</span><span class="rs">te ganó 3-1 · sin confirmar</span></span><span class="go hot">Confirmar</span></div>
+            <div class="rival"><span class="ini">FI</span><span class="mid"><span class="rn">Fernanda Ixcot</span><span class="rs">sin jugar</span></span><span class="go">Registrar</span></div>
+            <div class="rival"><span class="ini">KC</span><span class="mid"><span class="rn">Kevin Coj</span><span class="rs">sin jugar</span></span><span class="go">Registrar</span></div>
+            <div class="rival"><span class="ini">AS</span><span class="mid"><span class="rn">Andrés Sandoval</span><span class="rs">14 sep</span></span><span class="rr l">0-3</span></div>
+            <div class="rival"><span class="ini">RE</span><span class="mid"><span class="rn">Rodrigo Estrada</span><span class="rs">12 sep</span></span><span class="rr w">3-2</span></div>
+            <div class="rival"><span class="ini">JA</span><span class="mid"><span class="rn">José Luis Arriola</span><span class="rs">9 sep</span></span><span class="rr w">3-0</span></div>
+            <div class="rival"><span class="ini">MQ</span><span class="mid"><span class="rn">Mateo Quiñónez</span><span class="rs">6 sep</span></span><span class="rr w">3-1</span></div>
+          </div>
+          <button class="fab low">Marcador en vivo</button>
+        </div></div>
+        <p class="cap">Una sola lista responde todo: qué debo, contra quién falto, cómo me fue.</p>
+        </div>
+        <div>
+        <div class="phone"><div class="s">
+          <div class="plain"><span class="brand">vs. Fernanda Ixcot</span><button class="gh">Cerrar</button></div>
+          <div class="live">
+            <div class="lh"><span>Mayor · sin registrar</span><span>Sets 1 - 0</span></div>
+            <div class="grid">
+              <div class="half on"><span class="pn">Iván Roble</span><span class="big">9</span><span class="sets">■ □ □</span></div>
+              <div class="half"><span class="pn">Fernanda Ixcot</span><span class="big">7</span><span class="sets">□ □ □</span></div>
+            </div>
+            <div class="lf"><button>Deshacer</button><button class="pri">Cerrar set</button></div>
+          </div>
+        </div></div>
+        <p class="cap">El marcador vive dentro del rival, no como una sección aparte.</p>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Mapa</h3>
+      <div class="map">/            <b>tu cuadro</b>
+  └ rival    hoja + marcador
+/tabla       posiciones
+/jugador/x   perfil
+/admin/*     coordinador
+
+sin sesión
+/            <b>tabla</b></div>
+      <ul class="pros">
+        <li class="y">Coincide con la forma real del torneo. No hay que explicar nada.</li>
+        <li class="y">Confirmar, registrar y consultar historial son la misma lista.</li>
+        <li class="y">El marcador en vivo tiene un lugar natural: dentro del rival contra el que estás jugando.</li>
+        <li class="n">La tabla general queda en segundo plano, y es lo que más se presume en el grupo.</li>
+        <li class="n">Es la que más pantallas nuevas pide. La que más trabajo cuesta.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== D ===================== -->
+<section class="prop">
+  <div class="ph"><h2>D · Una sola pantalla</h2><span class="tag">Sin navegación</span></div>
+  <p class="lead">No hay pestañas ni secciones. Todo lo del jugador vive en un scroll: lo que te toca arriba, tu posición, la tabla completa, últimos resultados. El coordinador es el único con una pantalla aparte. Es la apuesta a que un club de 25 personas no necesita una arquitectura de información.</p>
+  <div class="cols">
+    <div>
+      <div class="screens">
+        <div>
+        <div class="phone"><div class="s">
+          <div class="plain"><span class="brand">Club TM UVG</span><button class="gh">Salir</button></div>
+          <div class="body">
+            <div class="sec white" style="border-left:3px solid var(--al)">
+              <div class="lbl hot">Te toca</div>
+              <div class="who">Diego Menchú te ganó 3-1</div>
+              <div class="det">Se confirma solo mañana a las 9:40 p.m.</div>
+              <div class="acts"><button>Confirmar</button><button class="sec2">No fue así</button></div>
+            </div>
+            <div class="sec">
+              <div class="lbl">Te faltan</div>
+              <div class="det" style="color:var(--fg);font-size:13.5px">Fernanda Ixcot y Kevin Coj.
+                <a href="#" style="color:var(--acc);text-decoration:none;border-bottom:1px solid;display:inline-block;margin-top:5px">Registrar un resultado</a></div>
+            </div>
+            <div class="seg" style="margin-top:12px"><a href="#" class="on">Mayor</a><a href="#">Menor</a></div>
+            <div class="th"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+            <div class="tr up"><span class="p">1</span><span class="nm">Kevin Coj</span><span class="n">9</span><span class="n">8</span><span class="pt">16</span></div>
+            <div class="tr"><span class="p">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="n">7</span><span class="pt">14</span></div>
+            <div class="tr me"><span class="p">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="n">6</span><span class="pt">12</span></div>
+            <div class="tr"><span class="p">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="n">5</span><span class="pt">10</span></div>
+            <div class="scrollhint">sigue: últimos resultados, calendario</div>
+          </div>
+          <button class="fab low">Marcador</button>
+        </div></div>
+        <p class="cap">Todo en un scroll. Cero decisiones de navegación.</p>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Mapa</h3>
+      <div class="map">/            <b>todo</b>
+  ├ te toca
+  ├ te faltan
+  ├ tabla
+  ├ resultados
+  └ calendario
+/registrar   hoja de partido
+/admin/*     coordinador</div>
+      <ul class="pros">
+        <li class="y">Nadie se pierde. No hay que enseñar a usarla.</li>
+        <li class="y">Una sola pantalla que pulir de verdad, en vez de seis a medias.</li>
+        <li class="y">Es la más barata de construir sobre lo que ya existe.</li>
+        <li class="n">Se vuelve larguísima cuando entren torneos, historial y perfiles.</li>
+        <li class="n">Sin URLs propias no se puede compartir "mirá la tabla de Menor" en el grupo.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== comparación ===================== -->
+<section class="foottbl">
+  <h2>Cuántos toques cuesta cada cosa</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Tarea</th><th>A · Tabla</th><th>B · Lo tuyo</th><th>C · Mi cuadro</th><th>D · Una pantalla</th></tr></thead>
+      <tbody>
+        <tr><td>Confirmar un resultado</td><td>2 toques</td><td class="good">1 toque</td><td class="good">1 toque</td><td class="good">1 toque</td></tr>
+        <tr><td>Registrar uno recién jugado</td><td>3 toques</td><td>2 toques</td><td class="good">2 toques</td><td>2 toques</td></tr>
+        <tr><td>Ver en qué puesto voy</td><td class="good">0 toques</td><td>1 toque</td><td class="good">0 toques</td><td class="good">0, scroll</td></tr>
+        <tr><td>Ver contra quién me falta</td><td>2 toques</td><td class="good">0 toques</td><td class="good">0 toques</td><td class="good">0 toques</td></tr>
+        <tr><td>Abrir el marcador en vivo</td><td>3 toques</td><td>2 toques</td><td class="good">1 toque</td><td class="good">1 toque</td></tr>
+        <tr><td>Compartir la tabla en el grupo</td><td class="good">URL propia</td><td class="good">URL propia</td><td class="good">URL propia</td><td>no tiene</td></tr>
+        <tr><td>Aguanta torneos después</td><td>Sí</td><td class="good">Sí, 4.ª pestaña</td><td>Hay que pensarlo</td><td>No</td></tr>
+        <tr><td>Trabajo desde lo que ya existe</td><td class="good">Ninguno</td><td>Medio</td><td>Alto</td><td>Bajo</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

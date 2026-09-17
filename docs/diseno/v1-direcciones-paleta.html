@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="es-GT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuatro Direcciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pg-bg:#101214; --pg-fg:#e8eaec; --pg-dim:#9aa1a8; --pg-line:#24282c; --pg-card:#171a1d;
+  --pg-mark:#6abf4b;
+}
+:root:not([data-theme="dark"]){
+  --pg-bg:#f2f3f4; --pg-fg:#14171a; --pg-dim:#5d666e; --pg-line:#dcdfe2; --pg-card:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --pg-bg:#101214; --pg-fg:#e8eaec; --pg-dim:#9aa1a8; --pg-line:#24282c; --pg-card:#171a1d;
+  }
+}
+:root[data-theme="dark"]{
+  --pg-bg:#101214; --pg-fg:#e8eaec; --pg-dim:#9aa1a8; --pg-line:#24282c; --pg-card:#171a1d;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--pg-bg); color:var(--pg-fg);
+  font-family:"Outfit",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 96px}
+
+/* ---------- cabecera de la página ---------- */
+.top{padding:56px 0 32px;border-bottom:1px solid var(--pg-line);margin-bottom:40px}
+.top h1{font-size:clamp(28px,6vw,44px);line-height:1.05;letter-spacing:-.03em;margin:0 0 14px;font-weight:700;text-wrap:balance}
+.top p{margin:0;max-width:62ch;color:var(--pg-dim);font-size:15px;text-wrap:pretty}
+.top .meta{margin-top:18px;font-size:12.5px;color:var(--pg-dim);letter-spacing:.02em}
+
+/* ---------- bloque de cada dirección ---------- */
+.dir{padding:44px 0;border-bottom:1px solid var(--pg-line)}
+.dir:last-of-type{border-bottom:0}
+.dirhead{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;justify-content:space-between;margin-bottom:26px}
+.dirhead h2{margin:0 0 8px;font-size:clamp(22px,4vw,30px);letter-spacing:-.02em;font-weight:700}
+.dirhead .lead{margin:0;max-width:56ch;color:var(--pg-dim);font-size:14.5px;text-wrap:pretty}
+.tagline{font-size:12px;color:var(--pg-dim);margin-top:12px}
+.tagline b{color:var(--pg-fg);font-weight:600}
+.swatches{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:5px;border:1px solid rgba(128,128,128,.25)}
+.stage{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;align-items:start}
+
+/* ---------- marco de teléfono ---------- */
+.phone{
+  width:100%;max-width:392px;margin:0 auto;border-radius:26px;overflow:hidden;
+  border:1px solid var(--pg-line);
+  box-shadow:0 18px 40px -20px rgba(0,0,0,.45);
+}
+.phone .screen{font-size:15px}
+.cap{font-size:12px;color:var(--pg-dim);text-align:center;margin:10px 0 0}
+
+/* ======================================================================
+   A. MARCADOR  — oscuro, lenguaje de transmisión deportiva
+   ====================================================================== */
+.marcador{
+  --bg:#0d1311; --fg:#f0f3f1; --dim:#7f8c86; --line:#1e2a25;
+  --acc:#7ad14f; --warn:#f0b323; --surf:#121a17;
+  background:var(--bg); color:var(--fg);
+  font-family:"Archivo",ui-sans-serif,system-ui,sans-serif;
+}
+.marcador .bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--line);
+}
+.marcador .brand{font-weight:800;letter-spacing:-.02em;font-size:15px}
+.marcador .brand span{color:var(--acc)}
+.marcador .ghost{
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--dim);
+  border:1px solid var(--line);background:none;padding:6px 11px;border-radius:7px;
+}
+.marcador .turno{
+  padding:18px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(122,209,79,.07),transparent);
+}
+.marcador .turno .kicker{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--acc);margin-bottom:9px}
+.marcador .turno .who{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-bottom:3px}
+.marcador .turno .det{font-size:13.5px;color:var(--dim)}
+.marcador .turno .det b{color:var(--warn);font-weight:600}
+.marcador .acts{display:flex;gap:9px;margin-top:15px}
+.marcador .acts button{
+  flex:1;font:inherit;font-size:14.5px;font-weight:700;padding:13px;border-radius:9px;border:0;
+  background:var(--acc);color:#0b140a;transition:transform .12s ease,filter .12s ease;
+}
+.marcador .acts button:active{transform:scale(.975)}
+.marcador .acts .sec{background:none;border:1px solid var(--line);color:var(--dim);font-weight:600;flex:0 0 auto;padding:13px 16px}
+.marcador .tabs{display:flex;gap:26px;padding:0 18px;border-bottom:1px solid var(--line)}
+.marcador .tabs a{
+  padding:14px 0;font-size:14px;font-weight:600;color:var(--dim);text-decoration:none;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.marcador .tabs a.on{color:var(--fg);border-bottom-color:var(--acc)}
+.marcador .thead{
+  display:grid;grid-template-columns:26px 1fr 30px 30px 46px;gap:8px;
+  padding:12px 18px 8px;font-size:10.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dim);
+}
+.marcador .row{
+  display:grid;grid-template-columns:26px 1fr 30px 30px 46px;gap:8px;align-items:center;
+  padding:13px 18px;border-top:1px solid var(--line);
+  font-variant-numeric:tabular-nums;
+}
+.marcador .row.me{background:var(--surf)}
+.marcador .pos{font-size:14px;font-weight:600;color:var(--dim);text-align:right}
+.marcador .nm{font-size:15.5px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.marcador .row.me .nm::after{content:"vos";font-size:10px;font-weight:700;color:var(--acc);margin-left:7px;letter-spacing:.06em;text-transform:uppercase}
+.marcador .n{font-size:14px;color:var(--dim);text-align:right}
+.marcador .pts{font-size:22px;font-weight:800;letter-spacing:-.03em;text-align:right;line-height:1}
+.marcador .zn{display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:3px}
+.marcador .z-sube{color:var(--acc)}
+.marcador .z-baja{color:#e0603f}
+.marcador .foot{padding:14px 18px;font-size:12px;color:var(--dim);border-top:1px solid var(--line)}
+
+/* ======================================================================
+   B. CANCHA — claro, bloque verde UVG, sin cards
+   ====================================================================== */
+.cancha{
+  --bg:#f7f8f6; --fg:#16191a; --dim:#616a6b; --line:#e0e4e0;
+  --acc:#0b9e51; --ink:#083d24;
+  background:var(--bg); color:var(--fg);
+  font-family:"Outfit",ui-sans-serif,system-ui,sans-serif;
+}
+.cancha .block{background:var(--acc);color:#fff;padding:16px 18px 20px}
+.cancha .block .brow{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.cancha .block .brand{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.cancha .block .ghost{font:inherit;font-size:12.5px;font-weight:500;color:#fff;background:rgba(255,255,255,.16);border:0;padding:6px 12px;border-radius:20px}
+.cancha .block h1{margin:0 0 5px;font-size:25px;font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.cancha .block .sub{font-size:13.5px;opacity:.82}
+.cancha .turno{padding:16px 18px;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+.cancha .turno .bar{width:3px;align-self:stretch;background:var(--acc);border-radius:3px;flex:0 0 3px}
+.cancha .turno .who{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.cancha .turno .det{font-size:13.5px;color:var(--dim);margin-top:2px}
+.cancha .acts{display:flex;gap:8px;margin-top:13px}
+.cancha .acts button{
+  font:inherit;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;border:0;
+  background:var(--acc);color:#fff;transition:transform .12s ease;
+}
+.cancha .acts button:active{transform:scale(.975)}
+.cancha .acts .sec{background:none;color:var(--dim);border:1px solid var(--line);font-weight:500}
+.cancha .seg{display:flex;gap:2px;margin:16px 18px 0;background:#eaece9;padding:3px;border-radius:9px}
+.cancha .seg a{flex:1;text-align:center;padding:9px;font-size:14px;font-weight:600;color:var(--dim);text-decoration:none;border-radius:7px}
+.cancha .seg a.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(8,61,36,.1)}
+.cancha .thead{
+  display:grid;grid-template-columns:22px 1fr 28px 28px 38px;gap:9px;
+  padding:18px 18px 7px;font-size:11px;font-weight:600;color:var(--dim);letter-spacing:.02em;
+}
+.cancha .row{
+  display:grid;grid-template-columns:22px 1fr 28px 28px 38px;gap:9px;align-items:center;
+  padding:12px 18px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;
+  border-left:3px solid transparent;
+}
+.cancha .row.sube{border-left-color:var(--acc)}
+.cancha .row.baja{border-left-color:#c8553d}
+.cancha .row.me{background:#fff}
+.cancha .pos{text-align:right;font-size:14px;color:var(--dim)}
+.cancha .nm{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cancha .row.me .nm{font-weight:700}
+.cancha .n{text-align:right;font-size:14px;color:var(--dim)}
+.cancha .pts{text-align:right;font-size:16px;font-weight:700;color:var(--ink)}
+.cancha .foot{padding:15px 18px;font-size:12px;color:var(--dim)}
+.cancha .foot .k{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+.cancha .foot .k i{width:3px;height:12px;border-radius:2px;display:inline-block}
+
+/* ======================================================================
+   C. PLANILLA — papel oficial de liga, cero radius, mono en números
+   ====================================================================== */
+.planilla{
+  --bg:#f4f2ed; --fg:#17181a; --dim:#6a6a66; --line:#c9c6bd; --hair:#deddd6;
+  --acc:#a8332c;
+  background:var(--bg); color:var(--fg);
+  font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+}
+.planilla .head{padding:15px 18px 13px;border-bottom:2px solid var(--fg)}
+.planilla .head .org{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.planilla .head .ttl{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:5px}
+.planilla .head h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.01em}
+.planilla .head .no{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--dim)}
+.planilla .turno{padding:14px 18px;border-bottom:1px solid var(--line);background:#fffdf8}
+.planilla .turno .stamp{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--acc);
+  border:1px solid var(--acc);padding:2px 7px;margin-bottom:10px;
+}
+.planilla .turno .who{font-size:16.5px;font-weight:600}
+.planilla .turno .det{font-size:13.5px;color:var(--dim);margin-top:3px;font-family:"IBM Plex Mono",monospace}
+.planilla .acts{display:flex;gap:0;margin-top:14px;border:1px solid var(--fg)}
+.planilla .acts button{
+  flex:1;font:inherit;font-size:13.5px;font-weight:600;padding:11px;border:0;background:var(--fg);color:#fffdf8;
+  transition:transform .1s ease;
+}
+.planilla .acts button:active{transform:translateY(1px)}
+.planilla .acts .sec{background:none;color:var(--fg);border-left:1px solid var(--fg);flex:0 0 auto;padding:11px 16px;font-weight:500}
+.planilla .tabs{display:flex;border-bottom:1px solid var(--line)}
+.planilla .tabs a{
+  flex:1;text-align:center;padding:11px;font-size:12px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dim);text-decoration:none;
+}
+.planilla .tabs a.on{color:var(--fg);background:#fffdf8;box-shadow:inset 0 -2px 0 var(--fg)}
+.planilla .thead{
+  display:grid;grid-template-columns:24px 1fr 26px 26px 34px;gap:8px;padding:11px 18px 6px;
+  font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);
+}
+.planilla .row{
+  display:grid;grid-template-columns:24px 1fr 26px 26px 34px;gap:8px;align-items:baseline;
+  padding:10px 18px;border-top:1px solid var(--hair);
+}
+.planilla .row.me{background:#fffdf8}
+.planilla .pos,.planilla .n,.planilla .pts{font-family:"IBM Plex Mono",monospace;text-align:right;font-variant-numeric:tabular-nums}
+.planilla .pos{font-size:13px;color:var(--dim)}
+.planilla .n{font-size:13px;color:var(--dim)}
+.planilla .pts{font-size:15px;font-weight:600}
+.planilla .nm{font-size:14.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.planilla .row.me .nm{font-weight:700}
+.planilla .nm em{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-left:7px}
+.planilla .row.sube .nm em{color:var(--fg)}
+.planilla .foot{padding:13px 18px;font-size:11.5px;color:var(--dim);border-top:2px solid var(--fg);font-family:"IBM Plex Mono",monospace}
+
+/* ======================================================================
+   D. AIRE — claro, casi monocromo, tipográfico, un solo acento
+   ====================================================================== */
+.aire{
+  --bg:#fbfbfa; --fg:#101112; --dim:#8a8d90; --line:#ebebe9;
+  --acc:#1b6b3a;
+  background:var(--bg); color:var(--fg);
+  font-family:"Outfit",ui-sans-serif,system-ui,sans-serif;
+}
+.aire .bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px}
+.aire .brand{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.aire .ghost{font:inherit;font-size:13px;color:var(--dim);background:none;border:0;padding:6px 0;font-weight:500}
+.aire .hero{padding:8px 20px 26px}
+.aire .hero h1{margin:0;font-size:30px;font-weight:300;letter-spacing:-.035em;line-height:1.08}
+.aire .hero h1 b{font-weight:600}
+.aire .hero .sub{margin-top:9px;font-size:13.5px;color:var(--dim)}
+.aire .turno{margin:0 20px 26px;padding:16px 0;border-top:1px solid var(--fg);border-bottom:1px solid var(--line)}
+.aire .turno .who{font-size:17px;font-weight:500;letter-spacing:-.015em}
+.aire .turno .det{font-size:13.5px;color:var(--dim);margin-top:3px}
+.aire .acts{display:flex;gap:20px;margin-top:15px;align-items:center}
+.aire .acts button{
+  font:inherit;font-size:14px;font-weight:600;padding:11px 22px;border-radius:999px;border:0;
+  background:var(--fg);color:var(--bg);transition:transform .12s ease;
+}
+.aire .acts button:active{transform:scale(.97)}
+.aire .acts .sec{background:none;color:var(--dim);padding:11px 0;font-weight:500;text-decoration:underline;text-underline-offset:4px}
+.aire .seg{display:flex;gap:22px;padding:0 20px 4px}
+.aire .seg a{font-size:14px;font-weight:500;color:var(--dim);text-decoration:none;padding-bottom:9px;border-bottom:1.5px solid transparent}
+.aire .seg a.on{color:var(--fg);border-bottom-color:var(--fg)}
+.aire .thead{
+  display:grid;grid-template-columns:20px 1fr 24px 38px;gap:12px;padding:16px 20px 6px;
+  font-size:11.5px;color:var(--dim);font-weight:500;
+}
+.aire .row{
+  display:grid;grid-template-columns:20px 1fr 24px 38px;gap:12px;align-items:center;
+  padding:14px 20px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;
+}
+.aire .pos{text-align:right;font-size:13.5px;color:var(--dim)}
+.aire .nm{font-size:15.5px;font-weight:400;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aire .row.me .nm{font-weight:600}
+.aire .n{text-align:right;font-size:13.5px;color:var(--dim)}
+.aire .pts{text-align:right;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.aire .dot{width:5px;height:5px;border-radius:50%;background:var(--acc);display:inline-block;margin-left:8px;vertical-align:middle}
+.aire .row.baja .dot{background:#c05a45}
+.aire .foot{padding:18px 20px 22px;font-size:12px;color:var(--dim);line-height:1.7}
+
+/* ---------- tabla comparativa ---------- */
+.compare{margin-top:52px}
+.compare h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 16px}
+.tblwrap{overflow-x:auto;border:1px solid var(--pg-line);border-radius:10px}
+table.cmp{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+table.cmp th,table.cmp td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--pg-line);vertical-align:top}
+table.cmp thead th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-dim);font-weight:600;background:var(--pg-card)}
+table.cmp tbody tr:last-child td{border-bottom:0}
+table.cmp td:first-child{font-weight:600;white-space:nowrap}
+.ok{color:var(--pg-mark);font-weight:600}
+@media (max-width:640px){
+  .dirhead{flex-direction:column;gap:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Cuatro direcciones para el ranking</h1>
+  <p>Cada una cambia la estructura, no solo los colores. El audit dijo que lo que se ve "genérico" es el apilado de tarjetas y los componentes shadcn en su estado por defecto, así que ninguna de estas usa tarjetas para separar secciones. Todas muestran la misma pantalla real: la tabla de la División Mayor con un resultado esperando confirmación.</p>
+  <p class="meta">Mostradas a ancho de teléfono, que es donde se va a usar. Datos de ejemplo, estructura real.</p>
+</header>
+
+<!-- ============ A. MARCADOR ============ -->
+<section class="dir">
+  <div class="dirhead">
+    <div>
+      <h2>A · Marcador</h2>
+      <p class="lead">Lenguaje de transmisión deportiva. Fondo verde-negro, puntos gigantes, cero tarjetas: las filas van a sangre y se separan con una línea de 1px. El acento verde se usa solo para "lo tuyo" y para acción.</p>
+      <p class="tagline"><b>Tipografía:</b> Archivo · <b>Acento:</b> uno (verde) · <b>Radio:</b> 7-9px</p>
+      <div class="swatches">
+        <span class="sw" style="background:#0d1311" title="#0d1311"></span>
+        <span class="sw" style="background:#121a17" title="#121a17"></span>
+        <span class="sw" style="background:#7ad14f" title="#7ad14f"></span>
+        <span class="sw" style="background:#f0b323" title="#f0b323"></span>
+        <span class="sw" style="background:#f0f3f1" title="#f0f3f1"></span>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <div>
+      <div class="phone"><div class="screen marcador">
+        <div class="bar">
+          <div class="brand">Club TM <span>UVG</span></div>
+          <button class="ghost">Mis partidos</button>
+        </div>
+        <div class="turno">
+          <div class="kicker">Te toca confirmar</div>
+          <div class="who">Diego Menchú te ganó 3-1</div>
+          <div class="det">Registrado hace 5 h · se confirma solo <b>mañana 9:40 p.m.</b></div>
+          <div class="acts">
+            <button>Confirmar</button>
+            <button class="sec">No fue así</button>
+          </div>
+        </div>
+        <nav class="tabs">
+          <a href="#" class="on">Mayor</a>
+          <a href="#">Menor</a>
+          <a href="#">Calendario</a>
+        </nav>
+        <div class="thead"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+        <div class="row"><span class="pos">1</span><span class="nm">Kevin Coj<span class="zn z-sube">Premio</span></span><span class="n">9</span><span class="n">8</span><span class="pts">16</span></div>
+        <div class="row"><span class="pos">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="n">7</span><span class="pts">14</span></div>
+        <div class="row me"><span class="pos">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="n">6</span><span class="pts">12</span></div>
+        <div class="row"><span class="pos">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="n">5</span><span class="pts">10</span></div>
+        <div class="row"><span class="pos">5</span><span class="nm">Fernanda Ixcot</span><span class="n">8</span><span class="n">3</span><span class="pts">6</span></div>
+        <div class="row"><span class="pos">6</span><span class="nm">Mateo Quiñónez<span class="zn z-baja">Baja a Menor</span></span><span class="n">9</span><span class="n">1</span><span class="pts">2</span></div>
+        <div class="foot">Fecha límite 24 oct · quedan 38 días</div>
+      </div></div>
+      <p class="cap">Un solo modo, oscuro. Se lee bien en el gimnasio con luz de techo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. CANCHA ============ -->
+<section class="dir">
+  <div class="dirhead">
+    <div>
+      <h2>B · Cancha</h2>
+      <p class="lead">Claro, con el verde UVG en un bloque sólido arriba que ancla la identidad. El resto es casi blanco y las secciones se separan con aire y una línea, no con tarjetas. Las zonas se marcan con una barra de 3px a la izquierda de la fila.</p>
+      <p class="tagline"><b>Tipografía:</b> Outfit · <b>Acento:</b> uno (verde institucional) · <b>Radio:</b> 9px</p>
+      <div class="swatches">
+        <span class="sw" style="background:#f7f8f6"></span>
+        <span class="sw" style="background:#ffffff"></span>
+        <span class="sw" style="background:#0b9e51"></span>
+        <span class="sw" style="background:#083d24"></span>
+        <span class="sw" style="background:#c8553d"></span>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <div>
+      <div class="phone"><div class="screen cancha">
+        <div class="block">
+          <div class="brow">
+            <div class="brand">Club TM UVG</div>
+            <button class="ghost">Mis partidos</button>
+          </div>
+          <h1>Ranking II · 2026</h1>
+          <div class="sub">División Mayor · en juego</div>
+        </div>
+        <div class="turno">
+          <span class="bar"></span>
+          <div>
+            <div class="who">Diego Menchú te ganó 3-1</div>
+            <div class="det">Registrado hace 5 h. Si no respondés, se confirma solo mañana a las 9:40 p.m.</div>
+            <div class="acts">
+              <button>Confirmar</button>
+              <button class="sec">No fue así</button>
+            </div>
+          </div>
+        </div>
+        <nav class="seg"><a href="#" class="on">Mayor</a><a href="#">Menor</a></nav>
+        <div class="thead"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+        <div class="row sube"><span class="pos">1</span><span class="nm">Kevin Coj</span><span class="n">9</span><span class="n">8</span><span class="pts">16</span></div>
+        <div class="row"><span class="pos">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="n">7</span><span class="pts">14</span></div>
+        <div class="row me"><span class="pos">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="n">6</span><span class="pts">12</span></div>
+        <div class="row"><span class="pos">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="n">5</span><span class="pts">10</span></div>
+        <div class="row"><span class="pos">5</span><span class="nm">Fernanda Ixcot</span><span class="n">8</span><span class="n">3</span><span class="pts">6</span></div>
+        <div class="row baja"><span class="pos">6</span><span class="nm">Mateo Quiñónez</span><span class="n">9</span><span class="n">1</span><span class="pts">2</span></div>
+        <div class="foot">
+          <span class="k"><i style="background:#0b9e51"></i> Premio</span>
+          <span class="k"><i style="background:#c8553d"></i> Baja a Menor</span>
+        </div>
+      </div></div>
+      <p class="cap">El bloque verde es lo único saturado. Todo lo demás respira.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C. PLANILLA ============ -->
+<section class="dir">
+  <div class="dirhead">
+    <div>
+      <h2>C · Planilla</h2>
+      <p class="lead">La hoja de resultados de una federación, hecha pantalla. Papel crudo, cero esquinas redondeadas, reglas gruesas arriba y abajo, todos los números en monoespaciada. Un solo acento rojo que se usa exclusivamente para lo que exige acción. Es la que menos puede confundirse con algo generado.</p>
+      <p class="tagline"><b>Tipografía:</b> IBM Plex Sans + IBM Plex Mono · <b>Acento:</b> uno (rojo sello) · <b>Radio:</b> 0</p>
+      <div class="swatches">
+        <span class="sw" style="background:#f4f2ed"></span>
+        <span class="sw" style="background:#fffdf8"></span>
+        <span class="sw" style="background:#17181a"></span>
+        <span class="sw" style="background:#a8332c"></span>
+        <span class="sw" style="background:#c9c6bd"></span>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <div>
+      <div class="phone"><div class="screen planilla">
+        <div class="head">
+          <div class="org">Club de Tenis de Mesa · UVG</div>
+          <div class="ttl">
+            <h1>División Mayor</h1>
+            <span class="no">R-II/26</span>
+          </div>
+        </div>
+        <div class="turno">
+          <span class="stamp">Pendiente de firma</span>
+          <div class="who">Diego Menchú te ganó 3-1</div>
+          <div class="det">reg. 15 sep 16:40 · vence 17 sep 21:40</div>
+          <div class="acts">
+            <button>Confirmar</button>
+            <button class="sec">Disputar</button>
+          </div>
+        </div>
+        <nav class="tabs"><a href="#" class="on">Posiciones</a><a href="#">Calendario</a><a href="#">Mis partidos</a></nav>
+        <div class="thead"><span style="text-align:right">Pos</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">PG</span><span style="text-align:right">Pts</span></div>
+        <div class="row sube"><span class="pos">01</span><span class="nm">Coj, Kevin <em>premio</em></span><span class="n">9</span><span class="n">8</span><span class="pts">16</span></div>
+        <div class="row"><span class="pos">02</span><span class="nm">Sandoval, Andrés</span><span class="n">9</span><span class="n">7</span><span class="pts">14</span></div>
+        <div class="row me"><span class="pos">03</span><span class="nm">Roble, Iván <em>vos</em></span><span class="n">8</span><span class="n">6</span><span class="pts">12</span></div>
+        <div class="row"><span class="pos">04</span><span class="nm">Menchú, Diego</span><span class="n">9</span><span class="n">5</span><span class="pts">10</span></div>
+        <div class="row"><span class="pos">05</span><span class="nm">Ixcot, Fernanda</span><span class="n">8</span><span class="n">3</span><span class="pts">6</span></div>
+        <div class="row"><span class="pos">06</span><span class="nm">Quiñónez, Mateo <em>desciende</em></span><span class="n">9</span><span class="n">1</span><span class="pts">2</span></div>
+        <div class="foot">cierre 24 oct 2026 · 38 d restantes</div>
+      </div></div>
+      <p class="cap">Sin radius, sin sombras, sin gradientes. Solo tipografía y reglas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ D. AIRE ============ -->
+<section class="dir">
+  <div class="dirhead">
+    <div>
+      <h2>D · Aire</h2>
+      <p class="lead">El polo opuesto a Planilla: máxima contención. Casi monocromo, un verde oscuro reducido a un punto de 5px, títulos en peso 300 con un tramo en 600. Nada de barras de color ni bloques; la jerarquía la hacen el tamaño y el espacio. Rápida de leer de un vistazo entre partidos.</p>
+      <p class="tagline"><b>Tipografía:</b> Outfit (300 / 500 / 600) · <b>Acento:</b> uno (verde profundo, mínimo) · <b>Radio:</b> pill solo en botones</p>
+      <div class="swatches">
+        <span class="sw" style="background:#fbfbfa"></span>
+        <span class="sw" style="background:#ebebe9"></span>
+        <span class="sw" style="background:#101112"></span>
+        <span class="sw" style="background:#1b6b3a"></span>
+        <span class="sw" style="background:#c05a45"></span>
+      </div>
+    </div>
+  </div>
+  <div class="stage">
+    <div>
+      <div class="phone"><div class="screen aire">
+        <div class="bar">
+          <div class="brand">Club TM UVG</div>
+          <button class="ghost">Mis partidos</button>
+        </div>
+        <div class="hero">
+          <h1>Vas <b>tercero</b><br>en Mayor.</h1>
+          <div class="sub">12 puntos, 8 jugados, quedan 3.</div>
+        </div>
+        <div class="turno">
+          <div class="who">Diego Menchú te ganó 3-1</div>
+          <div class="det">Se confirma solo mañana a las 9:40 p.m.</div>
+          <div class="acts">
+            <button>Confirmar</button>
+            <button class="sec">No fue así</button>
+          </div>
+        </div>
+        <nav class="seg"><a href="#" class="on">Mayor</a><a href="#">Menor</a><a href="#">Calendario</a></nav>
+        <div class="thead"><span style="text-align:right">#</span><span>Jugador</span><span style="text-align:right">PJ</span><span style="text-align:right">Pts</span></div>
+        <div class="row"><span class="pos">1</span><span class="nm">Kevin Coj<span class="dot"></span></span><span class="n">9</span><span class="pts">16</span></div>
+        <div class="row"><span class="pos">2</span><span class="nm">Andrés Sandoval</span><span class="n">9</span><span class="pts">14</span></div>
+        <div class="row me"><span class="pos">3</span><span class="nm">Iván Roble</span><span class="n">8</span><span class="pts">12</span></div>
+        <div class="row"><span class="pos">4</span><span class="nm">Diego Menchú</span><span class="n">9</span><span class="pts">10</span></div>
+        <div class="row"><span class="pos">5</span><span class="nm">Fernanda Ixcot</span><span class="n">8</span><span class="pts">6</span></div>
+        <div class="row baja"><span class="pos">6</span><span class="nm">Mateo Quiñónez<span class="dot"></span></span><span class="n">9</span><span class="pts">2</span></div>
+        <div class="foot">El punto verde marca zona de premio, el rojo el descenso.<br>Cierra el 24 de octubre.</div>
+      </div></div>
+      <p class="cap">Casi sin color. Lo que manda es el espacio y el peso tipográfico.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARACIÓN ============ -->
+<section class="compare">
+  <h2>Cómo se comparan</h2>
+  <div class="tblwrap">
+  <table class="cmp">
+    <thead>
+      <tr><th>Criterio</th><th>A · Marcador</th><th>B · Cancha</th><th>C · Planilla</th><th>D · Aire</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Se siente "liga en serio"</td><td>Sí, tipo transmisión</td><td>Medio, tipo app de club</td><td class="ok">Sí, tipo federación</td><td>Medio, tipo producto</td></tr>
+      <tr><td>Se siente fluido</td><td>Sí</td><td>Sí</td><td>Menos, es más rígido</td><td class="ok">Mucho</td></tr>
+      <tr><td>Riesgo de verse genérico</td><td>Bajo</td><td>Medio</td><td class="ok">Muy bajo</td><td>Medio-alto</td></tr>
+      <tr><td>Usa identidad UVG</td><td>Solo el verde cool</td><td class="ok">Sí, directo</td><td>No (solo el nombre)</td><td>No</td></tr>
+      <tr><td>Lectura en gimnasio</td><td class="ok">Buena, no encandila</td><td>Buena</td><td>Buena</td><td>Puede brillar mucho</td></tr>
+      <tr><td>Trabajo para llegar ahí</td><td>Medio</td><td>Bajo</td><td>Medio-alto</td><td>Bajo</td></tr>
+      <tr><td>Aguanta crecer (torneos, perfiles)</td><td>Sí</td><td>Sí</td><td class="ok">Muy bien, es un sistema</td><td>Se queda corto con datos densos</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

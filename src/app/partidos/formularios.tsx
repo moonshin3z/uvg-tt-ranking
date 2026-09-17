@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { confirmarResultado, disputarResultado, registrarResultado, type EstadoResultado } from "./acciones";
@@ -17,7 +18,7 @@ function Mensaje({ estado }: { estado: EstadoResultado }) {
     );
   if (estado.ok)
     return (
-      <p role="status" className="text-sm text-zona-ascenso">
+      <p role="status" className="text-sm text-primary">
         {estado.ok}
       </p>
     );
@@ -32,6 +33,17 @@ function Mensaje({ estado }: { estado: EstadoResultado }) {
  * pero en pantalla la primera columna siempre es "yo": por eso los `name` de
  * los campos se eligen según `soyA`.
  */
+/**
+ * Anotar el resultado, copiado de `.anotar` del prototipo.
+ *
+ * Dos contadores de más y menos, un resumen que dice en palabras qué pasó, y
+ * el botón. Nada de escribir números en un campo: en un teléfono, al lado de
+ * una mesa, dos toques son más rápidos y no se equivocan.
+ *
+ * El prototipo no tiene los puntos de cada set en esta pantalla, porque son
+ * opcionales y se llenan solos con el marcador en vivo. Los dejo detrás de una
+ * casilla, escondidos, para no perder la posibilidad de anotarlos a mano.
+ */
 export function FormularioResultado({
   partidoId,
   yo,
@@ -40,6 +52,7 @@ export function FormularioResultado({
   setsA,
   setsB,
   puntos,
+  setsParaGanar,
 }: {
   partidoId: string;
   yo: { id: string; nombre: string };
@@ -48,151 +61,144 @@ export function FormularioResultado({
   setsA: number | null;
   setsB: number | null;
   puntos: { numero: number; puntos_a: number; puntos_b: number }[];
+  /** Cuántos sets hay que ganar en este ranking o torneo. */
+  setsParaGanar: number;
 }) {
   const [estado, accion, pendiente] = useActionState(registrarResultado, vacio);
 
-  const inicialMios = soyA ? setsA : setsB;
-  const inicialSuyos = soyA ? setsB : setsA;
-  const [misSets, setMisSets] = useState(inicialMios?.toString() ?? "");
-  const [susSets, setSusSets] = useState(inicialSuyos?.toString() ?? "");
+  const [mios, setMios] = useState(soyA ? (setsA ?? 0) : (setsB ?? 0));
+  const [suyos, setSuyos] = useState(soyA ? (setsB ?? 0) : (setsA ?? 0));
   const [conPuntos, setConPuntos] = useState(puntos.length > 0);
 
-  const m = Number(misSets);
-  const s = Number(susSets);
-  const validos = misSets !== "" && susSets !== "" && Number.isInteger(m) && Number.isInteger(s) && m !== s;
-  const total = validos ? m + s : 0;
+  const total = mios + suyos;
   const nombreRival = rival.nombre.split(" ")[0];
+  const maximo = Math.max(mios, suyos);
+
+  // El ganador tiene que llegar exactamente a los sets que se juegan: es la
+  // misma regla que valida la base, dicha acá antes de mandar nada.
+  let resumen = `Poné cuántos sets ganó cada uno. Se juega a ${setsParaGanar}.`;
+  let malo = false;
+  if (total > 0 && mios === suyos) {
+    resumen = "Un partido no puede terminar empatado.";
+    malo = true;
+  } else if (maximo > setsParaGanar) {
+    resumen = `Acá se juega a ${setsParaGanar} sets, no a ${maximo}.`;
+    malo = true;
+  } else if (total > 0 && maximo < setsParaGanar) {
+    resumen = `Falta: el que gana tiene que llegar a ${setsParaGanar} sets.`;
+    malo = true;
+  } else if (total > 0) {
+    resumen = mios > suyos ? `Ganaste ${mios}-${suyos}.` : `Ganó ${nombreRival} ${suyos}-${mios}.`;
+  }
+  const listo = total > 0 && mios !== suyos && maximo === setsParaGanar;
 
   const nombreMisSets = soyA ? "sets_a" : "sets_b";
   const nombreSusSets = soyA ? "sets_b" : "sets_a";
   const misPuntos = (p: { puntos_a: number; puntos_b: number }) => (soyA ? p.puntos_a : p.puntos_b);
   const susPuntos = (p: { puntos_a: number; puntos_b: number }) => (soyA ? p.puntos_b : p.puntos_a);
 
+  const contador = (etiqueta: string, valor: number, poner: (n: number) => void) => (
+    <div className="flex items-center gap-3.5 border-b border-linea-suave py-3.5">
+      <span className="min-w-0 flex-1 truncate text-base font-medium">{etiqueta}</span>
+      <span className="flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => poner(valor - 1)}
+          disabled={valor === 0}
+          aria-label={`Quitar un set a ${etiqueta}`}
+          className="grid size-11 place-items-center rounded-full border border-border bg-card text-xl font-medium disabled:opacity-35"
+        >
+          −
+        </button>
+        <span aria-live="polite" className="min-w-[34px] text-center text-[26px] font-bold tabular">
+          {valor}
+        </span>
+        <button
+          type="button"
+          onClick={() => poner(valor + 1)}
+          disabled={valor >= setsParaGanar}
+          aria-label={`Sumar un set a ${etiqueta}`}
+          className="grid size-11 place-items-center rounded-full border border-border bg-card text-xl font-medium disabled:opacity-35"
+        >
+          +
+        </button>
+      </span>
+    </div>
+  );
+
   return (
-    <form action={accion} className="flex flex-col gap-5" noValidate>
+    <form action={accion} className="flex flex-col" noValidate>
       <input type="hidden" name="partido_id" value={partidoId} />
+      <input type="hidden" name={nombreMisSets} value={mios} />
+      <input type="hidden" name={nombreSusSets} value={suyos} />
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-medium">Sets ganados</legend>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="mis-sets" className="truncate">
-              Yo ({yo.nombre.split(" ")[0]})
-            </Label>
-            <Input
-              id="mis-sets"
-              name={nombreMisSets}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={4}
-              required
-              autoFocus
-              value={misSets}
-              onChange={(e) => setMisSets(e.target.value)}
-              className="h-14 text-center text-2xl font-bold"
-            />
+      {contador(yo.nombre, mios, (n) => setMios(Math.max(0, Math.min(setsParaGanar, n))))}
+      {contador(rival.nombre, suyos, (n) => setSuyos(Math.max(0, Math.min(setsParaGanar, n))))}
+
+      <p
+        aria-live="polite"
+        className={cn(
+          "my-[18px] rounded-md px-3.5 py-3.5 text-center text-[15px] font-medium",
+          malo ? "bg-malo-suave text-malo-hondo" : "bg-uvg-suave text-uvg-profundo",
+        )}
+      >
+        {resumen}
+      </p>
+
+      {listo ? (
+        <label className="mb-3 flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={conPuntos}
+            onChange={(e) => setConPuntos(e.target.checked)}
+            className="size-4 accent-primary"
+          />
+          Anotar también los puntos de cada set
+        </label>
+      ) : null}
+
+      {listo && conPuntos ? (
+        <div className="mb-4 flex flex-col gap-2 rounded-lg border border-border p-3">
+          <div className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-2 text-xs text-muted-foreground">
+            <span />
+            <span className="text-center">Yo</span>
+            <span className="truncate text-center">{nombreRival}</span>
           </div>
-          <span aria-hidden className="pb-4 text-xl text-muted-foreground">
-            –
-          </span>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sus-sets" className="truncate">
-              {nombreRival}
-            </Label>
-            <Input
-              id="sus-sets"
-              name={nombreSusSets}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={4}
-              required
-              value={susSets}
-              onChange={(e) => setSusSets(e.target.value)}
-              className="h-14 text-center text-2xl font-bold"
-            />
-          </div>
-        </div>
-
-        <p aria-live="polite" className="min-h-5 text-sm">
-          {validos ? (
-            m > s ? (
-              <span className="font-medium text-zona-ascenso">
-                Ganaste {m}-{s}
-              </span>
-            ) : (
-              <span className="font-medium text-muted-foreground">
-                Ganó {nombreRival} {s}-{m}
-              </span>
-            )
-          ) : misSets !== "" && susSets !== "" && m === s ? (
-            <span className="text-destructive">No puede quedar empatado en sets</span>
-          ) : (
-            <span className="text-muted-foreground">El ganador sale del marcador en sets.</span>
-          )}
-        </p>
-      </fieldset>
-
-      {validos ? (
-        <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={conPuntos}
-              onChange={(e) => setConPuntos(e.target.checked)}
-              className="size-4 accent-primary"
-            />
-            Anotar los puntos de cada set (opcional)
-          </label>
-
-          {conPuntos ? (
-            <div className="flex flex-col gap-2 rounded-lg border p-3">
-              <div className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-2 text-xs text-muted-foreground">
-                <span />
-                <span className="text-center">Yo</span>
-                <span className="truncate text-center">{nombreRival}</span>
+          {Array.from({ length: total }, (_, i) => {
+            const p = puntos[i];
+            return (
+              <div key={i} className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-2">
+                <Label className="text-muted-foreground">Set {i + 1}</Label>
+                <Input
+                  name={soyA ? `set${i + 1}a` : `set${i + 1}b`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={99}
+                  defaultValue={p ? misPuntos(p) : ""}
+                  className="text-center"
+                  aria-label={`Mis puntos en el set ${i + 1}`}
+                />
+                <Input
+                  name={soyA ? `set${i + 1}b` : `set${i + 1}a`}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={99}
+                  defaultValue={p ? susPuntos(p) : ""}
+                  className="text-center"
+                  aria-label={`Puntos de ${rival.nombre} en el set ${i + 1}`}
+                />
               </div>
-              {Array.from({ length: total }, (_, i) => {
-                const p = puntos[i];
-                return (
-                  <div key={i} className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-2">
-                    <Label className="text-muted-foreground">Set {i + 1}</Label>
-                    <Input
-                      name={soyA ? `set${i + 1}a` : `set${i + 1}b`}
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={99}
-                      defaultValue={p ? misPuntos(p) : ""}
-                      className="text-center"
-                      aria-label={`Mis puntos en el set ${i + 1}`}
-                    />
-                    <Input
-                      name={soyA ? `set${i + 1}b` : `set${i + 1}a`}
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      max={99}
-                      defaultValue={p ? susPuntos(p) : ""}
-                      className="text-center"
-                      aria-label={`Puntos de ${rival.nombre} en el set ${i + 1}`}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
+            );
+          })}
         </div>
       ) : null}
 
       <Mensaje estado={estado} />
-      <Button type="submit" size="lg" disabled={pendiente || !validos}>
-        {pendiente ? "Guardando..." : "Registrar resultado"}
+      <Button type="submit" size="lg" disabled={pendiente || !listo} className="w-full">
+        {pendiente ? "Guardando..." : "Registrar"}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        {nombreRival} tendrá que confirmarlo. Si no responde en el plazo, se confirma solo.
-      </p>
     </form>
   );
 }

@@ -9,31 +9,31 @@ export async function Encabezado() {
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span aria-hidden className="inline-block size-3 rounded-full bg-accent" />
+        <Link href="/" className="-mx-2 flex min-h-11 items-center gap-2 px-2 font-semibold tracking-tight">
+          <span aria-hidden className="inline-block size-3 rounded-full bg-uvg" />
           Club TM UVG
         </Link>
 
         {sesion ? (
           <div className="flex items-center gap-2">
             {sesion.usuario.rol === "coordinador" ? (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="min-h-10">
                 <Link href="/admin/ranking">Panel</Link>
               </Button>
             ) : (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="min-h-10">
                 <Link href="/partidos">Mis partidos</Link>
               </Button>
             )}
             <span className="hidden text-sm text-muted-foreground sm:inline">{sesion.usuario.nombre}</span>
             <form action={salir}>
-              <Button type="submit" variant="ghost" size="sm">
+              <Button type="submit" variant="ghost" size="sm" className="min-h-10">
                 Salir
               </Button>
             </form>
           </div>
         ) : (
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="min-h-10">
             <Link href="/ingresar">Ingresar</Link>
           </Button>
         )}

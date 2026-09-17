@@ -12,6 +12,7 @@ import {
   crearRanking,
   crearRankingSiguiente,
   crearSemestre,
+  decidirEmpate,
   generarCalendario,
   generarDesempates,
   sortear,
@@ -29,7 +30,7 @@ function Mensaje({ estado }: { estado: EstadoAccion }) {
     );
   if (estado.ok)
     return (
-      <p role="status" className="text-sm text-zona-ascenso">
+      <p role="status" className="text-sm text-primary">
         {estado.ok}
       </p>
     );
@@ -298,6 +299,68 @@ export function FormularioSiguiente({
       <Button type="submit" variant="accent" disabled={pendiente} className="sm:self-start">
         {pendiente ? "Creando..." : "Crear ranking siguiente"}
       </Button>
+    </form>
+  );
+}
+
+/**
+ * Último recurso de un desempate.
+ *
+ * Aparece solo cuando ya se jugaron los partidos de desempate y los empatados
+ * siguen exactamente iguales: mismos puntos, mismos desempates ganados, misma
+ * diferencia de sets. El coordinador los pone en orden y explica por qué. Sin
+ * esto el ranking no se puede cerrar, así que no es un atajo: es la salida.
+ */
+export function FormularioDecidirEmpate({
+  divisionId,
+  jugadores,
+}: {
+  divisionId: string;
+  jugadores: { id: string; nombre: string }[];
+}) {
+  const [estado, ejecutar, pendiente] = useActionState(decidirEmpate, vacio);
+  return (
+    <form action={ejecutar} className="flex flex-col gap-3 rounded-lg border border-input p-4">
+      <input type="hidden" name="division_id" value={divisionId} />
+      <p className="text-sm">
+        Ni los partidos de desempate ni la diferencia de sets los separaron. Ponelos en el orden que quedan.
+      </p>
+      {jugadores.map((_, i) => (
+        <div key={i} className="flex flex-col gap-1">
+          <Label htmlFor={`orden-${divisionId}-${i}`}>Puesto {i + 1}</Label>
+          <select
+            id={`orden-${divisionId}-${i}`}
+            name="orden"
+            required
+            defaultValue=""
+            className={claseSelect}
+          >
+            <option value="" disabled>
+              Elegí un jugador
+            </option>
+            {jugadores.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
+      <div className="flex flex-col gap-1">
+        <Label htmlFor={`motivo-${divisionId}`}>Por qué se decidió así</Label>
+        <Input
+          id={`motivo-${divisionId}`}
+          name="motivo"
+          required
+          minLength={10}
+          maxLength={300}
+          placeholder="Queda anotado y cualquiera lo va a poder consultar"
+        />
+      </div>
+      <Button type="submit" disabled={pendiente} className="sm:self-start">
+        {pendiente ? "Guardando..." : "Registrar la decisión"}
+      </Button>
+      <Mensaje estado={estado} />
     </form>
   );
 }

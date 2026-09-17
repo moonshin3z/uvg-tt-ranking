@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { figtree } from "@/fonts";
 import "./globals.css";
-import { Encabezado } from "@/components/encabezado";
+import { Pestanas } from "@/components/pestanas";
 
 export const metadata: Metadata = {
   title: {
@@ -32,18 +31,28 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#1b4a8a" },
-    { media: "(prefers-color-scheme: dark)", color: "#16233a" },
-  ],
+  // Un solo modo, un solo color: el mismo fondo de la app, para que la barra
+  // del navegador no corte contra la pantalla.
+  themeColor: "#f1f4f0",
 };
 
+/**
+ * `data-app` es una marca estable para que la auditoría sepa que la URL que
+ * está midiendo es esta aplicación y no otro proyecto ocupando el mismo
+ * puerto. El título no sirve para eso: mientras una página redirige, el
+ * navegador lo reemplaza por "Loading http://...".
+ */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-GT" className={`${GeistSans.variable} ${GeistMono.variable} h-full`} suppressHydrationWarning>
+    <html
+      lang="es-GT"
+      data-app="uvgtt"
+      className={`${figtree.variable} h-full`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col">
-        <Encabezado />
         {children}
+        <Pestanas />
       </body>
     </html>
   );
