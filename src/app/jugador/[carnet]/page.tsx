@@ -9,7 +9,8 @@ import {
   type FilaHistorial,
 } from "@/lib/jugadores/consultas";
 import { normalizarCarnet } from "@/lib/auth/carnet";
-import { CabeceraPerfil, Cifras, Fila, Flecha, Lista, Marcador, Pie, Rotulo } from "@/components/fila";
+import { CabeceraPerfil, Cifras, Fila, FilaAccion, Flecha, Lista, Marcador, Pie, Rotulo } from "@/components/fila";
+import { salir } from "@/app/(auth)/ingresar/acciones";
 
 export async function generateMetadata({ params }: PageProps<"/jugador/[carnet]">): Promise<Metadata> {
   const { carnet } = await params;
@@ -133,7 +134,20 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
         <>
           <Rotulo>Cuenta</Rotulo>
           <Lista>
-            <Fila nombre="Cambiar mi PIN" sub="El que usás para ingresar" href="/cambiar-pin" derecha={<Flecha />} />
+            <Fila
+              nombre="Cambiar mi PIN"
+              sub="El que usás para ingresar"
+              href="/cambiar-pin"
+              derecha={<Flecha />}
+              sinInicial
+            />
+            <FilaAccion
+              nombre="Salir"
+              sub="Cerrar sesión en este teléfono"
+              accion={salir}
+              derecha={<Flecha />}
+              sinInicial
+            />
           </Lista>
         </>
       ) : null}

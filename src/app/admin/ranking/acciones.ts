@@ -56,6 +56,10 @@ const esquemaRanking = z.object({
   n_ascienden: entero(0, 10),
   n_descienden: entero(0, 10),
   horas_autoconfirmacion: z.coerce.number().int().min(0).max(720),
+  // Los límites son los del CHECK `ranking_reglas_juego` de la base. Acá se
+  // repiten para dar un mensaje entendible antes de llegar a Postgres.
+  sets_para_ganar: entero(1, 5),
+  puntos_por_set: entero(5, 21),
 });
 
 export async function crearRanking(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
@@ -79,6 +83,8 @@ export async function crearRanking(_prev: EstadoAccion, formData: FormData): Pro
     p_n_ascienden: d.n_ascienden,
     p_n_descienden: d.n_descienden,
     p_horas_autoconfirmacion: d.horas_autoconfirmacion === 0 ? undefined : d.horas_autoconfirmacion,
+    p_sets_para_ganar: d.sets_para_ganar,
+    p_puntos_por_set: d.puntos_por_set,
   });
   if (error) return { error: mensaje(error, "No se pudo crear el ranking") };
 

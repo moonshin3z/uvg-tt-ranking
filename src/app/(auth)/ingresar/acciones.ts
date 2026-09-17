@@ -33,8 +33,9 @@ export async function ingresar(_prev: EstadoIngreso, formData: FormData): Promis
   redirect(perfil.debe_cambiar_pin ? "/cambiar-pin" : "/");
 }
 
+/** Cierra la sesión en este teléfono y deja la pantalla de ingreso. */
 export async function salir() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/");
+  redirect("/ingresar");
 }

@@ -37,21 +37,28 @@ type Props = {
   derecha?: React.ReactNode;
   /** Si la fila entera lleva a algún lado. Sin esto, la fila queda quieta. */
   href?: Route;
+  /**
+   * Sin el círculo de iniciales. En el prototipo el círculo sale solo cuando
+   * la fila es una persona: las de «Cuenta», que son acciones, no lo llevan.
+   */
+  sinInicial?: boolean;
   /** Debajo de la fila, dentro del mismo bloque. */
   children?: React.ReactNode;
 };
 
 const FILA = "flex w-full items-center gap-3 px-4 py-[11px] min-h-[62px] text-left bg-card";
 
-export function Fila({ nombre, sub, derecha, href, children }: Props) {
-  const contenido = (
+function Contenido({ nombre, sub, derecha, sinInicial }: Omit<Props, "href" | "children">) {
+  return (
     <>
-      <span
-        aria-hidden
-        className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-uvg-suave text-[13px] font-semibold text-uvg-profundo"
-      >
-        {iniciales(nombre)}
-      </span>
+      {sinInicial ? null : (
+        <span
+          aria-hidden
+          className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-uvg-suave text-[13px] font-semibold text-uvg-profundo"
+        >
+          {iniciales(nombre)}
+        </span>
+      )}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15.5px] font-medium tracking-[-0.01em]">{nombre}</span>
         {sub ? <span className="mt-px block truncate text-[13px] text-muted-foreground">{sub}</span> : null}
@@ -59,6 +66,10 @@ export function Fila({ nombre, sub, derecha, href, children }: Props) {
       {derecha ? <span className="flex shrink-0 items-center gap-2">{derecha}</span> : null}
     </>
   );
+}
+
+export function Fila({ nombre, sub, derecha, href, sinInicial, children }: Props) {
+  const contenido = <Contenido nombre={nombre} sub={sub} derecha={derecha} sinInicial={sinInicial} />;
 
   return (
     <li className="border-b border-linea-suave last:border-b-0">
@@ -70,6 +81,32 @@ export function Fila({ nombre, sub, derecha, href, children }: Props) {
         <div className={FILA}>{contenido}</div>
       )}
       {children ? <div className="flex flex-col gap-2 bg-card px-4 pb-3">{children}</div> : null}
+    </li>
+  );
+}
+
+/**
+ * La misma fila, pero que hace algo en vez de llevar a algún lado.
+ *
+ * Va con un formulario y no con un enlace a propósito. Salir por un enlace
+ * sería un GET, y Next precarga los enlaces que ve en pantalla: bastaría con
+ * que la fila entrara al viewport para cerrarle la sesión a alguien que solo
+ * estaba mirando su perfil.
+ */
+export function FilaAccion({
+  nombre,
+  sub,
+  derecha,
+  sinInicial,
+  accion,
+}: Omit<Props, "href" | "children"> & { accion: () => Promise<void> }) {
+  return (
+    <li className="border-b border-linea-suave last:border-b-0">
+      <form action={accion}>
+        <button type="submit" className={cn(FILA, "active:bg-uvg-suave")}>
+          <Contenido nombre={nombre} sub={sub} derecha={derecha} sinInicial={sinInicial} />
+        </button>
+      </form>
     </li>
   );
 }

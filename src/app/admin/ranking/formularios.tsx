@@ -94,6 +94,34 @@ export function FormularioRanking({ semestres }: { semestres: { id: string; nomb
         </div>
       </div>
 
+      {/*
+        El formato va acá arriba y no dentro de «Parámetros del reglamento»
+        porque no se puede cambiar después: `sets_para_ganar` con partidos ya
+        registrados deja los resultados viejos contradiciendo la configuración
+        nueva. Es la única decisión de esta pantalla que no tiene vuelta atrás.
+      */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="sets_para_ganar">Formato del partido</Label>
+          <select id="sets_para_ganar" name="sets_para_ganar" className={claseSelect} defaultValue="2">
+            <option value="1">Un solo set</option>
+            <option value="2">Al mejor de 3 (gana 2 sets)</option>
+            <option value="3">Al mejor de 5 (gana 3 sets)</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="puntos_por_set">Puntos por set</Label>
+          <select id="puntos_por_set" name="puntos_por_set" className={claseSelect} defaultValue="11">
+            <option value="11">11 puntos</option>
+            <option value="21">21 puntos</option>
+          </select>
+        </div>
+        <p className="text-sm text-muted-foreground sm:col-span-2">
+          Esto no se puede cambiar una vez que se registre el primer resultado. Confirmalo con el club antes de crear
+          el ranking.
+        </p>
+      </div>
+
       <details className="rounded-lg border p-3">
         <summary className="cursor-pointer text-sm font-medium">Parámetros del reglamento</summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
