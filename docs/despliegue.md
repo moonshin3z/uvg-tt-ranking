@@ -69,6 +69,12 @@ En supabase.com, crear un proyecto. Región: la más cercana, `us-east-1`.
 Guardá la contraseña de la base donde no se pierda; hace falta para el `db push`
 y para conectarse con `psql`.
 
+**Antes del `db push`**, en el panel: **Database > Extensions**, habilitá
+`pg_cron`. El orden importa. La migración 19 programa la autoconfirmación sola
+si encuentra `pg_cron` habilitado, y si no lo encuentra solo deja un aviso en el
+log y sigue. Habilitándolo antes, el paso 4 se vuelve una verificación en lugar
+de trabajo.
+
 Después, desde la carpeta del proyecto:
 
 ```
@@ -77,7 +83,7 @@ npx supabase link --project-ref <el ref del proyecto>
 npx supabase db push
 ```
 
-`db push` aplica las 16 migraciones en orden. **No corre la semilla**, y así
+`db push` aplica las 17 migraciones en orden. **No corre la semilla**, y así
 tiene que ser: la semilla es de desarrollo y crea nueve usuarios de prueba con
 el PIN 123456.
 
@@ -86,6 +92,18 @@ Verificá que aplicaron todas:
 ```
 npx supabase migration list
 ```
+
+Las 17 tienen que aparecer con fecha en las dos columnas, local y remoto.
+
+Después, en el SQL Editor del panel, pegá entero `supabase/verificar-nube.sql`.
+Solo lee: no escribe ni borra nada. Devuelve una fila por revisión, y las diez
+tienen que decir OK. Comprueba lo que `migration list` no ve: que RLS esté
+encendida en todas las tablas, que `debe_cambiar_pin` no se pueda leer desde el
+navegador, que no haya usuarios de prueba, y que estén las 12 funciones del
+sistema y la vista de posiciones.
+
+Al final del archivo hay una consulta aparte para el cron, que va después de
+habilitar `pg_cron`.
 
 ## 3. El primer coordinador (vos)
 
@@ -111,8 +129,18 @@ update public.usuario
 ## 4. Autoconfirmación (vos)
 
 Los resultados se confirman solos al cumplirse el plazo, y eso lo dispara
-`pg_cron`. En el panel, Database > Extensions, habilitá `pg_cron`. Después, en
-el SQL Editor:
+`pg_cron`. Si lo habilitaste antes del `db push`, ya quedó programado. Comprobalo
+en el SQL Editor:
+
+```sql
+select jobname, schedule, active from cron.job;
+```
+
+Tiene que aparecer `autoconfirmar-partidos` con `15 * * * *` y `active = true`.
+
+Si la consulta no devuelve nada, es que `pg_cron` no estaba habilitado cuando
+corrieron las migraciones. Habilitalo en **Database > Extensions** y programalo
+a mano:
 
 ```sql
 select cron.schedule(
@@ -124,12 +152,6 @@ select cron.schedule(
 Sin esto, la autoconfirmación solo ocurre cuando alguien abre la aplicación, que
 en la práctica funciona pero no es de fiar: si nadie entra en tres días, el
 plazo no corre.
-
-Para comprobar que quedó:
-
-```sql
-select jobname, schedule, active from cron.job;
-```
 
 ## 5. Vercel (vos)
 
