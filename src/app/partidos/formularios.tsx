@@ -110,7 +110,7 @@ export function FormularioResultado({
         >
           −
         </button>
-        <span aria-live="polite" className="min-w-[34px] text-center text-[26px] font-bold tabular">
+        <span aria-live="polite" className="tabular min-w-[34px] text-center text-[26px] font-bold">
           {valor}
         </span>
         <button

@@ -95,7 +95,7 @@ export function ListaJugadores({
           aria-label="Buscar jugador"
           className="sm:max-w-xs"
         />
-        <label className="min-h-10 flex items-center gap-2 text-sm">
+        <label className="flex min-h-10 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={soloActivos}

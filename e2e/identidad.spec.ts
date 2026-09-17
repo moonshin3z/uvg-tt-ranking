@@ -17,9 +17,7 @@ function url(nombre: string) {
   return pathToFileURL(resolve(__dirname, "fixtures", nombre)).href;
 }
 
-test("acepta una página de esta app aunque el título sea el de una redirección en vuelo", async ({
-  page,
-}) => {
+test("acepta una página de esta app aunque el título sea el de una redirección en vuelo", async ({ page }) => {
   await page.goto(url("redirigiendo.html"));
   await expect(confirmarQueEsLaApp(page, 2_000)).resolves.toBeUndefined();
 });

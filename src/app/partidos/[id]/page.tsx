@@ -57,94 +57,100 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
 
   return (
     <>
-    <Tope titulo={juego ? rival.nombre : `${p.a.nombre} vs. ${p.b.nombre}`} sub={contexto} atras={volver as Route} />
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-card pb-8">
-
-      <div className="bg-card px-4 pt-[22px] pb-7">
-        {meTocaResponder ? (
-          <>
-            <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
-              {rival.nombre.split(" ")[0]} dice que te {misSets != null && susSets != null && misSets > susSets ? "perdió" : "ganó"}
-            </p>
-            <p className="mt-1 text-[13.5px] text-muted-foreground text-pretty">
-              {contexto} · lo registró {rival.nombre.split(" ")[0]}
-            </p>
-
-            <TarjetaMarcador
-              marcador={`${misSets ?? 0} - ${susSets ?? 0}`}
-              sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
-            />
-
-            <Pila>
-              <BotonesConfirmar partidoId={p.id} />
-            </Pila>
-
-            {ranking && textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion) ? (
-              <Aviso>Si no respondés, {textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion)}.</Aviso>
-            ) : null}
-          </>
-        ) : puedeRegistrar ? (
-          <>
-            <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
-              {juego ? `vs. ${rival.nombre}` : `${p.a.nombre} vs. ${p.b.nombre}`}
-            </p>
-            <p className="mt-1 text-[13.5px] text-muted-foreground text-pretty">
-              {contexto} · {p.estado === "jugado" ? "corregir el resultado" : "todavía sin jugar"}
-            </p>
-            {marcador === "no" ? (
-              <p role="alert" className="mt-4 rounded-md bg-malo-suave px-3.5 py-3 text-[14px] text-malo-hondo">
-                No se pudo abrir el marcador. Anotá el resultado a mano acá abajo.
+      <Tope
+        titulo={juego ? rival.nombre : `${p.a.nombre} vs. ${p.b.nombre}`}
+        sub={contexto}
+        atras={volver as Route}
+      />
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-card pb-8">
+        <div className="bg-card px-4 pt-[22px] pb-7">
+          {meTocaResponder ? (
+            <>
+              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
+                {rival.nombre.split(" ")[0]} dice que te{" "}
+                {misSets != null && susSets != null && misSets > susSets ? "perdió" : "ganó"}
               </p>
-            ) : null}
+              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
+                {contexto} · lo registró {rival.nombre.split(" ")[0]}
+              </p>
 
-            {/* El camino largo del prototipo: llevar el marcador en vivo y que
-                el resultado se registre solo al terminar. */}
-            <form action={abrirMarcador} className="mt-5">
-              <input type="hidden" name="partido_id" value={p.id} />
-              <Button type="submit" variant="outline" size="lg" className="w-full">
-                Llevar el marcador en vivo
-              </Button>
-            </form>
-
-            <div className="mt-3">
-              <FormularioResultado
-                partidoId={p.id}
-                yo={juego ? { id: propio.id, nombre: propio.nombre } : { id: p.a.id, nombre: p.a.nombre }}
-                rival={{ id: rival.id, nombre: rival.nombre }}
-                soyA={soyA}
-                setsA={p.sets_a}
-                setsB={p.sets_b}
-                puntos={puntos}
-                setsParaGanar={setsParaGanar}
-              />
-            </div>
-            <Aviso>Cualquiera de los dos puede registrarlo. El otro lo confirma.</Aviso>
-          </>
-        ) : (
-          /* Cerrado, en disputa o anulado: antes esta pantalla te devolvía a la
-             lista sin decir nada. Ahora muestra lo que pasó. */
-          <>
-            <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">vs. {rival.nombre}</p>
-            <p className="mt-1 text-[13.5px] text-muted-foreground text-pretty">
-              {contexto} ·{" "}
-              {p.estado === "disputado"
-                ? "en disputa, lo va a resolver el coordinador"
-                : p.estado === "anulado"
-                  ? "anulado"
-                  : "resultado confirmado"}
-            </p>
-            {p.estado !== "anulado" && misSets != null && susSets != null ? (
               <TarjetaMarcador
-                marcador={`${misSets} - ${susSets}`}
+                marcador={`${misSets ?? 0} - ${susSets ?? 0}`}
                 sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
               />
-            ) : null}
-            {p.disputa_motivo ? <Aviso>Motivo de la disputa: {p.disputa_motivo}</Aviso> : null}
-            {p.resolucion ? <Aviso>Resolución del coordinador: {p.resolucion}</Aviso> : null}
-          </>
-        )}
-      </div>
-    </main>
+
+              <Pila>
+                <BotonesConfirmar partidoId={p.id} />
+              </Pila>
+
+              {ranking && textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion) ? (
+                <Aviso>
+                  Si no respondés, {textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion)}.
+                </Aviso>
+              ) : null}
+            </>
+          ) : puedeRegistrar ? (
+            <>
+              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
+                {juego ? `vs. ${rival.nombre}` : `${p.a.nombre} vs. ${p.b.nombre}`}
+              </p>
+              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
+                {contexto} · {p.estado === "jugado" ? "corregir el resultado" : "todavía sin jugar"}
+              </p>
+              {marcador === "no" ? (
+                <p role="alert" className="mt-4 rounded-md bg-malo-suave px-3.5 py-3 text-[14px] text-malo-hondo">
+                  No se pudo abrir el marcador. Anotá el resultado a mano acá abajo.
+                </p>
+              ) : null}
+
+              {/* El camino largo del prototipo: llevar el marcador en vivo y que
+                el resultado se registre solo al terminar. */}
+              <form action={abrirMarcador} className="mt-5">
+                <input type="hidden" name="partido_id" value={p.id} />
+                <Button type="submit" variant="outline" size="lg" className="w-full">
+                  Llevar el marcador en vivo
+                </Button>
+              </form>
+
+              <div className="mt-3">
+                <FormularioResultado
+                  partidoId={p.id}
+                  yo={juego ? { id: propio.id, nombre: propio.nombre } : { id: p.a.id, nombre: p.a.nombre }}
+                  rival={{ id: rival.id, nombre: rival.nombre }}
+                  soyA={soyA}
+                  setsA={p.sets_a}
+                  setsB={p.sets_b}
+                  puntos={puntos}
+                  setsParaGanar={setsParaGanar}
+                />
+              </div>
+              <Aviso>Cualquiera de los dos puede registrarlo. El otro lo confirma.</Aviso>
+            </>
+          ) : (
+            /* Cerrado, en disputa o anulado: antes esta pantalla te devolvía a la
+             lista sin decir nada. Ahora muestra lo que pasó. */
+            <>
+              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">vs. {rival.nombre}</p>
+              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
+                {contexto} ·{" "}
+                {p.estado === "disputado"
+                  ? "en disputa, lo va a resolver el coordinador"
+                  : p.estado === "anulado"
+                    ? "anulado"
+                    : "resultado confirmado"}
+              </p>
+              {p.estado !== "anulado" && misSets != null && susSets != null ? (
+                <TarjetaMarcador
+                  marcador={`${misSets} - ${susSets}`}
+                  sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
+                />
+              ) : null}
+              {p.disputa_motivo ? <Aviso>Motivo de la disputa: {p.disputa_motivo}</Aviso> : null}
+              {p.resolucion ? <Aviso>Resolución del coordinador: {p.resolucion}</Aviso> : null}
+            </>
+          )}
+        </div>
+      </main>
     </>
   );
 }

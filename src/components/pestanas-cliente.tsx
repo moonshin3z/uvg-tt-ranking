@@ -45,7 +45,7 @@ export function PestanasCliente({ pestanas }: { pestanas: Pestana[] }) {
             <span>
               {p.texto}
               {p.bolita ? (
-                <span className="ml-1 inline-block min-w-[18px] rounded-full bg-destructive px-[5px] align-[1px] text-[10.5px] font-bold leading-[18px] text-destructive-foreground">
+                <span className="ml-1 inline-block min-w-[18px] rounded-full bg-destructive px-[5px] align-[1px] text-[10.5px] leading-[18px] font-bold text-destructive-foreground">
                   {p.bolita}
                 </span>
               ) : null}

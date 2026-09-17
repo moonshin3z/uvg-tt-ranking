@@ -30,8 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: supabase/setup-cli@v1
         with:
           version: latest
       - run: supabase db start
       - run: supabase db reset --local
+      # Las 18 comprobaciones de supabase/pruebas/: permisos, reglas del juego,
+      # orden, desempates y marcador. Cada una se probó en los dos sentidos
+      # (falla sin el arreglo, pasa con el arreglo), así que si una se pone
+      # roja acá es que una migración volvió a abrir un agujero.
+      - run: node scripts/pruebas-sql.mjs

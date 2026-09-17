@@ -161,7 +161,7 @@ export default async function PaginaPartidosAdmin() {
                     </p>
                     <Link
                       href={`/partidos/${p.id}`}
-                      className="shrink-0 inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline"
+                      className="inline-flex min-h-10 shrink-0 items-center text-primary underline-offset-4 hover:underline"
                     >
                       Registrar
                     </Link>

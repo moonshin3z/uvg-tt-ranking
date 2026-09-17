@@ -45,35 +45,47 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <>
       <Tope titulo="Panel" sub="Coordinación del club" />
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
-      <nav aria-label="Panel" className="flex gap-1 overflow-x-auto rounded-lg bg-secondary p-1 text-sm font-medium">
-        <Link href="/admin/ranking" className="inline-flex min-h-10 items-center rounded-md px-3 py-2 hover:bg-background">
-          Ranking
-        </Link>
-        <Link href="/admin/partidos" className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-3 py-2 hover:bg-background">
-          Partidos
-          {disputas > 0 ? (
-            <span
-              aria-label={`${disputas} en disputa`}
-              className="inline-flex size-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground"
-            >
-              {disputas}
-            </span>
-          ) : sinConfirmar > 0 ? (
-            <span
-              aria-label={`${sinConfirmar} sin confirmar`}
-              className="inline-flex size-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground"
-            >
-              {sinConfirmar}
-            </span>
-          ) : null}
-        </Link>
-        <Link href="/admin/jugadores" className="inline-flex min-h-10 items-center rounded-md px-3 py-2 hover:bg-background">
-          Jugadores
-        </Link>
-      </nav>
-      {children}
-    </div>
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
+        <nav
+          aria-label="Panel"
+          className="flex gap-1 overflow-x-auto rounded-lg bg-secondary p-1 text-sm font-medium"
+        >
+          <Link
+            href="/admin/ranking"
+            className="inline-flex min-h-10 items-center rounded-md px-3 py-2 hover:bg-background"
+          >
+            Ranking
+          </Link>
+          <Link
+            href="/admin/partidos"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-3 py-2 hover:bg-background"
+          >
+            Partidos
+            {disputas > 0 ? (
+              <span
+                aria-label={`${disputas} en disputa`}
+                className="inline-flex size-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground"
+              >
+                {disputas}
+              </span>
+            ) : sinConfirmar > 0 ? (
+              <span
+                aria-label={`${sinConfirmar} sin confirmar`}
+                className="inline-flex size-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground"
+              >
+                {sinConfirmar}
+              </span>
+            ) : null}
+          </Link>
+          <Link
+            href="/admin/jugadores"
+            className="inline-flex min-h-10 items-center rounded-md px-3 py-2 hover:bg-background"
+          >
+            Jugadores
+          </Link>
+        </nav>
+        {children}
+      </div>
     </>
   );
 }

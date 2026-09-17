@@ -46,9 +46,4 @@ export const RUTAS_PUBLICAS = [
 export const RUTAS_JUGADOR = ["/partidos"];
 
 /** Rutas que necesitan sesión de coordinador. */
-export const RUTAS_COORDINADOR = [
-  "/admin",
-  "/admin/jugadores",
-  "/admin/ranking",
-  "/admin/partidos",
-];
+export const RUTAS_COORDINADOR = ["/admin", "/admin/jugadores", "/admin/ranking", "/admin/partidos"];

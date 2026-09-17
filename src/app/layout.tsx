@@ -44,12 +44,7 @@ export const viewport: Viewport = {
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="es-GT"
-      data-app="uvgtt"
-      className={`${figtree.variable} h-full`}
-      suppressHydrationWarning
-    >
+    <html lang="es-GT" data-app="uvgtt" className={`${figtree.variable} h-full`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         {children}
         <Pestanas />

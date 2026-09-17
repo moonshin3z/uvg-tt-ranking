@@ -19,6 +19,7 @@
   como texto sobre el fondo, 5.22:1 con blanco encima, 4.67:1 sobre el verde
   lavado. El primer candidato fue `#098645`, que pasaba con blanco encima
   (4.66:1) pero no como texto sobre el fondo (4.20:1).
+
 - **Un solo acento y un solo rojo.** Verde para lo bueno (premio y ascenso),
   rojo `#ab3f2b` para el descenso y para los avisos. No hay un tercer color.
 - **Las zonas de la tabla se marcan con una barra de 3px en el borde**, sin
@@ -40,13 +41,13 @@
 
 ## Archivos
 
-| Archivo | Qué contiene |
-|---|---|
-| `v1-direcciones-paleta.html` | Cuatro direcciones de paleta: Marcador, Cancha, Planilla, Aire. Sin usar |
-| `v2-estructura.html` | Cuatro estructuras posibles, de antes de que existieran torneos y marcador |
-| `v3-estructura-definitiva.html` | La estructura elegida, con el mapa de URLs |
-| `v4-prototipo.html` | **El prototipo navegable.** Es la referencia viva del diseño |
-| `responsive.md` | Cómo se verifica que todo se adapte, y el resultado de las corridas |
+| Archivo                         | Qué contiene                                                               |
+| ------------------------------- | -------------------------------------------------------------------------- |
+| `v1-direcciones-paleta.html`    | Cuatro direcciones de paleta: Marcador, Cancha, Planilla, Aire. Sin usar   |
+| `v2-estructura.html`            | Cuatro estructuras posibles, de antes de que existieran torneos y marcador |
+| `v3-estructura-definitiva.html` | La estructura elegida, con el mapa de URLs                                 |
+| `v4-prototipo.html`             | **El prototipo navegable.** Es la referencia viva del diseño               |
+| `responsive.md`                 | Cómo se verifica que todo se adapte, y el resultado de las corridas        |
 
 El prototipo trae interruptores para probar tipografías, estados de datos
 (con datos, cargando, sin ranking, sin conexión), estado del club (con torneo

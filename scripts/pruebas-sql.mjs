@@ -35,11 +35,7 @@ function contenedor() {
   }
   const nombre = salida.trim().split("\n").filter(Boolean)[0];
   if (!nombre) {
-    fallar(
-      "La base local de Supabase no está corriendo.",
-      "",
-      "    npm run db:start",
-    );
+    fallar("La base local de Supabase no está corriendo.", "", "    npm run db:start");
   }
   return nombre;
 }
@@ -86,7 +82,5 @@ for (const archivo of archivos) {
   }
 }
 
-console.log(
-  `\n${pasaron} comprobaciones pasaron` + (fallaron ? `, ${fallaron} archivo(s) con fallas` : "") + "\n",
-);
+console.log(`\n${pasaron} comprobaciones pasaron` + (fallaron ? `, ${fallaron} archivo(s) con fallas` : "") + "\n");
 process.exit(fallaron ? 1 : 0);

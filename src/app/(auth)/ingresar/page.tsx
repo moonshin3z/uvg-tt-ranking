@@ -32,10 +32,16 @@ export default async function PaginaIngresar({ searchParams }: PageProps<"/ingre
           <FormularioIngreso />
         </CardContent>
         <CardFooter className="flex-col items-start gap-1 text-sm text-muted-foreground">
-          <Link href="/" className="inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/"
+            className="inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline"
+          >
             Ver la tabla sin ingresar
           </Link>
-          <Link href="/reglas" className="inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/reglas"
+            className="inline-flex min-h-10 items-center text-primary underline-offset-4 hover:underline"
+          >
             Cómo funciona el ranking
           </Link>
         </CardFooter>

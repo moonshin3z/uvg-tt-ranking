@@ -328,13 +328,7 @@ export function FormularioDecidirEmpate({
       {jugadores.map((_, i) => (
         <div key={i} className="flex flex-col gap-1">
           <Label htmlFor={`orden-${divisionId}-${i}`}>Puesto {i + 1}</Label>
-          <select
-            id={`orden-${divisionId}-${i}`}
-            name="orden"
-            required
-            defaultValue=""
-            className={claseSelect}
-          >
+          <select id={`orden-${divisionId}-${i}`} name="orden" required defaultValue="" className={claseSelect}>
             <option value="" disabled>
               Elegí un jugador
             </option>

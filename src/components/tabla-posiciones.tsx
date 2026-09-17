@@ -25,7 +25,7 @@ export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
     { valor: "menor", etiqueta: "Menor" },
   ];
   return (
-    <nav aria-label="División" className="mt-3 mb-3.5 flex gap-0.5 rounded-md bg-linea-suave p-0.5 mx-4">
+    <nav aria-label="División" className="mx-4 mt-3 mb-3.5 flex gap-0.5 rounded-md bg-linea-suave p-0.5">
       {opciones.map((o) => (
         <Link
           key={o.valor}
@@ -82,9 +82,7 @@ export function TablaPosiciones({
 
   return (
     <table className="w-full table-fixed border-collapse bg-card">
-      <caption className="sr-only">
-        Posiciones de la División {division === "mayor" ? "Mayor" : "Menor"}
-      </caption>
+      <caption className="sr-only">Posiciones de la División {division === "mayor" ? "Mayor" : "Menor"}</caption>
       <colgroup>
         <col className="w-11" />
         <col />
@@ -106,7 +104,7 @@ export function TablaPosiciones({
           <th scope="col" className="px-1 pb-[9px] text-right font-normal">
             PG
           </th>
-          <th scope="col" className="px-1 pb-[9px] pr-4 text-right font-normal">
+          <th scope="col" className="px-1 pr-4 pb-[9px] text-right font-normal">
             Pts
           </th>
         </tr>
@@ -127,7 +125,7 @@ export function TablaPosiciones({
               >
                 {f.posicion}
               </td>
-              <th scope="row" className="h-[46px] px-1 text-left text-[15.5px] font-[inherit]">
+              <th scope="row" className="h-[46px] px-1 text-left font-[inherit] text-[15.5px]">
                 {/* El enlace ocupa la fila entera, no solo la línea de texto.
                     Medía 23px de alto: para tocar el nombre había que apuntar
                     a una franja más angosta que el dedo. */}
@@ -138,10 +136,14 @@ export function TablaPosiciones({
                   <span className="truncate">{f.nombre}</span>
                 </Link>
               </th>
-              <td className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}>
+              <td
+                className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}
+              >
                 {f.pj}
               </td>
-              <td className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}>
+              <td
+                className={cn("h-[46px] px-1 text-right text-[14px] text-muted-foreground", yo && "text-foreground")}
+              >
                 {f.pg}
               </td>
               <td className="h-[46px] px-1 pr-4 text-right text-[16px] font-semibold">{f.pts}</td>

@@ -35,6 +35,33 @@ git push -u origin main
 Privado porque el reglamento, los nombres y los carnets del club no tienen por
 qué ser públicos, aunque el código no tenga secretos.
 
+### Si el push se rechaza por `.github/workflows/ci.yml`
+
+```
+! [remote rejected] main -> main (refusing to allow an OAuth App to create or
+update workflow .github/workflows/ci.yml without workflow scope)
+```
+
+No es un problema del código. GitHub trata los archivos de
+`.github/workflows/` como un permiso aparte: subir uno equivale a poder correr
+comandos en la infraestructura de GitHub con tu cuenta, así que la credencial
+necesita el permiso `workflow`, y el inicio de sesión normal de Git para
+Windows no lo pide.
+
+La salida es darle a Git una credencial que sí lo tenga:
+
+1. En GitHub: **Settings → Developer settings → Personal access tokens →
+   Tokens (classic) → Generate new token (classic)**.
+2. Marcar **`repo`** y **`workflow`**. Vencimiento: 90 días está bien.
+3. Copiar el token (se ve una sola vez).
+4. Borrar la credencial vieja, si no Windows la sigue usando sin preguntar:
+   **Panel de control → Administrador de credenciales → Credenciales de
+   Windows**, y quitar `git:https://github.com`.
+5. `git push -u origin main`. Cuando pida usuario va tu usuario de GitHub, y
+   cuando pida contraseña va el token, no tu contraseña.
+
+El token es una contraseña: no va en ningún archivo del proyecto.
+
 ## 2. Supabase en la nube (vos)
 
 En supabase.com, crear un proyecto. Región: la más cercana, `us-east-1`.
@@ -111,11 +138,11 @@ Importar el repositorio de GitHub. Framework: Next.js, detectado solo.
 Variables de entorno, las tres, para Production y Preview. Los valores están en
 Project Settings > API del proyecto de Supabase:
 
-| Variable | De dónde sale |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | la clave publicable |
-| `SUPABASE_SERVICE_ROLE_KEY` | la clave secreta. **Sin** el prefijo `NEXT_PUBLIC_` |
+| Variable                        | De dónde sale                                       |
+| ------------------------------- | --------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Project URL                                         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | la clave publicable                                 |
+| `SUPABASE_SERVICE_ROLE_KEY`     | la clave secreta. **Sin** el prefijo `NEXT_PUBLIC_` |
 
 Si a la tercera le pones `NEXT_PUBLIC_`, queda en el JavaScript que descarga
 cualquiera y se salta toda la seguridad de la base. No es una advertencia

@@ -33,11 +33,11 @@ corrida decía "4 passed" como si todo estuviera bien. Se pueden cambiar con
 
 ## Los tres tamaños
 
-| Ancho | Qué es | Por qué está |
-|---|---|---|
-| 320 | iPhone SE de primera generación, Android baratos | El piso real. En el club va a haber teléfonos viejos, y quien tenga uno no va a reportar que la app no le sirve: va a dejar de usarla. Es el único ancho donde aparecieron defectos de verdad. |
-| 390 | El teléfono de casi todos | Lo que va a ver la mayoría. |
-| 1440 | Laptop | El coordinador arma el ranking y resuelve disputas desde una computadora, no desde el celular. |
+| Ancho | Qué es                                           | Por qué está                                                                                                                                                                                   |
+| ----- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 320   | iPhone SE de primera generación, Android baratos | El piso real. En el club va a haber teléfonos viejos, y quien tenga uno no va a reportar que la app no le sirve: va a dejar de usarla. Es el único ancho donde aparecieron defectos de verdad. |
+| 390   | El teléfono de casi todos                        | Lo que va a ver la mayoría.                                                                                                                                                                    |
+| 1440  | Laptop                                           | El coordinador arma el ranking y resuelve disputas desde una computadora, no desde el celular.                                                                                                 |
 
 Antes eran siete: 320, 360, 390, 430, 768, 1024 y 1440. Se bajaron a tres porque
 entre 320 y 430 casi nunca se rompe algo en un ancho y no en los otros, y los
@@ -50,13 +50,13 @@ por precaución.
 
 ## Las cinco reglas que se revisan
 
-| Regla | Qué falla |
-|---|---|
-| `sin-scroll-horizontal` | La página entera se puede desplazar a los lados. Casi siempre es un ancho fijo en px que alguien dejó. |
-| `nada-se-sale` | Un elemento llega más a la derecha que el borde de la pantalla. No cuenta si vive dentro de algo con `overflow-x: auto`, porque eso se hizo a propósito (el cuadro del torneo, por ejemplo). |
-| `area-tactil` | Algo que se toca mide menos de 40px de alto o de ancho. Los enlaces sueltos dentro de un párrafo no cuentan: son texto, no botones. |
-| `texto-cortado` | El texto no cabe en su caja, la caja lo recorta y no hay puntos suspensivos. El usuario pierde información sin enterarse. |
-| `letra-minima` | Texto por debajo de 12px. |
+| Regla                   | Qué falla                                                                                                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sin-scroll-horizontal` | La página entera se puede desplazar a los lados. Casi siempre es un ancho fijo en px que alguien dejó.                                                                                       |
+| `nada-se-sale`          | Un elemento llega más a la derecha que el borde de la pantalla. No cuenta si vive dentro de algo con `overflow-x: auto`, porque eso se hizo a propósito (el cuadro del torneo, por ejemplo). |
+| `area-tactil`           | Algo que se toca mide menos de 40px de alto o de ancho. Los enlaces sueltos dentro de un párrafo no cuentan: son texto, no botones.                                                          |
+| `texto-cortado`         | El texto no cabe en su caja, la caja lo recorta y no hay puntos suspensivos. El usuario pierde información sin enterarse.                                                                    |
+| `letra-minima`          | Texto por debajo de 12px.                                                                                                                                                                    |
 
 ## Por qué no hay comparación contra capturas
 
@@ -105,15 +105,15 @@ estaba en otro lado.
 
 **Lo que hubo que arreglar**, todo por área táctil:
 
-| Qué | Medía | Ahora |
-|---|---|---|
-| Link del logo en el encabezado | 115x24 | 115x44 |
-| Botones `size="sm"` de shadcn | 36px de alto | 40px |
-| Pestañas del panel del coordinador | 36px de alto | 40px |
-| Links de navegación de la portada | 20px de alto | 40px |
-| Nombre del jugador en la tabla | 20px de alto | 40px |
-| Casillas de verificación | la etiqueta no llegaba a 40px | 40px |
-| Campos de puntos por set | 32px de ancho | 40px |
+| Qué                                | Medía                         | Ahora  |
+| ---------------------------------- | ----------------------------- | ------ |
+| Link del logo en el encabezado     | 115x24                        | 115x44 |
+| Botones `size="sm"` de shadcn      | 36px de alto                  | 40px   |
+| Pestañas del panel del coordinador | 36px de alto                  | 40px   |
+| Links de navegación de la portada  | 20px de alto                  | 40px   |
+| Nombre del jugador en la tabla     | 20px de alto                  | 40px   |
+| Casillas de verificación           | la etiqueta no llegaba a 40px | 40px   |
+| Campos de puntos por set           | 32px de ancho                 | 40px   |
 
 El arreglo del botón `sm` es el que más rindió: una línea en
 `src/components/ui/button.tsx` resolvió la mitad de los hallazgos, porque el

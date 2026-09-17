@@ -5,3 +5,17 @@ package-lock.json
 supabase/.temp
 public/icons
 *.sql
+
+# Generado por `npm run db:types`. Prettier lo reformatea y el siguiente
+# `db:types` lo vuelve a dejar como estaba, así que `format:check` fallaría
+# cada vez que se regeneran los tipos.
+src/lib/supabase/database.types.ts
+
+# Herramientas locales, no son parte del proyecto.
+.claude
+
+# Copias de referencia (el prototipo tal cual se acordó) y fixtures de
+# layout: Prettier reparte los elementos en líneas nuevas, y los espacios
+# entre elementos en línea son justo lo que miden las pruebas.
+docs/diseno/*.html
+e2e/fixtures/*.html

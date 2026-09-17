@@ -64,10 +64,7 @@ export function Marcador({
   const sacaA = Math.floor(puntosDelSet / 2) % 2 === 0;
 
   const mandar = useCallback(
-    (
-      estado: { a: number; b: number; sa: number; sb: number; hist: [number, number][] },
-      fin: boolean,
-    ) => {
+    (estado: { a: number; b: number; sa: number; sb: number; hist: [number, number][] }, fin: boolean) => {
       version.current += 1;
       void sincronizarMarcador({
         marcadorId: id,
@@ -151,10 +148,7 @@ export function Marcador({
   const pips = (n: number) => (
     <span className="flex gap-[7px]">
       {Array.from({ length: setsParaGanar }, (_, i) => (
-        <i
-          key={i}
-          className={cn("block size-2.5 rounded-full", i < n ? "bg-[#7ad14f]" : "bg-white/[0.22]")}
-        />
+        <i key={i} className={cn("block size-2.5 rounded-full", i < n ? "bg-[#7ad14f]" : "bg-white/[0.22]")} />
       ))}
     </span>
   );
@@ -171,7 +165,7 @@ export function Marcador({
       )}
     >
       <span className="max-w-[92%] truncate text-[15px] text-white/70">{nombre}</span>
-      <span className="text-[96px] leading-[0.84] font-bold tracking-[-0.06em] tabular">{puntos}</span>
+      <span className="tabular text-[96px] leading-[0.84] font-bold tracking-[-0.06em]">{puntos}</span>
       {pips(sets)}
     </button>
   );

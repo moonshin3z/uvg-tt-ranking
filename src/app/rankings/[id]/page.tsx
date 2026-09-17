@@ -74,97 +74,97 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
   return (
     <>
       <Tope titulo={ranking.nombre} sub="Ranking cerrado" atras="/rankings" />
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
-      <header className="flex flex-col gap-2">
-        <Link href="/rankings" className="text-sm text-muted-foreground hover:underline">
-          ← Todos los rankings
-        </Link>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">{ranking.nombre}</h1>
-          <Badge variant={ranking.estado === "cerrado" ? "outline" : "secondary"}>
-            {ETIQUETA[ranking.estado] ?? ranking.estado}
-          </Badge>
-        </div>
-      </header>
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
+        <header className="flex flex-col gap-2">
+          <Link href="/rankings" className="text-sm text-muted-foreground hover:underline">
+            ← Todos los rankings
+          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">{ranking.nombre}</h1>
+            <Badge variant={ranking.estado === "cerrado" ? "outline" : "secondary"}>
+              {ETIQUETA[ranking.estado] ?? ranking.estado}
+            </Badge>
+          </div>
+        </header>
 
-      <nav aria-label="División" className="grid grid-cols-2 rounded-lg bg-secondary p-1">
-        {(["mayor", "menor"] as const).map((d) => (
-          <Pestania
-            key={d}
-            href={{ pathname: base, query: verCalendario ? { division: d, ver: "calendario" } : { division: d } }}
-            activa={d === division}
-          >
-            {d === "mayor" ? "Mayor" : "Menor"}
+        <nav aria-label="División" className="grid grid-cols-2 rounded-lg bg-secondary p-1">
+          {(["mayor", "menor"] as const).map((d) => (
+            <Pestania
+              key={d}
+              href={{ pathname: base, query: verCalendario ? { division: d, ver: "calendario" } : { division: d } }}
+              activa={d === division}
+            >
+              {d === "mayor" ? "Mayor" : "Menor"}
+            </Pestania>
+          ))}
+        </nav>
+
+        <nav aria-label="Vista" className="grid grid-cols-2 rounded-lg bg-secondary p-1">
+          <Pestania href={{ pathname: base, query: { division } }} activa={!verCalendario}>
+            Tabla
           </Pestania>
-        ))}
-      </nav>
+          <Pestania href={{ pathname: base, query: { division, ver: "calendario" } }} activa={verCalendario}>
+            Calendario
+          </Pestania>
+        </nav>
 
-      <nav aria-label="Vista" className="grid grid-cols-2 rounded-lg bg-secondary p-1">
-        <Pestania href={{ pathname: base, query: { division } }} activa={!verCalendario}>
-          Tabla
-        </Pestania>
-        <Pestania href={{ pathname: base, query: { division, ver: "calendario" } }} activa={verCalendario}>
-          Calendario
-        </Pestania>
-      </nav>
-
-      {!verCalendario ? (
-        <>
+        {!verCalendario ? (
+          <>
+            <Card>
+              <CardContent className="p-0 sm:p-0">
+                <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
+              </CardContent>
+            </Card>
+          </>
+        ) : (
           <Card>
             <CardContent className="p-0 sm:p-0">
-              <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
+              {deLaDivision.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground sm:p-6">No hay partidos en esta división.</p>
+              ) : (
+                <ul className="divide-y">
+                  {deLaDivision.map((p) => {
+                    const ganoA = p.ganador === p.jugador_a;
+                    const definido = p.estado === "confirmado" || p.estado === "resuelto";
+                    const sets = p.sets_a != null && p.sets_b != null ? `${p.sets_a}-${p.sets_b}` : null;
+                    return (
+                      <li key={p.id} className="flex items-center gap-2 px-4 py-2.5 text-sm sm:px-6">
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Link
+                              href={`/jugador/${encodeURIComponent(p.a.carnet)}`}
+                              className={cn("truncate hover:underline", definido && ganoA && "font-semibold")}
+                            >
+                              {p.a.nombre}
+                            </Link>
+                            <span className="shrink-0 text-xs text-muted-foreground">vs</span>
+                            <Link
+                              href={`/jugador/${encodeURIComponent(p.b.carnet)}`}
+                              className={cn("truncate hover:underline", definido && !ganoA && "font-semibold")}
+                            >
+                              {p.b.nombre}
+                            </Link>
+                          </div>
+                          {p.tipo === "desempate" ? (
+                            <span className="text-xs text-muted-foreground">desempate</span>
+                          ) : null}
+                        </div>
+                        {definido ? (
+                          <span className="tabular shrink-0 font-medium">{sets ?? "jugado"}</span>
+                        ) : (
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {ETIQUETA_PARTIDO[p.estado] ?? p.estado}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </CardContent>
           </Card>
-        </>
-      ) : (
-        <Card>
-          <CardContent className="p-0 sm:p-0">
-            {deLaDivision.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground sm:p-6">No hay partidos en esta división.</p>
-            ) : (
-              <ul className="divide-y">
-                {deLaDivision.map((p) => {
-                  const ganoA = p.ganador === p.jugador_a;
-                  const definido = p.estado === "confirmado" || p.estado === "resuelto";
-                  const sets = p.sets_a != null && p.sets_b != null ? `${p.sets_a}-${p.sets_b}` : null;
-                  return (
-                    <li key={p.id} className="flex items-center gap-2 px-4 py-2.5 text-sm sm:px-6">
-                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <Link
-                            href={`/jugador/${encodeURIComponent(p.a.carnet)}`}
-                            className={cn("truncate hover:underline", definido && ganoA && "font-semibold")}
-                          >
-                            {p.a.nombre}
-                          </Link>
-                          <span className="shrink-0 text-xs text-muted-foreground">vs</span>
-                          <Link
-                            href={`/jugador/${encodeURIComponent(p.b.carnet)}`}
-                            className={cn("truncate hover:underline", definido && !ganoA && "font-semibold")}
-                          >
-                            {p.b.nombre}
-                          </Link>
-                        </div>
-                        {p.tipo === "desempate" ? (
-                          <span className="text-xs text-muted-foreground">desempate</span>
-                        ) : null}
-                      </div>
-                      {definido ? (
-                        <span className="tabular shrink-0 font-medium">{sets ?? "jugado"}</span>
-                      ) : (
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {ETIQUETA_PARTIDO[p.estado] ?? p.estado}
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </main>
+        )}
+      </main>
     </>
   );
 }

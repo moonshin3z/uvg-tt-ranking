@@ -69,14 +69,26 @@ describe("cruzesPrimeraRonda", () => {
 
 describe("ordenarSiembra", () => {
   it("es reproducible con la misma semilla", () => {
-    const a = ordenarSiembra(ids(9).map((usuario_id) => ({ usuario_id })), "SEM-1");
-    const b = ordenarSiembra(ids(9).map((usuario_id) => ({ usuario_id })), "SEM-1");
+    const a = ordenarSiembra(
+      ids(9).map((usuario_id) => ({ usuario_id })),
+      "SEM-1",
+    );
+    const b = ordenarSiembra(
+      ids(9).map((usuario_id) => ({ usuario_id })),
+      "SEM-1",
+    );
     expect(a).toEqual(b);
   });
 
   it("cambia con otra semilla", () => {
-    const a = ordenarSiembra(ids(9).map((usuario_id) => ({ usuario_id })), "SEM-1");
-    const b = ordenarSiembra(ids(9).map((usuario_id) => ({ usuario_id })), "SEM-2");
+    const a = ordenarSiembra(
+      ids(9).map((usuario_id) => ({ usuario_id })),
+      "SEM-1",
+    );
+    const b = ordenarSiembra(
+      ids(9).map((usuario_id) => ({ usuario_id })),
+      "SEM-2",
+    );
     expect(a).not.toEqual(b);
   });
 
@@ -103,21 +115,30 @@ describe("ordenarSiembra", () => {
   });
 
   it("devuelve a todos, una sola vez", () => {
-    const orden = ordenarSiembra(ids(12).map((usuario_id) => ({ usuario_id })), "SEM-9");
+    const orden = ordenarSiembra(
+      ids(12).map((usuario_id) => ({ usuario_id })),
+      "SEM-9",
+    );
     expect(new Set(orden).size).toBe(12);
     expect([...orden].sort()).toEqual(ids(12));
   });
 
   it("rechaza dos sembrados en el mismo puesto", () => {
     expect(() =>
-      ordenarSiembra([{ usuario_id: "a", siembra: 1 }, { usuario_id: "b", siembra: 1 }], "S"),
+      ordenarSiembra(
+        [
+          { usuario_id: "a", siembra: 1 },
+          { usuario_id: "b", siembra: 1 },
+        ],
+        "S",
+      ),
     ).toThrow(/puesto 1/);
   });
 
   it("rechaza una siembra fuera de rango", () => {
-    expect(() =>
-      ordenarSiembra([{ usuario_id: "a", siembra: 9 }, { usuario_id: "b" }], "S"),
-    ).toThrow(/fuera de rango/);
+    expect(() => ordenarSiembra([{ usuario_id: "a", siembra: 9 }, { usuario_id: "b" }], "S")).toThrow(
+      /fuera de rango/,
+    );
   });
 
   it("rechaza jugadores repetidos", () => {
