@@ -5,7 +5,7 @@ import { datos } from "@/lib/supabase/errores";
 import { calendarioDeRanking, rankingVigente } from "@/lib/ranking/consultas";
 import { torneoEnCurso } from "@/lib/torneos/consultas";
 import { Tope } from "@/components/tope";
-import { Dato, Fila, Flecha, Lista, Nota, PastillaChica, Pie, Rotulo } from "@/components/fila";
+import { Dato, Fila, Flecha, Lista, Nota, PastillaChica, Rotulo } from "@/components/fila";
 
 export const metadata: Metadata = { title: "Panel" };
 
@@ -128,19 +128,24 @@ export default async function Panel() {
           </>
         )}
 
-        {torneo ? (
-          <>
-            <Rotulo>Torneos</Rotulo>
-            <Lista>
-              <Fila
-                nombre={torneo.torneo.nombre}
-                sub={`En juego · ${torneo.porJugar === 0 ? "sin partidos por jugar" : `${torneo.porJugar} por jugar`}`}
-                href={`/torneos/${torneo.torneo.id}` as Route}
-                derecha={<Flecha />}
-              />
-            </Lista>
-          </>
-        ) : null}
+        <Rotulo>Torneos</Rotulo>
+        <Lista>
+          {torneo ? (
+            <Fila
+              nombre={torneo.torneo.nombre}
+              sub={`En juego · ${torneo.porJugar === 0 ? "sin partidos por jugar" : `${torneo.porJugar} por jugar`}`}
+              href={`/torneos/${torneo.torneo.id}` as Route}
+              derecha={<Flecha />}
+            />
+          ) : null}
+          <Fila
+            ini="+"
+            nombre="Crear un torneo"
+            sub="Llave directa o grupos y llave"
+            href={"/admin/torneos" as Route}
+            derecha={<Flecha />}
+          />
+        </Lista>
 
         <Rotulo>Club</Rotulo>
         <Lista>
@@ -159,11 +164,6 @@ export default async function Panel() {
             derecha={<Flecha />}
           />
         </Lista>
-
-        <Pie>
-          Crear torneos todavía no tiene pantalla: las funciones están en la base y probadas, pero hay que armarlos a
-          mano por ahora.
-        </Pie>
       </main>
     </>
   );
