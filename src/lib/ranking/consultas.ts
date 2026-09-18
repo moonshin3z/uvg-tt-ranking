@@ -24,7 +24,7 @@ export async function rankingVigente(): Promise<RankingRow | null> {
     await supabase
       .from("ranking")
       .select("*")
-      .neq("estado", "borrador")
+      .not("estado", "in", "(borrador,cancelado)")
       .order("creado_en", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -108,7 +108,11 @@ export async function ultimosResultados(ranking: RankingRow, limite = 8): Promis
 export async function todosLosRankings(): Promise<RankingRow[]> {
   const supabase = createPublicClient();
   const data = datos(
-    await supabase.from("ranking").select("*").neq("estado", "borrador").order("creado_en", { ascending: false }),
+    await supabase
+      .from("ranking")
+      .select("*")
+      .not("estado", "in", "(borrador,cancelado)")
+      .order("creado_en", { ascending: false }),
     "la lista de rankings",
   );
   return data ?? [];

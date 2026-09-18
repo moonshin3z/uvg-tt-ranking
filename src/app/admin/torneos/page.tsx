@@ -14,6 +14,7 @@ const ETIQUETA: Record<string, string> = {
   inscripcion: "Inscripción abierta",
   en_juego: "En juego",
   cerrado: "Cerrado",
+  cancelado: "Cancelado",
 };
 
 function fechaCorta(iso: string | null) {
@@ -77,7 +78,10 @@ export default async function PaginaTorneos() {
                         {fechaCorta(t.fecha)} · {t.formato === "llave" ? "llave directa" : "grupos y llave"}
                       </p>
                     </div>
-                    <Badge variant={t.estado === "en_juego" ? "secondary" : "outline"}>
+                    <Badge
+                      variant={t.estado === "en_juego" ? "secondary" : "outline"}
+                      className={t.estado === "cancelado" ? "line-through opacity-60" : undefined}
+                    >
                       {ETIQUETA[t.estado] ?? t.estado}
                     </Badge>
                   </Link>

@@ -25,8 +25,7 @@ export default async function PaginaJugadores() {
     await supabase
       .from("ranking")
       .select("id, nombre, estado")
-      .neq("estado", "cerrado")
-      .neq("estado", "borrador")
+      .not("estado", "in", "(cerrado,borrador,cancelado)")
       .order("creado_en", { ascending: false })
       .limit(1)
       .maybeSingle(),

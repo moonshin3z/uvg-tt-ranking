@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gestion } from "@/app/admin/gestion";
+import { ZonaDePeligro, type Contenido } from "@/app/admin/bajas";
 import { abrirRanking, cerrarFaseRegular, cerrarRanking, generarCalendario, generarDesempates } from "./acciones";
 import {
   BotonAccion,
@@ -29,6 +30,7 @@ const ETIQUETA_ESTADO: Record<string, string> = {
   fase_regular_cerrada: "Fase regular cerrada",
   en_desempates: "En desempates",
   cerrado: "Cerrado",
+  cancelado: "Cancelado",
 };
 
 function Paso({
@@ -92,6 +94,35 @@ function Exportar({ rankingId }: { rankingId: string }) {
   );
 }
 
+async function ZonaRanking({ ranking }: { ranking: RankingRow }) {
+  const supabase = await createClient();
+  const contenido = (datos(
+    await supabase.rpc("contenido_del_ranking", { p_ranking_id: ranking.id }),
+    "el contenido del ranking",
+  ) ?? {}) as Partial<Contenido> & { retiros?: number; hereda?: number };
+
+  const c: Contenido = {
+    inscritos: contenido.inscritos ?? 0,
+    partidos: contenido.partidos ?? 0,
+    jugados: contenido.jugados ?? 0,
+    marcadores: contenido.marcadores ?? 0,
+  };
+  const limpio =
+    c.jugados === 0 && c.marcadores === 0 && (contenido.retiros ?? 0) === 0 && (contenido.hereda ?? 0) === 0;
+
+  return (
+    <ZonaDePeligro
+      tipo="ranking"
+      id={ranking.id}
+      nombre={ranking.nombre}
+      estado={ETIQUETA_ESTADO[ranking.estado]?.toLowerCase() ?? ranking.estado}
+      contenido={c}
+      sePuedeBorrar={["borrador", "abierto"].includes(ranking.estado) && limpio}
+      sePuedeCancelar={!["cerrado", "cancelado"].includes(ranking.estado)}
+    />
+  );
+}
+
 async function CuerpoRanking() {
   await requerirCoordinador();
   const supabase = await createClient();
@@ -100,7 +131,8 @@ async function CuerpoRanking() {
     supabase
       .from("ranking")
       .select("*")
-      .neq("estado", "cerrado")
+      // Un cancelado tampoco está en curso, aunque no esté cerrado.
+      .not("estado", "in", "(cerrado,cancelado)")
       .order("creado_en", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -273,6 +305,7 @@ async function CuerpoRanking() {
             variant="accent"
           />
         </Paso>
+        <ZonaRanking ranking={enCurso} />
       </>
     );
   }
@@ -316,6 +349,7 @@ async function CuerpoRanking() {
             />
           </CardContent>
         </Card>
+        <ZonaRanking ranking={enCurso} />
       </>
     );
   }
@@ -405,6 +439,7 @@ async function CuerpoRanking() {
           />
         </CardContent>
       </Card>
+      <ZonaRanking ranking={enCurso} />
     </>
   );
 }

@@ -7,16 +7,47 @@ import { gruposSugeridos } from "@/lib/torneos/sorteo";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gestion } from "@/app/admin/gestion";
+import { ZonaDePeligro, type Contenido } from "@/app/admin/bajas";
 import { abrirInscripcion, cerrarGrupos, cerrarTorneo } from "../acciones";
 import { BotonTorneo, FormularioArmar, FormularioInscripcion, type JugadorInscribible } from "../formularios";
 
 export const metadata: Metadata = { title: "Torneo" };
+
+async function ZonaTorneo({ id, nombre, estado }: { id: string; nombre: string; estado: string }) {
+  const supabase = await createClient();
+  const contenido = (datos(
+    await supabase.rpc("contenido_del_torneo", { p_torneo_id: id }),
+    "el contenido del torneo",
+  ) ?? {}) as Partial<Contenido>;
+
+  const c: Contenido = {
+    inscritos: contenido.inscritos ?? 0,
+    partidos: contenido.partidos ?? 0,
+    jugados: contenido.jugados ?? 0,
+    marcadores: contenido.marcadores ?? 0,
+  };
+
+  return (
+    <ZonaDePeligro
+      tipo="torneo"
+      id={id}
+      nombre={nombre}
+      estado={ETIQUETA[estado]?.toLowerCase() ?? estado}
+      contenido={c}
+      sePuedeBorrar={
+        ["borrador", "inscripcion", "en_juego"].includes(estado) && c.jugados === 0 && c.marcadores === 0
+      }
+      sePuedeCancelar={!["cerrado", "cancelado"].includes(estado)}
+    />
+  );
+}
 
 const ETIQUETA: Record<string, string> = {
   borrador: "Borrador",
   inscripcion: "Inscripción abierta",
   en_juego: "En juego",
   cerrado: "Cerrado",
+  cancelado: "Cancelado",
 };
 
 /**
@@ -185,6 +216,8 @@ export default async function PaginaTorneoAdmin({ params }: PageProps<"/admin/to
           </CardHeader>
         </Card>
       ) : null}
+
+      <ZonaTorneo id={torneo.id} nombre={torneo.nombre} estado={torneo.estado} />
     </Gestion>
   );
 }
