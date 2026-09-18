@@ -1,5 +1,17 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: eliminar un partido sin terminar
+
+- La pantalla del marcador muestra **Eliminar partido** mientras nadie haya
+  completado los sets necesarios. Usa solo la confirmación breve del navegador.
+- Se quitó de esa pantalla el flujo de abandonar y reabrir. Si era un marcador
+  libre, desaparece; si venía de un ranking o torneo, se borra únicamente el
+  marcador y el partido programado sigue pendiente para jugarlo de nuevo.
+- La migración `20261010000000_eliminar_marcador.sql` permite borrar al dueño
+  del marcador o a un coordinador y rechaza marcadores terminados.
+- Pasaron el recorrido real de navegador, las 56 comprobaciones SQL, los tipos
+  de base, lint, formato, 55 pruebas unitarias y el build.
+
 ## Actualización: base de fluidez visual
 
 Iván quiere que el diseño sea una parte central del producto: fácil, simple,
@@ -452,7 +464,7 @@ docs/despliegue.md
 
 Los archivos con pruebas unitarias: `auth/carnet`, `fechas`, `ranking/sorteo`, `ranking/tabla`, `torneos/sorteo`, `jugadores/lote`. 55 pruebas en total.
 
-### Las 24 migraciones
+### Las 27 migraciones
 
 ```
 20260914 nucleo_ranking            tablas base, enums, RLS, es_coordinador()
@@ -479,6 +491,9 @@ Los archivos con pruebas unitarias: `auth/carnet`, `fechas`, `ranking/sorteo`, `
 20261005 reparar_divisiones        rankings que nacieron sin divisiones + auto reparación
 20261006 estado_cancelado          agrega 'cancelado' a los dos enums de estado
 20261007 borrar_y_cancelar         eliminar/cancelar ranking y torneo, tabla baja
+20261008 partidos_cancelados       bloquea cambios dentro de competencias canceladas
+20261009 eliminar_torneo_simple    elimina torneos en cualquier estado
+20261010 eliminar_marcador         elimina un marcador inconcluso sin borrar su partido
 ```
 
 ---

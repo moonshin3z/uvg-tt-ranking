@@ -84,7 +84,7 @@ test.describe("partidos independientes del ranking", () => {
       commit;`);
   });
 
-  test("sin ranking activo aparecen el torneo y los marcadores", async ({ page }) => {
+  test("sin ranking activo aparecen los marcadores y se puede eliminar el que está en curso", async ({ page }) => {
     await page.goto("/partidos");
     await exigirQueCargue(page, "/partidos");
     await expect(page.locator(`a[href='/partidos/${partido}']`)).toBeVisible();
@@ -95,6 +95,11 @@ test.describe("partidos independientes del ranking", () => {
     await page.locator(`a[href='/partidos/${partido}']`).click();
     await page.getByRole("button", { name: "Llevar el marcador en vivo" }).click();
     await expect(page).toHaveURL(new RegExp(`/marcador/${marcador}$`));
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Eliminar partido" }).click();
+    await expect(page).toHaveURL(/\/partidos$/);
+    await expect.poll(() => sql(`select count(*) from public.marcador where id='${marcador}'`)).toBe("0");
+    expect(sql(`select estado from public.partido where id='${partido}'`)).toBe("pendiente");
   });
 
   test("no mezcla rankings y permite registrar y confirmar un torneo sin estar inscrito en el ranking", async ({

@@ -136,6 +136,18 @@ export async function reabrirMarcador(marcadorId: string): Promise<{ error?: str
   return { version: Number(data.version) };
 }
 
+/** Borra un marcador inconcluso. El partido programado, si existe, queda pendiente. */
+export async function eliminarMarcador(marcadorId: string): Promise<{ error?: string }> {
+  await requerirSesion();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("eliminar_marcador", { p_marcador_id: marcadorId });
+  if (error) return { error: limpiar(error.message, "No se pudo eliminar el partido") };
+
+  revalidatePath("/partidos");
+  revalidatePath("/admin/partidos");
+  return {};
+}
+
 export type EstadoMarcadorLibre = { error?: string };
 
 /**

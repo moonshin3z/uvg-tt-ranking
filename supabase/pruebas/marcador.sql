@@ -220,4 +220,48 @@ begin
   raise notice 'ok · abandonar no registra resultado y reabrir devuelve la versión buena';
 end $$;
 
+-- -----------------------------------------------------------------------------
+-- Un marcador que todavía no terminó se puede borrar sin tocar el partido del
+-- ranking o torneo. Uno terminado ya representa un resultado y no se borra.
+-- -----------------------------------------------------------------------------
+do $$
+declare m public.marcador%rowtype; p uuid; t uuid;
+begin
+  perform pg_temp.como('20002');
+  m := public.abrir_marcador_libre('Uno', 'Dos', 1::smallint, 11::smallint);
+  perform public.eliminar_marcador(m.id);
+  if exists (select 1 from public.marcador where id = m.id) then
+    raise exception 'AGUJERO: el marcador sin terminar no se eliminó';
+  end if;
+
+  reset role;
+  insert into public.torneo(semestre_id, nombre, formato, estado)
+    select id, 'Eliminar marcador ' || gen_random_uuid(), 'llave', 'en_juego'
+      from public.semestre limit 1
+    returning id into t;
+  insert into public.partido(torneo_id, tipo, jugador_a, jugador_b)
+    select t, 'llave', a.id, b.id
+      from public.usuario a, public.usuario b
+     where a.carnet = '20002' and b.carnet = '20003'
+    returning id into p;
+  perform pg_temp.como('20002');
+  select * into m from public.abrir_marcador_de_partido(p);
+  p := m.partido_id;
+  perform public.eliminar_marcador(m.id);
+  if not exists (select 1 from public.partido where id = p and estado = 'pendiente') then
+    raise exception 'AGUJERO: borrar el marcador también borró el partido programado';
+  end if;
+
+  m := public.abrir_marcador_libre('Uno', 'Dos', 1::smallint, 11::smallint);
+  m := public.sincronizar_marcador(
+    m.id, m.version + 1, 0::smallint, 0::smallint, 1::smallint, 0::smallint,
+    '[[11,4]]'::jsonb, 'a', 'terminado');
+  perform pg_temp.exige_error(
+    format('select public.eliminar_marcador(%L)', m.id),
+    'borrar un marcador que ya terminó');
+  reset role;
+
+  raise notice 'ok · eliminar quita el marcador inconcluso y conserva el partido programado';
+end $$;
+
 rollback;

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { reabrirMarcador, sincronizarMarcador } from "@/app/partidos/acciones";
+import { eliminarMarcador, sincronizarMarcador } from "@/app/partidos/acciones";
 
 /**
  * El marcador en vivo, copiado de `.marcador` del prototipo.
@@ -65,8 +65,7 @@ export function Marcador({
   //     Guarda el tanteo pero no registra ningún resultado.
   //   · salir de la pantalla no es ninguna de las dos: el marcador queda
   //     abierto y se puede retomar.
-  const [abandonado, setAbandonado] = useState(inicial.estado === "abandonado");
-  const [confirmando, setConfirmando] = useState(false);
+  const abandonado = inicial.estado === "abandonado";
   const terminado = sa >= setsParaGanar || sb >= setsParaGanar;
   // El saque cambia cada dos puntos.
   const puntosDelSet = a + b;
@@ -154,37 +153,15 @@ export function Marcador({
     router.push(partidoId ? `/partidos/${partidoId}` : "/partidos");
   }
 
-  async function abandonar() {
+  async function eliminar() {
+    if (!window.confirm("¿Eliminar este partido sin terminar?")) return;
     setGuardando(true);
     setAviso(null);
-    version.current += 1;
-    const r = await sincronizarMarcador({
-      marcadorId: id,
-      version: version.current,
-      puntosA: a,
-      puntosB: b,
-      setsA: sa,
-      setsB: sb,
-      historial,
-      saca: sacaA ? "a" : "b",
-      estado: "abandonado",
-    });
+    const r = await eliminarMarcador(id);
     setGuardando(false);
     if (r.error) return setAviso(r.error);
-    router.push(partidoId ? `/partidos/${partidoId}` : "/partidos");
-  }
-
-  async function reabrir() {
-    setGuardando(true);
-    setAviso(null);
-    const r = await reabrirMarcador(id);
-    setGuardando(false);
-    if (r.error) return setAviso(r.error);
-    // Reabrir sube la versión del servidor. Sin esto, la foto siguiente
-    // llegaría atrasada y se descartaría sin decir nada: el marcador se vería
-    // andar en la pantalla y no se estaría guardando.
-    if (r.version !== undefined) version.current = r.version;
-    setAbandonado(false);
+    router.replace("/partidos");
+    router.refresh();
   }
 
   const pips = (n: number) => (
@@ -258,44 +235,9 @@ export function Marcador({
 
       <div className="shrink-0 px-3.5 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
         {abandonado ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-center text-[13.5px] text-pretty text-white/[0.62]">
-              Este partido quedó como abandonado y no registró resultado. Si al final se jugó, reabrilo y seguí
-              anotando desde donde iba.
-            </p>
-            <button
-              type="button"
-              onClick={reabrir}
-              disabled={guardando}
-              className="min-h-12 w-full rounded-md border border-white/[0.35] text-[16px] font-semibold text-white disabled:opacity-60"
-            >
-              {guardando ? "Reabriendo..." : "Reabrir y seguir anotando"}
-            </button>
-          </div>
-        ) : confirmando ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-center text-[13.5px] text-pretty text-white/[0.62]">
-              Se guarda el tanteo como está y no se registra ningún resultado. Va {sa}-{sb} en sets.
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmando(false)}
-                className="min-h-12 flex-1 rounded-md border border-white/[0.35] text-[16px] font-medium text-white"
-              >
-                Seguir jugando
-              </button>
-              <button
-                type="button"
-                onClick={abandonar}
-                disabled={guardando}
-                className="min-h-12 flex-1 rounded-md bg-white/[0.92] text-[16px] font-semibold text-[#5b1f12] disabled:opacity-60"
-              >
-                {guardando ? "Guardando..." : "Abandonar"}
-              </button>
-            </div>
-          </div>
-        ) : (
+          <p className="mb-2 text-center text-[13.5px] text-white/[0.62]">Este partido quedó sin terminar.</p>
+        ) : null}
+        {abandonado ? null : (
           <div className="flex flex-col gap-2">
             <button
               type="button"
@@ -305,16 +247,17 @@ export function Marcador({
             >
               {guardando ? "Guardando..." : terminado ? "Registrar el resultado" : "Terminar"}
             </button>
-            {terminado ? null : (
-              <button
-                type="button"
-                onClick={() => setConfirmando(true)}
-                className="min-h-10 w-full text-[14px] font-medium text-white/[0.62]"
-              >
-                El partido no se va a terminar
-              </button>
-            )}
           </div>
+        )}
+        {terminado ? null : (
+          <button
+            type="button"
+            onClick={eliminar}
+            disabled={guardando}
+            className="mt-1 min-h-10 w-full text-[14px] font-medium text-white/[0.62] disabled:opacity-60"
+          >
+            {guardando ? "Eliminando..." : "Eliminar partido"}
+          </button>
         )}
       </div>
     </div>

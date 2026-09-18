@@ -1355,6 +1355,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      eliminar_marcador: { Args: { p_marcador_id: string }; Returns: string }
       eliminar_ranking: {
         Args: { p_motivo?: string; p_ranking_id: string }
         Returns: Json
