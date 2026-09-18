@@ -74,6 +74,18 @@ Esta sección prevalece sobre las anteriores para los temas de partidos.
   usuario de semilla como jugador al terminar. Se agregó `npm run
 test:jugadores`.
 
+## Actualización del 18 de septiembre de 2026: etapa 6
+
+- `/admin/bajas` muestra la bitácora permanente de rankings y torneos borrados
+  o cancelados: acción, tipo, estado anterior, fecha, quién lo hizo, motivo y
+  resumen del contenido capturado.
+- La pantalla usa la política existente de `public.baja`; además de esa
+  protección, el servidor exige coordinador antes de consultar. Se agregó al
+  panel principal y se corrigió el texto de exportación para no prometer una
+  bitácora CSV que todavía no existe.
+- `e2e/bajas.spec.ts` comprueba la lectura de un registro y que un jugador no
+  pueda entrar. Se agregó `npm run test:bajas`.
+
 Al ejecutar `next dev`, Next.js generó `AGENTS.md` y `CLAUDE.md` en el repo.
 El código que los genera está en
 `node_modules/next/dist/server/lib/generate-agent-files.js`.
@@ -509,7 +521,7 @@ Lo que ya se descartó, verificado contra la base: `cambiar_mi_pin` es `security
 
 **C.1 — Un paso de CI que detecte tipos desactualizados.** El fallo del punto 7.2 volvería a pasar. La idea: regenerar `database.types.ts` en CI contra la base recién migrada y fallar si difiere del versionado. El job `migraciones` ya levanta Supabase, así que el paso cabe ahí. Esto lo tenía propuesto el agente anterior y Iván no alcanzó a decidirlo.
 
-**C.2 — Pantalla que muestre la bitácora de bajas.** La tabla `public.baja` ya guarda qué se borró o canceló, quién, cuándo, por qué y qué había adentro. Falta la pantalla en el panel. Es corto.
+**C.2 — Pantalla que muestre la bitácora de bajas. Resuelto en etapa 6.** `/admin/bajas` muestra qué se borró o canceló, quién, cuándo, por qué y qué había adentro.
 
 **C.3 — Detalle de un partido con su bitácora.** `partido_evento` ya registra todo (registro, confirmó, disputó, editó, resolvió, autoconfirmó, anuló, creó). Falta mostrarlo.
 

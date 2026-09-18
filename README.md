@@ -49,6 +49,7 @@ Usuarios del seed (PIN `123456` para todos):
 | `npm run test:pin`          | cambio de PIN en el primer ingreso, sin bucle (local)               |
 | `npm run test:torneos`      | siembra manual del cuadro y registro de su orden (local)            |
 | `npm run test:jugadores`    | nombrar coordinador desde la lista de jugadores (local)             |
+| `npm run test:bajas`        | bitácora de rankings y torneos borrados o cancelados (local)        |
 | `npm run test:responsive`   | auditoría de layout en tres anchos (navegador)                      |
 
 **Aviso sobre `db:types`.** Lee la base **local**, no la de la nube. Si acabás

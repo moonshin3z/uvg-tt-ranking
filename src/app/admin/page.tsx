@@ -159,8 +159,15 @@ export default async function Panel() {
           <Fila
             ini="↓"
             nombre="Exportar a CSV"
-            sub="Tabla, partidos y bitácora"
+            sub="Tabla y partidos"
             href={"/admin/exportar" as Route}
+            derecha={<Flecha />}
+          />
+          <Fila
+            ini="◷"
+            nombre="Bitácora de bajas"
+            sub="Rankings y torneos borrados o cancelados"
+            href={"/admin/bajas" as Route}
             derecha={<Flecha />}
           />
         </Lista>
