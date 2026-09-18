@@ -132,3 +132,48 @@ export async function autoconfirmarVencidos() {
   const { error } = await supabase.rpc("autoconfirmar_vencidos");
   if (error) console.error("autoconfirmar_vencidos falló:", error.message);
 }
+
+export type MarcadorAbierto = {
+  id: string;
+  nombreA: string;
+  nombreB: string;
+  setsA: number;
+  setsB: number;
+  puntosA: number;
+  puntosB: number;
+  estado: string;
+  partidoId: string | null;
+  actualizado: string;
+};
+
+/**
+ * Los marcadores que dejé a medias.
+ *
+ * Sin esto, salir de la pantalla del marcador es perderlo: el de un partido
+ * del ranking se vuelve a abrir desde el partido, pero uno libre no cuelga de
+ * nada y no había forma de llegar a él otra vez. Salir y retomar más tarde es
+ * lo normal en el club, así que tienen que estar a la vista.
+ */
+export async function misMarcadoresAbiertos(yo: string): Promise<MarcadorAbierto[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("marcador")
+    .select("id, nombre_a, nombre_b, sets_a, sets_b, puntos_a, puntos_b, estado, partido_id, actualizado_en")
+    .eq("dueno", yo)
+    .in("estado", ["en_juego", "abandonado"])
+    .order("actualizado_en", { ascending: false })
+    .limit(5);
+
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    nombreA: m.nombre_a,
+    nombreB: m.nombre_b,
+    setsA: m.sets_a,
+    setsB: m.sets_b,
+    puntosA: m.puntos_a,
+    puntosB: m.puntos_b,
+    estado: m.estado,
+    partidoId: m.partido_id,
+    actualizado: m.actualizado_en,
+  }));
+}

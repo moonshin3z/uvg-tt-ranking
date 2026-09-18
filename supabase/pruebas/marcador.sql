@@ -157,4 +157,67 @@ begin
   raise notice 'ok · si el resultado no se puede registrar, el marcador se guarda y lo explica';
 end $$;
 
+
+-- -----------------------------------------------------------------------------
+-- Abandonar guarda el tanteo y no registra nada; reabrir sube la versión.
+--
+-- Dos cosas que la pantalla necesita y que es fácil romper sin notarlo:
+--
+--   · Abandonar tiene que poder cerrarse con el partido a medias (la guarda de
+--     «no terminó» es solo para 'terminado') y NO debe disparar el puente a
+--     registrar_resultado, o un partido que nadie jugó entraría a la tabla.
+--   · `reabrir_marcador` deja la versión en la que había + 1. Si el teléfono
+--     siguiera con la suya, la foto siguiente llegaría con una versión que el
+--     servidor ya tiene y la descartaría sin decir nada: el marcador se vería
+--     andar en la pantalla y no se estaría guardando.
+-- -----------------------------------------------------------------------------
+do $$
+declare m public.marcador%rowtype; v_vieja bigint; v_nueva bigint; v_puntos smallint;
+begin
+  perform pg_temp.como('20002');
+  m := public.abrir_marcador_libre('Uno', 'Dos', 2::smallint, 11::smallint);
+
+  -- Abandonar a mitad del partido: 0-0 en sets, 5-3 en puntos.
+  m := public.sincronizar_marcador(m.id, m.version + 1, 5::smallint, 3::smallint,
+         0::smallint, 0::smallint, '[]'::jsonb, 'a', 'abandonado');
+  if m.estado <> 'abandonado' then
+    raise exception 'AGUJERO: no dejó abandonar un partido a medias (quedó %)', m.estado;
+  end if;
+  if m.puntos_a <> 5 then
+    raise exception 'AGUJERO: abandonar perdió el tanteo (quedó en %)', m.puntos_a;
+  end if;
+  if m.aviso is not null then
+    raise exception 'AGUJERO: abandonar intentó registrar un resultado: %', m.aviso;
+  end if;
+  v_vieja := m.version;
+
+  m := public.reabrir_marcador(m.id);
+  v_nueva := m.version;
+  if m.estado <> 'en_juego' then
+    raise exception 'AGUJERO: reabrir no lo dejó en juego (quedó %)', m.estado;
+  end if;
+  if v_nueva <= v_vieja then
+    raise exception 'AGUJERO: reabrir no subió la versión (antes %, después %)', v_vieja, v_nueva;
+  end if;
+
+  -- Con la versión vieja, la foto se descarta en silencio.
+  m := public.sincronizar_marcador(m.id, v_vieja + 1, 9::smallint, 3::smallint,
+         0::smallint, 0::smallint, '[]'::jsonb, 'a', 'en_juego');
+  select puntos_a into v_puntos from public.marcador where id = m.id;
+  if v_puntos = 9 then
+    raise exception 'AGUJERO: aceptó una foto con una versión que ya estaba usada';
+  end if;
+
+  -- Con la que devolvió reabrir, entra.
+  m := public.sincronizar_marcador(m.id, v_nueva + 1, 9::smallint, 3::smallint,
+         0::smallint, 0::smallint, '[]'::jsonb, 'a', 'en_juego');
+  select puntos_a into v_puntos from public.marcador where id = m.id;
+  if v_puntos <> 9 then
+    raise exception 'AGUJERO: con la versión que devuelve reabrir tampoco guardó (quedó en %)', v_puntos;
+  end if;
+  reset role;
+
+  raise notice 'ok · abandonar no registra resultado y reabrir devuelve la versión buena';
+end $$;
+
 rollback;

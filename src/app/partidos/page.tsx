@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
 import { rankingVigente } from "@/lib/ranking/consultas";
-import { autoconfirmarVencidos, misPartidos, type PartidoMio } from "@/lib/partidos/consultas";
+import { autoconfirmarVencidos, misMarcadoresAbiertos, misPartidos, type PartidoMio } from "@/lib/partidos/consultas";
 import { Badge } from "@/components/ui/badge";
 import { Fila, Flecha, Lista, Marcador, Pastilla, Pie, Rotulo } from "@/components/fila";
 import { Tope } from "@/components/tope";
@@ -37,7 +37,10 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
   }
 
   await autoconfirmarVencidos();
-  const mp = await misPartidos(sesion.authId, ranking.id);
+  const [mp, marcadores] = await Promise.all([
+    misPartidos(sesion.authId, ranking.id),
+    misMarcadoresAbiertos(sesion.authId),
+  ]);
   const inscrito =
     mp.pendientes.length +
       mp.porConfirmar.length +
@@ -199,6 +202,20 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
 
             <Rotulo>Marcador</Rotulo>
             <Lista>
+              {marcadores.map((m) => (
+                <Fila
+                  key={m.id}
+                  nombre={`${m.nombreA} vs. ${m.nombreB}`}
+                  sub={
+                    m.estado === "abandonado"
+                      ? `Abandonado en ${m.setsA}-${m.setsB}`
+                      : `Sin terminar · va ${m.setsA}-${m.setsB} (${m.puntosA}-${m.puntosB})`
+                  }
+                  href={`/marcador/${m.id}` as Route}
+                  derecha={<Flecha />}
+                  ini="▮"
+                />
+              ))}
               <Fila
                 nombre="Marcador libre"
                 sub="Para un partido que no es del ranking"

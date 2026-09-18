@@ -114,6 +114,28 @@ export async function abrirMarcador(formData: FormData): Promise<void> {
   redirect(`/marcador/${data.id}`);
 }
 
+/**
+ * Vuelve a poner en juego un marcador cerrado.
+ *
+ * Sirve para uno abandonado que se retoma: se lastimó alguien, se acabó el
+ * tiempo de la mesa, y después se siguió. La base se niega si el partido del
+ * que cuelga ya quedó firme, así que esto no es una puerta para cambiar un
+ * resultado confirmado.
+ *
+ * Devuelve la versión nueva, y hace falta: reabrir sube la versión del
+ * servidor, y si el teléfono siguiera con la suya vieja, la foto siguiente
+ * llegaría atrasada y se descartaría sin decir nada. El marcador se vería
+ * andar en la pantalla y no se estaría guardando.
+ */
+export async function reabrirMarcador(marcadorId: string): Promise<{ error?: string; version?: number }> {
+  await requerirSesion();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("reabrir_marcador", { p_marcador_id: marcadorId });
+  if (error || !data) return { error: error?.message.replace(/^.*?:\s*/, "") ?? "No se pudo reabrir el marcador." };
+  revalidatePath(`/marcador/${marcadorId}`);
+  return { version: Number(data.version) };
+}
+
 export type EstadoMarcadorLibre = { error?: string };
 
 /**
@@ -168,7 +190,7 @@ export async function sincronizarMarcador(entrada: {
   setsB: number;
   historial: [number, number][];
   saca: "a" | "b";
-  estado: "en_juego" | "terminado";
+  estado: "en_juego" | "terminado" | "abandonado";
 }): Promise<{ error?: string; aviso?: string | null }> {
   await requerirSesion();
   const supabase = await createClient();
