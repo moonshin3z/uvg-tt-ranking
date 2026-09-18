@@ -26,7 +26,8 @@
     "test:pin": "playwright test pin",
     "test:torneos": "playwright test torneos",
     "test:jugadores": "playwright test jugadores",
-    "test:bajas": "playwright test bajas"
+    "test:bajas": "playwright test bajas",
+    "test:eventos": "playwright test eventos"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

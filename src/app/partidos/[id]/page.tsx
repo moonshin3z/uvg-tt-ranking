@@ -1,7 +1,13 @@
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
-import { partidoCancelado, partidoPorId, setsDePartido } from "@/lib/partidos/consultas";
+import {
+  eventosDePartido,
+  partidoCancelado,
+  partidoPorId,
+  setsDePartido,
+  type EventoPartido,
+} from "@/lib/partidos/consultas";
 import { rankingPorId } from "@/lib/ranking/consultas";
 import { createClient } from "@/lib/supabase/server";
 import { textoAutoconfirmacion } from "@/lib/fechas";
@@ -19,6 +25,70 @@ function textoSets(puntos: { puntos_a: number; puntos_b: number }[], soyA: boole
   return puntos.map((s) => (soyA ? `${s.puntos_a}-${s.puntos_b}` : `${s.puntos_b}-${s.puntos_a}`)).join(" · ");
 }
 
+const ETIQUETA_EVENTO: Record<string, string> = {
+  registro: "Registró el resultado",
+  confirmo: "Confirmó el resultado",
+  disputo: "Abrió una disputa",
+  edito: "Editó el resultado",
+  resolvio: "Resolvió la disputa",
+  autoconfirmo: "El sistema autoconfirmó el resultado",
+  anulo: "Anuló el partido",
+  creo: "Creó el partido",
+};
+
+function textoCampo(valor: unknown, campo: string): string | null {
+  if (typeof valor !== "object" || valor === null || Array.isArray(valor)) return null;
+  const dato = (valor as Record<string, unknown>)[campo];
+  if (dato === null || dato === undefined || dato === "") return null;
+  return String(dato);
+}
+
+function detalleEvento(evento: EventoPartido): string | null {
+  const antesEstado = textoCampo(evento.antes, "estado");
+  const despuesEstado = textoCampo(evento.despues, "estado");
+  const partes: string[] = [];
+  if (antesEstado && despuesEstado && antesEstado !== despuesEstado) {
+    partes.push(`${antesEstado} → ${despuesEstado}`);
+  } else if (despuesEstado) {
+    partes.push(despuesEstado);
+  }
+  const setsA = textoCampo(evento.despues, "sets_a");
+  const setsB = textoCampo(evento.despues, "sets_b");
+  if (setsA !== null && setsB !== null) partes.push(`sets ${setsA}-${setsB}`);
+  const resolucion = textoCampo(evento.despues, "resolucion");
+  if (resolucion) partes.push(resolucion);
+  return partes.length > 0 ? partes.join(" · ") : null;
+}
+
+function BitacoraPartido({ eventos }: { eventos: EventoPartido[] }) {
+  return (
+    <details className="border-t border-linea-suave px-4 py-4">
+      <summary className="cursor-pointer text-sm font-medium">Bitácora del partido ({eventos.length})</summary>
+      <ol className="mt-4 grid gap-3 border-l border-linea-suave pl-4">
+        {eventos.map((evento) => {
+          const detalle = detalleEvento(evento);
+          return (
+            <li key={evento.id} className="grid gap-0.5 text-sm">
+              <p className="font-medium">{ETIQUETA_EVENTO[evento.accion] ?? evento.accion}</p>
+              <p className="text-muted-foreground">
+                {evento.actor ? `${evento.actor.nombre} (${evento.actor.carnet})` : "Sistema"}
+              </p>
+              {detalle ? <p className="text-muted-foreground">{detalle}</p> : null}
+              <time dateTime={evento.creadoEn} className="text-xs text-faint">
+                {new Intl.DateTimeFormat("es-GT", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                  timeZone: "America/Guatemala",
+                }).format(new Date(evento.creadoEn))}
+              </time>
+            </li>
+          );
+        })}
+      </ol>
+    </details>
+  );
+}
+
 export default async function PaginaPartido({ params, searchParams }: PageProps<"/partidos/[id]">) {
   const [{ id }, { marcador }, sesion] = await Promise.all([params, searchParams, requerirSesion()]);
   if (sesion.usuario.debe_cambiar_pin) redirect("/cambiar-pin");
@@ -32,13 +102,14 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
   if (!juego && !esCoordinador) redirect("/partidos");
 
   const supabase = await createClient();
-  const [puntos, ranking, reglas] = await Promise.all([
+  const [puntos, ranking, reglas, eventos] = await Promise.all([
     setsDePartido(id),
     // Un partido de torneo no cuelga de ningún ranking.
     p.division ? rankingPorId(p.division.ranking_id) : Promise.resolve(null),
     // Las reglas salen del contenedor del partido, que puede ser un ranking o
     // un torneo, y cada uno juega a lo suyo.
     supabase.rpc("reglas_de_partido", { p_partido_id: id }),
+    eventosDePartido(id),
   ]);
   const setsParaGanar = datos(reglas, "las reglas del partido")?.[0]?.sets_para_ganar ?? 2;
   const cancelado = partidoCancelado(p);
@@ -167,6 +238,7 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
             </>
           )}
         </div>
+        <BitacoraPartido eventos={eventos} />
       </main>
     </>
   );

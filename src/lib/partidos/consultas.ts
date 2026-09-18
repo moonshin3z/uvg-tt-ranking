@@ -139,6 +139,47 @@ export async function setsDePartido(id: string) {
   return data ?? [];
 }
 
+export type EventoPartido = {
+  id: number;
+  accion: string;
+  antes: unknown;
+  despues: unknown;
+  creadoEn: string;
+  actor: { nombre: string; carnet: string } | null;
+};
+
+/** Historial inmutable de las transiciones de un partido. */
+export async function eventosDePartido(id: string): Promise<EventoPartido[]> {
+  const supabase = await createClient();
+  const data = datos(
+    await supabase
+      .from("partido_evento")
+      .select("id, accion, antes, despues, creado_en, actor:usuario!partido_evento_actor_fkey(nombre, carnet)")
+      .eq("partido_id", id)
+      .order("creado_en", { ascending: true })
+      .order("id", { ascending: true }),
+    "la bitácora del partido",
+  );
+
+  return (
+    (data ?? []) as unknown as {
+      id: number;
+      accion: string;
+      antes: unknown;
+      despues: unknown;
+      creado_en: string;
+      actor: { nombre: string; carnet: string } | null;
+    }[]
+  ).map((e) => ({
+    id: e.id,
+    accion: e.accion,
+    antes: e.antes,
+    despues: e.despues,
+    creadoEn: e.creado_en,
+    actor: e.actor,
+  }));
+}
+
 /**
  * Corre la autoconfirmación de vencidos. Barata e idempotente.
  * Si falla no rompe la página: es una tarea de fondo, no lo que vino a ver

@@ -86,6 +86,15 @@ test:jugadores`.
 - `e2e/bajas.spec.ts` comprueba la lectura de un registro y que un jugador no
   pueda entrar. Se agregó `npm run test:bajas`.
 
+## Actualización del 18 de septiembre de 2026: etapa 7
+
+- El detalle de cada partido muestra una bitácora desplegable con la acción,
+  quién la hizo, el cambio de estado, el marcador cuando existe y la hora en
+  Guatemala. La consulta usa la política existente de `partido_evento`, así
+  que solo la ven los dos jugadores y el coordinador.
+- `e2e/eventos.spec.ts` comprueba el flujo con un partido y un evento
+  temporales. Se agregó `npm run test:eventos` y su fila en el README.
+
 Al ejecutar `next dev`, Next.js generó `AGENTS.md` y `CLAUDE.md` en el repo.
 El código que los genera está en
 `node_modules/next/dist/server/lib/generate-agent-files.js`.
@@ -523,7 +532,7 @@ Lo que ya se descartó, verificado contra la base: `cambiar_mi_pin` es `security
 
 **C.2 — Pantalla que muestre la bitácora de bajas. Resuelto en etapa 6.** `/admin/bajas` muestra qué se borró o canceló, quién, cuándo, por qué y qué había adentro.
 
-**C.3 — Detalle de un partido con su bitácora.** `partido_evento` ya registra todo (registro, confirmó, disputó, editó, resolvió, autoconfirmó, anuló, creó). Falta mostrarlo.
+**C.3 — Detalle de un partido con su bitácora.** Resuelto en etapa 7. El detalle de cada partido muestra una bitácora desplegable con la acción, quién la hizo, el cambio de estado, el marcador cuando existe y la hora en Guatemala. La consulta respeta la política existente: solo la ven los dos jugadores y el coordinador. `e2e/eventos.spec.ts` comprueba el flujo con un registro temporal y `npm run test:eventos` lo ejecuta contra la base local.
 
 ### D. Diseño
 
