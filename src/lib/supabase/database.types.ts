@@ -1124,6 +1124,14 @@ export type Database = {
       autoconfirmar_vencidos: { Args: never; Returns: number }
       cambiar_mi_pin: { Args: { p_nuevo: string }; Returns: undefined }
       campeon_de_torneo: { Args: { p_torneo_id: string }; Returns: string }
+      cancelar_ranking: {
+        Args: { p_motivo: string; p_ranking_id: string }
+        Returns: undefined
+      }
+      cancelar_torneo: {
+        Args: { p_motivo: string; p_torneo_id: string }
+        Returns: undefined
+      }
       cerrar_fase_regular: { Args: { p_ranking_id: string }; Returns: number }
       cerrar_grupos: { Args: { p_torneo_id: string }; Returns: number }
       cerrar_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
@@ -1197,6 +1205,14 @@ export type Database = {
           horas_autoconfirmacion: number
           nombre: string
         }[]
+      }
+      contenido_del_ranking: {
+        Args: { p_ranking_id: string }
+        Returns: Json
+      }
+      contenido_del_torneo: {
+        Args: { p_torneo_id: string }
+        Returns: Json
       }
       crear_ranking: {
         Args: {
@@ -1297,6 +1313,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      eliminar_ranking: {
+        Args: { p_motivo?: string; p_ranking_id: string }
+        Returns: Json
+      }
+      eliminar_torneo: {
+        Args: { p_motivo?: string; p_torneo_id: string }
+        Returns: Json
       }
       empates_relevantes: {
         Args: { p_ranking_id: string }
@@ -1696,8 +1720,14 @@ export type Database = {
         | "fase_regular_cerrada"
         | "en_desempates"
         | "cerrado"
+        | "cancelado"
       rol: "jugador" | "coordinador"
-      torneo_estado: "borrador" | "inscripcion" | "en_juego" | "cerrado"
+      torneo_estado:
+        | "borrador"
+        | "inscripcion"
+        | "en_juego"
+        | "cerrado"
+        | "cancelado"
       torneo_formato: "llave" | "grupos_y_llave"
     }
     CompositeTypes: {
@@ -1861,9 +1891,16 @@ export const Constants = {
         "fase_regular_cerrada",
         "en_desempates",
         "cerrado",
+        "cancelado",
       ],
       rol: ["jugador", "coordinador"],
-      torneo_estado: ["borrador", "inscripcion", "en_juego", "cerrado"],
+      torneo_estado: [
+        "borrador",
+        "inscripcion",
+        "en_juego",
+        "cerrado",
+        "cancelado",
+      ],
       torneo_formato: ["llave", "grupos_y_llave"],
     },
   },

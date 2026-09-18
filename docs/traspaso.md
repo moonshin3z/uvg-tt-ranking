@@ -296,7 +296,7 @@ Los archivos con pruebas unitarias: `auth/carnet`, `fechas`, `ranking/sorteo`, `
 
 Esta sección vale más que cualquier otra. Todos pasaron de verdad en este proyecto.
 
-**1. Regenerar `database.types.ts` sin la base completa.** Rompió CI dos veces. Una vez el agente corrió `npm run db:types` sin Docker y escribió un mensaje de error JSON dentro del archivo de tipos. Otra vez el agente parchó el archivo a mano, Iván lo regeneró, y el parche se perdió. **Regla: el archivo regenerado por él manda siempre.** Si hay que parchar a mano por falta de Docker, se avisa explícitamente y se le pide que lo regenere y lo commitee.
+**1. Regenerar `database.types.ts` sin la base local completa.** Rompió CI **tres** veces. `db:types` corre con `--local`: si la base local no tiene aplicadas todas las migraciones, la regeneración **borra** tipos en vez de agregarlos. Siempre `npm run db:reset` antes. Una vez el agente corrió `npm run db:types` sin Docker y escribió un mensaje de error JSON dentro del archivo de tipos. Otra vez el agente parchó el archivo a mano, Iván lo regeneró, y el parche se perdió. **Regla: el archivo regenerado por él manda siempre.** Si hay que parchar a mano por falta de Docker, se avisa explícitamente y se le pide que lo regenere y lo commitee.
 
 **2. Commitear el código pero no los tipos.** El fallo de CI más reciente fue exactamente esto: se agregó una pantalla que llama `supabase.rpc("jugadores_del_club")`, se regeneró `database.types.ts`, y el archivo quedó sin commitear. GitHub compiló la versión vieja de los tipos, donde esa función no existe, y `typecheck` murió con un mensaje que no decía nada. **Antes de dar por resuelto un fallo de CI, corré `git status` y mirá si lo que falla está commiteado.**
 
@@ -336,11 +336,19 @@ df8b16a  Borrar y cancelar rankings y torneos
 Lo primero que hay que hacer es que él corra:
 
 ```
-npx supabase db push        # aplica las migraciones 20261006 y 20261007
-npm run db:types            # regenera los tipos con la base al día
+npx supabase db push        # sube las migraciones a la NUBE
+npm run db:reset            # aplica las migraciones en la base LOCAL (Docker)
+npm run db:types            # lee la LOCAL; sin el paso anterior borra tipos
 git add -A && git commit -m "Tipos regenerados"
 git push origin main
 ```
+
+**El `db:reset` del medio no es opcional.** `db:types` corre con `--local`: lee
+la base local, no la de la nube. Saltárselo hace que la regeneración _quite_
+del archivo de tipos las funciones que la base local todavía no tiene, en vez
+de agregarlas. Pasó exactamente así el 18 de septiembre: un commit llamado
+"Tipos regenerados" borró 39 líneas y CI murió en `typecheck` sin decir por
+qué.
 
 El `db:types` importa: los tipos de las funciones nuevas (`eliminar_ranking`, `cancelar_ranking`, `eliminar_torneo`, `cancelar_torneo`, `contenido_del_ranking`, `contenido_del_torneo`) y los valores `cancelado` de los enums están **parchados a mano** porque el agente anterior no tenía Docker. La regeneración de él es la autoridad.
 

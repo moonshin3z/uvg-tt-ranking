@@ -40,11 +40,24 @@ Usuarios del seed (PIN `123456` para todos):
 | `npm run verify`            | typecheck + lint + tests + build (lo mismo que corre CI)     |
 | `npm test`                  | tests unitarios (vitest)                                     |
 | `npm run db:reset`          | recrea la BD local con migraciones + seed                    |
-| `npm run db:types`          | regenera `src/lib/supabase/database.types.ts`                |
+| `npm run db:types`          | regenera `src/lib/supabase/database.types.ts` (ver aviso)    |
 | `npm run db:diff -- nombre` | genera una migración a partir de cambios hechos en Studio    |
 | `npm run test:sql`          | las comprobaciones de `supabase/pruebas/` contra la BD local |
 | `npm run test:humo`         | que cada pantalla cargue, con y sin sesión (navegador)       |
 | `npm run test:responsive`   | auditoría de layout en tres anchos (navegador)               |
+
+**Aviso sobre `db:types`.** Lee la base **local**, no la de la nube. Si acabás
+de escribir una migración, primero hay que aplicarla en local:
+
+```bash
+npm run db:reset      # aplica TODAS las migraciones + semilla en la base local
+npm run db:types      # recién ahora los tipos salen completos
+```
+
+Correrlo al revés, o correrlo después de un `supabase db push` (que sube a la
+nube y no toca la local), **borra** del archivo de tipos las funciones que la
+base local todavía no tiene. El código deja de compilar y el error no dice de
+dónde viene. Ya pasó dos veces.
 
 Los dos últimos necesitan la base local con la semilla (`npm run db:reset`) y
 levantan el servidor de desarrollo solos. `test:humo` no escribe nada, así que
