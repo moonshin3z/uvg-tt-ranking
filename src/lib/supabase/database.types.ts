@@ -1379,6 +1379,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      jugadores_del_club: {
+        Args: never
+        Returns: {
+          activo: boolean
+          carnet: string
+          debe_cambiar_pin: boolean
+          id: string
+          nombre: string
+          rol: Database["public"]["Enums"]["rol"]
+        }[]
+      }
       limpiar_desde: {
         Args: { p_posicion: number; p_ronda: number; p_torneo_id: string }
         Returns: undefined
