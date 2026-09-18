@@ -5,8 +5,8 @@
 --   psql "$(npx supabase status -o env | grep DB_URL | cut -d= -f2- | tr -d '"')" \
 --        -v ON_ERROR_STOP=1 -f supabase/pruebas/bajas.sql
 --
--- Esta es la única operación del sistema que no tiene vuelta atrás, así que lo
--- que se prueba acá no es tanto que borre: es que NO borre cuando no debe.
+-- El coordinador elimina torneos directamente, incluso con resultados.
+-- Los rankings conservan sus reglas de borrado y cancelación.
 -- Todo corre dentro de una transacción que se revierte.
 -- =============================================================================
 \set ON_ERROR_STOP on
@@ -300,26 +300,61 @@ begin
     raise exception 'AGUJERO: quedaron inscripciones huérfanas';
   end if;
   select count(*) into v_n from public.baja where objeto_id = v_t and accion = 'borrado';
-  if v_n <> 1 then raise exception 'AGUJERO: el borrado del torneo no quedó anotado'; end if;
-  raise notice 'ok · un torneo en inscripción se borra con todo lo que cuelga, y queda anotado';
+  if v_n <> 0 then raise exception 'MAL: eliminar un torneo no debe crear una baja'; end if;
+  raise notice 'ok · un torneo en inscripción se elimina sin generar una baja';
 end $$;
 
 do $$
-declare v_t uuid;
+declare v_t uuid; v_partidos uuid[]; v_m uuid; v_otros int;
 begin
   -- El del seed: está en juego y con la fase de grupos jugada.
   select id into v_t from public.torneo where nombre = 'Copa UVG';
+  if v_t is null then raise exception 'Falta Copa UVG en la semilla'; end if;
+  select array_agg(id) into v_partidos from public.partido where torneo_id = v_t;
+  select count(*) into v_otros from public.partido where torneo_id is distinct from v_t;
+  insert into public.marcador (codigo, partido_id, nombre_a, nombre_b, dueno, puntos_a, puntos_b)
+    select public.codigo_marcador(), id, 'A', 'B', jugador_a, 7, 5
+    from public.partido where torneo_id = v_t limit 1 returning id into v_m;
+  insert into public.partido_evento (partido_id, accion) values (v_partidos[1], 'registro');
   perform pg_temp.como('20001');
-  perform pg_temp.exige_error(
-    format('select public.eliminar_torneo(%L)', v_t), 'resultado',
-    'borró un torneo donde ya se jugó');
-  perform public.cancelar_torneo(v_t, 'se suspendió por la huelga');
+  perform public.eliminar_torneo(v_t);
   reset role;
 
-  if (select estado::text from public.torneo where id = v_t) <> 'cancelado' then
-    raise exception 'AGUJERO: no quedó cancelado';
+  if exists (select 1 from public.torneo where id = v_t)
+     or exists (select 1 from public.partido where torneo_id = v_t)
+     or exists (select 1 from public.set_partido where partido_id = any(v_partidos))
+     or exists (select 1 from public.partido_evento where partido_id = any(v_partidos))
+     or exists (select 1 from public.marcador where id = v_m)
+     or exists (select 1 from public.torneo_grupo where torneo_id = v_t)
+     or exists (select 1 from public.torneo_llave where torneo_id = v_t)
+     or exists (select 1 from public.torneo_inscripcion where torneo_id = v_t)
+     or exists (select 1 from public.torneo_sorteo where torneo_id = v_t) then
+    raise exception 'MAL: quedaron datos del torneo eliminado';
   end if;
-  raise notice 'ok · un torneo con partidos jugados no se borra, pero sí se cancela';
+  if (select count(*) from public.partido where torneo_id is distinct from v_t) <> v_otros then
+    raise exception 'MAL: se eliminaron partidos ajenos';
+  end if;
+  if exists (select 1 from public.baja where objeto_id = v_t) then
+    raise exception 'MAL: se generó una baja al eliminar';
+  end if;
+  raise notice 'ok · elimina torneo con resultados, cuadro y marcador sin afectar partidos ajenos';
+end $$;
+
+do $$
+declare v_t uuid; v_estado public.torneo_estado;
+begin
+  foreach v_estado in array enum_range(null::public.torneo_estado) loop
+    insert into public.torneo (semestre_id, nombre, formato, estado)
+      values ((select id from public.semestre limit 1), 'Eliminar en cualquier estado', 'llave', v_estado)
+      returning id into v_t;
+    perform pg_temp.como('20001');
+    perform public.eliminar_torneo(v_t);
+    reset role;
+    if exists (select 1 from public.torneo where id = v_t) then
+      raise exception 'MAL: no se eliminó el torneo %', v_estado;
+    end if;
+    raise notice 'ok · el coordinador puede eliminar un torneo %', v_estado;
+  end loop;
 end $$;
 
 rollback;

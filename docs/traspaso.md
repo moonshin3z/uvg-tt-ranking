@@ -1,5 +1,27 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: eliminación simple de torneos
+
+Esta decisión de Iván reemplaza las restricciones históricas de borrado de
+torneos descritas más abajo. La app debe ser simple, limpia y conservar su
+estilo visual. Eliminar un torneo se resuelve con un solo botón.
+
+- En el detalle administrativo aparece **Eliminar torneo**, con el estilo de
+  botón existente. Se quitaron el panel de peligro, la elección entre borrar
+  y cancelar, el nombre de confirmación y el motivo.
+- La migración `20261009000000_eliminar_torneo_simple.sql` permite al
+  coordinador eliminar torneos en cualquier estado, también con resultados
+  o marcadores con puntos. Borra los datos asociados en cascada y no crea
+  registros en `baja`. Conserva la firma del RPC por compatibilidad.
+- La acción valida la sesión de coordinador y el identificador; después de
+  eliminar vuelve a la lista. Las reglas de rankings siguen como estaban.
+- Pruebas: eliminación desde el navegador en los cinco estados; SQL verifica
+  permisos, borrado en cascada y conservación de partidos ajenos. Las pruebas
+  nuevas detectaron el formulario y la bitácora anteriores antes del cambio.
+- Verificación local: 6 pruebas de navegador, 55 comprobaciones SQL, 55
+  pruebas unitarias, tipos de base, lint, formato y build pasaron. Se aplicaron
+  en la base remota las migraciones 20261008 (pendiente) y 20261009, sin reset.
+
 ## Actualización del 18 de septiembre de 2026: etapa 2
 
 Esta sección prevalece sobre las anteriores para los temas de partidos.

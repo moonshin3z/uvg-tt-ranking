@@ -47,7 +47,7 @@ Usuarios del seed (PIN `123456` para todos):
 | `npm run test:humo`         | que cada pantalla cargue, con y sin sesión (navegador)              |
 | `npm run test:partidos`     | independencia de torneos, filtro de ranking y cancelaciones (local) |
 | `npm run test:pin`          | cambio de PIN en el primer ingreso, sin bucle (local)               |
-| `npm run test:torneos`      | siembra manual del cuadro y registro de su orden (local)            |
+| `npm run test:torneos`      | siembra manual y eliminación directa de torneos (local)             |
 | `npm run test:jugadores`    | nombrar coordinador desde la lista de jugadores (local)             |
 | `npm run test:bajas`        | bitácora de rankings y torneos borrados o cancelados (local)        |
 | `npm run test:eventos`      | bitácora de eventos de un partido (local)                           |

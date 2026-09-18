@@ -27,7 +27,7 @@ function sql(texto: string) {
   ).trim();
 }
 
-test.describe("siembra manual de torneos", () => {
+test.describe("gestión de torneos", () => {
   test.describe.configure({ timeout: 120_000 });
 
   let semestre = "";
@@ -82,4 +82,22 @@ test.describe("siembra manual de torneos", () => {
       )
       .toBe("20003,20002,20004,20005");
   });
+
+  for (const estado of ["borrador", "inscripcion", "en_juego", "cerrado", "cancelado"]) {
+    test(`elimina un torneo ${estado} con un solo botón`, async ({ page }) => {
+      sql(`update public.torneo set estado='${estado}' where id='${torneo}';`);
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(`/admin/torneos/${torneo}`);
+      await exigirQueCargue(page, `/admin/torneos/${torneo}`);
+      await expect(page.getByLabel(/para confirmar|Por qué/)).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Cancelar torneo", exact: true })).toHaveCount(0);
+      // Un diálogo también sería un segundo paso; Playwright lo rechaza por defecto.
+      await page.getByRole("button", { name: "Eliminar torneo", exact: true }).click({ timeout: 8_000 });
+      await expect(page).toHaveURL(/\/admin\/torneos$/);
+      await expect(page.getByRole("link", { name: /Copa siembra E2E/ })).toHaveCount(0);
+      expect(sql(`select count(*) from public.torneo where id='${torneo}'`)).toBe("0");
+      expect(sql(`select count(*) from public.torneo_inscripcion where torneo_id='${torneo}'`)).toBe("0");
+      expect(sql(`select count(*) from public.baja where objeto_id='${torneo}'`)).toBe("0");
+    });
+  }
 });

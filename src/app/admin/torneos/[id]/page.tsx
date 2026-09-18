@@ -7,8 +7,7 @@ import { gruposSugeridos } from "@/lib/torneos/sorteo";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gestion } from "@/app/admin/gestion";
-import { ZonaDePeligro, type Contenido } from "@/app/admin/bajas";
-import { abrirInscripcion, cerrarGrupos, cerrarTorneo } from "../acciones";
+import { abrirInscripcion, cerrarGrupos, cerrarTorneo, eliminarTorneo } from "../acciones";
 import {
   BotonTorneo,
   FormularioArmar,
@@ -18,35 +17,6 @@ import {
 } from "../formularios";
 
 export const metadata: Metadata = { title: "Torneo" };
-
-async function ZonaTorneo({ id, nombre, estado }: { id: string; nombre: string; estado: string }) {
-  const supabase = await createClient();
-  const contenido = (datos(
-    await supabase.rpc("contenido_del_torneo", { p_torneo_id: id }),
-    "el contenido del torneo",
-  ) ?? {}) as Partial<Contenido>;
-
-  const c: Contenido = {
-    inscritos: contenido.inscritos ?? 0,
-    partidos: contenido.partidos ?? 0,
-    jugados: contenido.jugados ?? 0,
-    marcadores: contenido.marcadores ?? 0,
-  };
-
-  return (
-    <ZonaDePeligro
-      tipo="torneo"
-      id={id}
-      nombre={nombre}
-      estado={ETIQUETA[estado]?.toLowerCase() ?? estado}
-      contenido={c}
-      sePuedeBorrar={
-        ["borrador", "inscripcion", "en_juego"].includes(estado) && c.jugados === 0 && c.marcadores === 0
-      }
-      sePuedeCancelar={!["cerrado", "cancelado"].includes(estado)}
-    />
-  );
-}
 
 const ETIQUETA: Record<string, string> = {
   borrador: "Borrador",
@@ -234,14 +204,18 @@ export default async function PaginaTorneoAdmin({ params }: PageProps<"/admin/to
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Terminado</CardTitle>
-            <CardDescription>
-              El torneo ya está cerrado. El cuadro queda para consulta y no se puede cambiar.
-            </CardDescription>
+            <CardDescription>El torneo ya terminó. El cuadro queda disponible para consulta.</CardDescription>
           </CardHeader>
         </Card>
       ) : null}
 
-      <ZonaTorneo id={torneo.id} nombre={torneo.nombre} estado={torneo.estado} />
+      <BotonTorneo
+        accion={eliminarTorneo}
+        torneoId={torneo.id}
+        etiqueta="Eliminar torneo"
+        etiquetaPendiente="Eliminando..."
+        variant="outline"
+      />
     </Gestion>
   );
 }

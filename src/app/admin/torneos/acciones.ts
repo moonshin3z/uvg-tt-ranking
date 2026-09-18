@@ -16,6 +16,19 @@ function mensaje(e: { message: string } | null | undefined, porDefecto: string) 
 
 const RUTA = "/admin/torneos";
 
+export async function eliminarTorneo(_prev: EstadoTorneo, formData: FormData): Promise<EstadoTorneo> {
+  await requerirCoordinador();
+  const id = z.string().uuid("Ese torneo no es válido").safeParse(formData.get("torneo_id"));
+  if (!id.success) return { error: id.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("eliminar_torneo", { p_torneo_id: id.data });
+  if (error) return { error: mensaje(error, "No se pudo eliminar el torneo") };
+
+  revalidatePath("/", "layout");
+  redirect(RUTA);
+}
+
 // ---------------------------------------------------------------------------
 // Crear
 // ---------------------------------------------------------------------------
