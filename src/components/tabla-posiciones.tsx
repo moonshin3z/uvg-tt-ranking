@@ -33,7 +33,7 @@ export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
           scroll={false}
           aria-current={o.valor === actual ? "page" : undefined}
           className={cn(
-            "flex min-h-10 flex-1 items-center justify-center rounded-[6px] text-[14.5px] transition-colors",
+            "flex min-h-10 flex-1 items-center justify-center rounded-[6px] text-[14.5px] transition-[background-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.97]",
             o.valor === actual
               ? "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgba(6,56,31,0.08)]"
               : "font-medium text-muted-foreground",

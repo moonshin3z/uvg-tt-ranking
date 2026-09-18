@@ -1,5 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -52,7 +53,8 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const FILA = "flex w-full items-center gap-3 px-4 py-[11px] min-h-[62px] text-left bg-card";
+const FILA =
+  "flex w-full items-center gap-3 px-4 py-[11px] min-h-[62px] text-left bg-card transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] active:bg-uvg-suave";
 
 function Contenido({ nombre, sub, derecha, ini, sinInicial }: Omit<Props, "href" | "children">) {
   return (
@@ -80,7 +82,7 @@ export function Fila({ nombre, sub, derecha, href, ini, sinInicial, children }: 
   return (
     <li className="border-b border-linea-suave last:border-b-0">
       {href ? (
-        <Link href={href} className={cn(FILA, "active:bg-uvg-suave")}>
+        <Link href={href} className={FILA}>
           {contenido}
         </Link>
       ) : (
@@ -110,7 +112,7 @@ export function FilaAccion({
   return (
     <li className="border-b border-linea-suave last:border-b-0">
       <form action={accion}>
-        <button type="submit" className={cn(FILA, "active:bg-uvg-suave")}>
+        <button type="submit" className={FILA}>
           <Contenido nombre={nombre} sub={sub} derecha={derecha} ini={ini} sinInicial={sinInicial} />
         </button>
       </form>
@@ -127,11 +129,7 @@ export function Marcador({ texto, gano }: { texto: string; gano: boolean }) {
 
 /** La flecha de una fila que lleva a otra pantalla. */
 export function Flecha() {
-  return (
-    <span aria-hidden className="text-[19px] leading-none text-faint">
-      ›
-    </span>
-  );
+  return <ChevronRight aria-hidden className="size-[18px] text-faint" strokeWidth={2} />;
 }
 
 /** La pastilla de acción a la derecha de una fila. */
@@ -250,7 +248,7 @@ export function Franja({ nombre, sub, href }: { nombre: string; sub: string; hre
   return (
     <Link
       href={href}
-      className="flex min-h-14 w-full items-center gap-3 border-b border-border bg-card px-4 py-[11px] active:bg-uvg-suave"
+      className="flex min-h-14 w-full items-center gap-3 border-b border-border bg-card px-4 py-[11px] transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] active:bg-uvg-suave"
     >
       <span aria-hidden className="ml-3.5 size-[9px] shrink-0 rounded-full bg-uvg" />
       <span className="min-w-0 flex-1">
@@ -282,7 +280,7 @@ export function Segmentado({
           scroll={false}
           aria-current={o.valor === actual ? "page" : undefined}
           className={cn(
-            "flex min-h-10 flex-1 items-center justify-center rounded-[6px] text-[14.5px] transition-colors",
+            "flex min-h-10 flex-1 items-center justify-center rounded-[6px] text-[14.5px] transition-[background-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.97]",
             o.valor === actual
               ? "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgba(6,56,31,0.08)]"
               : "font-medium text-muted-foreground",

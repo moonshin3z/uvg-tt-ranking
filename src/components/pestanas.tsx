@@ -28,12 +28,12 @@ export async function Pestanas() {
 
   const esCoordinador = sesion.usuario.rol === "coordinador";
   const pestanas: Pestana[] = [
-    { href: "/", icono: "▤", texto: "Tabla", raiz: "/" },
-    { href: "/partidos", icono: "◆", texto: "Partidos", bolita: porResponder, raiz: "/partidos" },
-    ...(esCoordinador ? [{ href: "/admin" as Route, icono: "⬚", texto: "Panel", raiz: "/admin" }] : []),
+    { href: "/", icono: "tabla", texto: "Tabla", raiz: "/" },
+    { href: "/partidos", icono: "partidos", texto: "Partidos", bolita: porResponder, raiz: "/partidos" },
+    ...(esCoordinador ? [{ href: "/admin" as Route, icono: "panel" as const, texto: "Panel", raiz: "/admin" }] : []),
     {
       href: `/jugador/${encodeURIComponent(sesion.usuario.carnet)}` as Route,
-      icono: "◐",
+      icono: "perfil",
       texto: "Perfil",
       raiz: "/jugador",
     },

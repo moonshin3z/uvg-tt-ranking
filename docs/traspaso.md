@@ -1,5 +1,21 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: base de fluidez visual
+
+Iván quiere que el diseño sea una parte central del producto: fácil, simple,
+limpio y fluido. La primera pasada crea una base común sin sumar opciones ni
+información a las pantallas.
+
+- Las rutas entran con un movimiento corto de 180 ms; botones, filas y
+  selectores responden al toque. Todo se desactiva con `prefers-reduced-motion`.
+- La navegación inferior usa iconos consistentes de Lucide y una transición
+  sutil para la sección activa. El encabezado y la barra inferior conservan
+  el fondo claro con desenfoque leve al pasar contenido detrás.
+- La flecha de regreso, los campos y los botones comparten la misma respuesta
+  visual. No se agregaron tarjetas, menús ni texto.
+- Se revisó visualmente a 390 px. Pasaron las 44 pruebas responsive en 320,
+  390 y 1440 px, además de tipos, lint, formato, 55 unitarias y build.
+
 ## Actualización: eliminación simple de torneos
 
 Esta decisión de Iván reemplaza las restricciones históricas de borrado de

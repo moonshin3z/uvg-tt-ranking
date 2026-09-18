@@ -7,8 +7,8 @@ export function Input({ className, type, ...props }: React.ComponentProps<"input
       type={type}
       className={cn(
         // text-base en móvil evita el zoom automático de iOS al enfocar (<16px lo dispara)
-        "flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-xs transition-colors",
-        "placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-xs transition-[background-color,border-color,box-shadow] duration-150 ease-out",
+        "placeholder:text-muted-foreground focus-visible:border-primary focus-visible:bg-card focus-visible:ring-2 focus-visible:ring-ring/25 focus-visible:outline-none",
         "disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/30",
         className,
       )}

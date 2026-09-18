@@ -1,5 +1,6 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { obtenerSesion } from "@/lib/auth/sesion";
 
 /**
@@ -26,14 +27,14 @@ export async function Tope({
   const sesion = await obtenerSesion();
 
   return (
-    <header className="sticky top-0 z-10 flex min-h-14 items-center gap-2.5 border-b border-border bg-card px-4 py-[9px]">
+    <header className="sticky top-0 z-10 flex min-h-14 items-center gap-2.5 border-b border-border bg-card/95 px-4 py-[9px] shadow-[0_1px_0_rgba(19,23,20,0.02)] backdrop-blur-md">
       {atras ? (
         <Link
           href={atras}
           aria-label="Volver"
-          className="-ml-2 inline-flex min-h-10 min-w-10 items-center px-2 text-[15px] font-medium text-primary"
+          className="-ml-2 inline-flex min-h-10 min-w-10 items-center justify-center rounded-full text-primary transition-[background-color,transform] duration-150 ease-out active:scale-90 active:bg-uvg-suave"
         >
-          ‹
+          <ChevronLeft aria-hidden className="size-5" strokeWidth={2.25} />
         </Link>
       ) : null}
       <div className="min-w-0 flex-1">
@@ -47,7 +48,7 @@ export async function Tope({
       ) : (
         <Link
           href="/ingresar"
-          className="inline-flex min-h-10 shrink-0 items-center text-[13px] font-medium text-primary"
+          className="inline-flex min-h-10 shrink-0 items-center rounded-md px-1 text-[13px] font-medium text-primary transition-[color,transform] duration-150 ease-out active:scale-95"
         >
           Ingresar
         </Link>
