@@ -178,6 +178,15 @@ Sus requisitos permanentes, en sus palabras:
 
 Esto importa tanto como el código.
 
+### Regla de oro de producto
+
+La aplicación debe ser fácil y tener solo las opciones necesarias. Menos
+opciones significa menos saturación. Si Iván pide una acción simple, como
+eliminar un torneo, la interfaz debe hacer esa acción directamente. Para esas
+acciones no se agregan bitácoras, confirmaciones especiales ni pasos extra por
+costumbre o por miedo, salvo que Iván los pida explícitamente o sean
+indispensables para que la aplicación funcione.
+
 - **Habla en español de Guatemala, voseo, directo y sin rodeos.** Nada de "¡Excelente pregunta!". Sin guiones largos (—) en el texto; él los pidió fuera explícitamente.
 - **Quiere opiniones honestas, no validación.** Si algo que propone está mal, hay que decírselo y explicar por qué.
 - **Preguntá antes de decidir algo que no te dijo.** Para decisiones con más de una salida razonable, preguntale. Le gusta que se le pregunte con opciones concretas, "en una ventanita".
