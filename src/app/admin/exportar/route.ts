@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { obtenerSesion } from "@/lib/auth/sesion";
 import { createClient } from "@/lib/supabase/server";
 import { rankingVigente } from "@/lib/ranking/consultas";
+import { datos } from "@/lib/supabase/errores";
 
 /**
  * Exporta la tabla o los resultados en CSV (se abre directo en Excel).
@@ -37,20 +38,23 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   const ranking = rankingId
-    ? (await supabase.from("ranking").select("*").eq("id", rankingId).maybeSingle()).data
+    ? datos(await supabase.from("ranking").select("*").eq("id", rankingId).maybeSingle(), "el ranking")
     : await rankingVigente();
   if (!ranking) return new NextResponse("No hay ranking", { status: 404 });
 
   const slug = ranking.nombre.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase();
 
   if (tipo === "resultados") {
-    const { data } = await supabase
-      .from("partido")
-      .select(
-        "tipo, estado, sets_a, sets_b, confirmado_en, division!inner(tipo, ranking_id), a:usuario!partido_jugador_a_fkey(nombre, carnet), b:usuario!partido_jugador_b_fkey(nombre, carnet), ganador",
-      )
-      .eq("division.ranking_id", ranking.id)
-      .order("confirmado_en", { ascending: true, nullsFirst: false });
+    const data = datos(
+      await supabase
+        .from("partido")
+        .select(
+          "tipo, estado, sets_a, sets_b, confirmado_en, division!inner(tipo, ranking_id), a:usuario!partido_jugador_a_fkey(nombre, carnet), b:usuario!partido_jugador_b_fkey(nombre, carnet), ganador",
+        )
+        .eq("division.ranking_id", ranking.id)
+        .order("confirmado_en", { ascending: true, nullsFirst: false }),
+      "los resultados del ranking",
+    );
 
     type Fila = {
       tipo: string;
@@ -101,14 +105,19 @@ export async function GET(request: NextRequest) {
     return respuesta(`resultados-${slug}`, csv(filas));
   }
 
-  const { data: divisiones } = await supabase.from("division").select("id, tipo").eq("ranking_id", ranking.id);
+  const divisiones = datos(
+    await supabase.from("division").select("id, tipo").eq("ranking_id", ranking.id),
+    "las divisiones del ranking",
+  );
   const filas: (string | number | null)[][] = [["División", "Pos", "Jugador", "Carnet", "PJ", "PG", "PP", "Pts"]];
 
   for (const d of divisiones ?? []) {
-    const [{ data: pos }, { data: tabla }] = await Promise.all([
+    const [posRespuesta, tablaRespuesta] = await Promise.all([
       supabase.rpc("posiciones_division", { p_division_id: d.id }),
       supabase.from("tabla_posiciones").select("usuario_id, carnet, pj, pg, pp").eq("division_id", d.id),
     ]);
+    const pos = datos(posRespuesta, "las posiciones de la división");
+    const tabla = datos(tablaRespuesta, "la tabla de la división");
     const porId = new Map((tabla ?? []).map((t) => [t.usuario_id, t]));
     for (const p of (pos ?? []).sort((x, y) => x.posicion - y.posicion)) {
       const t = porId.get(p.usuario_id);

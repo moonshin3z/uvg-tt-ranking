@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import {
   consultarImpacto,
   crearJugador,
+  hacerCoordinador,
   reiniciarPin,
   deshacerRetiro,
   retirarDelRanking,
   type EstadoAlta,
+  type EstadoRol,
   type EstadoReset,
   type EstadoRetiro,
 } from "./acciones";
@@ -139,6 +141,27 @@ export function BotonReiniciarPin({ id, carnet }: { id: string; carnet: string }
           <BotonCopiar texto={`Carnet: ${estado.carnet}\nPIN nuevo: ${estado.pin}\nCambialo al entrar.`} />
         </div>
       ) : null}
+      {estado.error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {estado.error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function BotonHacerCoordinador({ id }: { id: string }) {
+  const [estado, accion, pendiente] = useActionState(hacerCoordinador, {} as EstadoRol);
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <form action={accion}>
+        <input type="hidden" name="id" value={id} />
+        <Button type="submit" variant="outline" size="sm" disabled={pendiente}>
+          {pendiente ? "..." : "Hacer coordinador"}
+        </Button>
+      </form>
+      {estado.ok ? <p className="text-xs text-primary">{estado.ok}</p> : null}
       {estado.error ? (
         <p role="alert" className="text-xs text-destructive">
           {estado.error}

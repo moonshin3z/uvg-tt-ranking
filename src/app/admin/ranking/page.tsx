@@ -127,7 +127,7 @@ async function CuerpoRanking() {
   await requerirCoordinador();
   const supabase = await createClient();
 
-  const [{ data: enCurso }, { data: semestres }, { data: ultimoCerrado }] = await Promise.all([
+  const [enCursoRespuesta, semestresRespuesta, ultimoCerradoRespuesta] = await Promise.all([
     supabase
       .from("ranking")
       .select("*")
@@ -145,6 +145,9 @@ async function CuerpoRanking() {
       .limit(1)
       .maybeSingle(),
   ]);
+  const enCurso = datos(enCursoRespuesta, "el ranking en curso");
+  const semestres = datos(semestresRespuesta, "los semestres");
+  const ultimoCerrado = datos(ultimoCerradoRespuesta, "el último ranking cerrado");
 
   // ===========================================================================
   // Sin ranking en curso
@@ -235,7 +238,7 @@ async function CuerpoRanking() {
   // ===========================================================================
   // Ranking en curso
   // ===========================================================================
-  const [{ data: divisiones }, { data: usuarios }, { data: sorteo }] = await Promise.all([
+  const [divisionesRespuesta, usuariosRespuesta, sorteoRespuesta] = await Promise.all([
     supabase
       .from("division")
       .select("id, tipo, inscripcion(usuario_id), partido(id, tipo, estado)")
@@ -243,6 +246,9 @@ async function CuerpoRanking() {
     supabase.from("usuario").select("id, carnet, nombre").eq("activo", true).order("nombre"),
     supabase.from("sorteo").select("semilla").eq("ranking_id", enCurso.id).maybeSingle(),
   ]);
+  const divisiones = datos(divisionesRespuesta, "las divisiones del ranking");
+  const usuarios = datos(usuariosRespuesta, "los jugadores");
+  const sorteo = datos(sorteoRespuesta, "el sorteo del ranking");
 
   const divisionDe = new Map<string, DivisionTipo>();
   const conteo = { regular: 0, pendiente: 0, jugado: 0, disputado: 0, desempatePendiente: 0 };

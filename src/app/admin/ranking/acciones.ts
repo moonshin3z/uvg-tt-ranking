@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { createClient } from "@/lib/supabase/server";
+import { datos } from "@/lib/supabase/errores";
 import { generarSemilla, sortearDivisiones, type Asignacion } from "@/lib/ranking/sorteo";
 
 export type EstadoAccion = { error?: string; ok?: string };
@@ -69,7 +70,10 @@ export async function crearRanking(_prev: EstadoAccion, formData: FormData): Pro
   const d = parsed.data;
 
   const supabase = await createClient();
-  const { data: semestre } = await supabase.from("semestre").select("nombre").eq("id", d.semestre_id).maybeSingle();
+  const semestre = datos(
+    await supabase.from("semestre").select("nombre").eq("id", d.semestre_id).maybeSingle(),
+    "el semestre",
+  );
   if (!semestre) return { error: "Semestre no encontrado" };
 
   const { error } = await supabase.rpc("crear_ranking", {

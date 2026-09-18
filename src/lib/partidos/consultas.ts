@@ -27,8 +27,8 @@ const SELECT_PARTIDO = `
   id, tipo, estado, jugador_a, jugador_b, ganador, sets_a, sets_b,
   registrado_por, registrado_en, confirmado_en, disputa_motivo, resolucion,
   torneo_id,
-  division(tipo, ranking_id),
-  torneo(id, nombre),
+  division(tipo, ranking_id, ranking(estado)),
+  torneo(id, nombre, estado, horas_autoconfirmacion),
   a:usuario!partido_jugador_a_fkey(id, nombre, carnet),
   b:usuario!partido_jugador_b_fkey(id, nombre, carnet)
 `;
@@ -48,11 +48,18 @@ type FilaPartido = {
   disputa_motivo: string | null;
   resolucion: string | null;
   torneo_id: string | null;
-  division: { tipo: DivisionTipo; ranking_id: string } | null;
-  torneo: { id: string; nombre: string } | null;
+  division: { tipo: DivisionTipo; ranking_id: string; ranking: { estado: string } | null } | null;
+  torneo: { id: string; nombre: string; estado: string; horas_autoconfirmacion: number | null } | null;
   a: { id: string; nombre: string; carnet: string };
   b: { id: string; nombre: string; carnet: string };
 };
+
+export function partidoCancelado(p: {
+  division: { ranking: { estado: string } | null } | null;
+  torneo: { estado: string } | null;
+}): boolean {
+  return p.division?.ranking?.estado === "cancelado" || p.torneo?.estado === "cancelado";
+}
 
 export function desdeMiPerspectiva(p: FilaPartido, yo: string): PartidoMio {
   const soyA = p.jugador_a === yo;
@@ -91,11 +98,9 @@ export async function misPartidos(yo: string, rankingId: string): Promise<MisPar
   const data = datos(
     await supabase
       .from("partido")
-      .select(SELECT_PARTIDO)
-      // `not.is` además del filtro: sin él, un partido de torneo (que no tiene
-      // división) se colaba, porque el filtro sobre una relación ausente no
-      // descarta la fila cuando la unión es externa.
-      .not("division_id", "is", null)
+      // El filtro debe descartar el partido, no solo dejar su división en null.
+      // Sin !inner aparecían partidos de rankings anteriores como si fueran de torneo.
+      .select(SELECT_PARTIDO.replace("division(", "division!inner("))
       .eq("division.ranking_id", rankingId)
       .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
       .order("registrado_en", { ascending: false, nullsFirst: false }),
@@ -168,26 +173,35 @@ export type MarcadorAbierto = {
  */
 export async function misMarcadoresAbiertos(yo: string): Promise<MarcadorAbierto[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("marcador")
-    .select("id, nombre_a, nombre_b, sets_a, sets_b, puntos_a, puntos_b, estado, partido_id, actualizado_en")
-    .eq("dueno", yo)
-    .in("estado", ["en_juego", "abandonado"])
-    .order("actualizado_en", { ascending: false })
-    .limit(5);
+  const data = datos(
+    await supabase
+      .from("marcador")
+      .select(
+        "id, nombre_a, nombre_b, sets_a, sets_b, puntos_a, puntos_b, estado, partido_id, actualizado_en, partido(division(ranking(estado)), torneo(estado))",
+      )
+      .eq("dueno", yo)
+      .in("estado", ["en_juego", "abandonado"])
+      .order("actualizado_en", { ascending: false }),
+    "tus marcadores abiertos",
+  );
 
-  return (data ?? []).map((m) => ({
-    id: m.id,
-    nombreA: m.nombre_a,
-    nombreB: m.nombre_b,
-    setsA: m.sets_a,
-    setsB: m.sets_b,
-    puntosA: m.puntos_a,
-    puntosB: m.puntos_b,
-    estado: m.estado,
-    partidoId: m.partido_id,
-    actualizado: m.actualizado_en,
-  }));
+  // Primero se excluyen las cancelaciones: cinco marcadores cancelados no
+  // deben ocultar uno libre o de otra competencia que todavía se puede retomar.
+  return (data ?? [])
+    .filter((m) => !m.partido || !partidoCancelado(m.partido))
+    .slice(0, 5)
+    .map((m) => ({
+      id: m.id,
+      nombreA: m.nombre_a,
+      nombreB: m.nombre_b,
+      setsA: m.sets_a,
+      setsB: m.sets_b,
+      puntosA: m.puntos_a,
+      puntosB: m.puntos_b,
+      estado: m.estado,
+      partidoId: m.partido_id,
+      actualizado: m.actualizado_en,
+    }));
 }
 
 /**
@@ -205,8 +219,8 @@ export async function misPartidosDeTorneo(yo: string): Promise<PartidoMio[]> {
   const data = datos(
     await supabase
       .from("partido")
-      .select(SELECT_PARTIDO)
-      .not("torneo_id", "is", null)
+      .select(SELECT_PARTIDO.replace("torneo(", "torneo!inner("))
+      .eq("torneo.estado", "en_juego")
       .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
       .in("estado", ["pendiente", "jugado", "disputado"])
       .order("registrado_en", { ascending: false, nullsFirst: false }),

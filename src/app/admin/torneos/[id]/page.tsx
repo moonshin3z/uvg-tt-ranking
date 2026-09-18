@@ -9,7 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Gestion } from "@/app/admin/gestion";
 import { ZonaDePeligro, type Contenido } from "@/app/admin/bajas";
 import { abrirInscripcion, cerrarGrupos, cerrarTorneo } from "../acciones";
-import { BotonTorneo, FormularioArmar, FormularioInscripcion, type JugadorInscribible } from "../formularios";
+import {
+  BotonTorneo,
+  FormularioArmar,
+  FormularioInscripcion,
+  type JugadorInscribible,
+  type JugadorSembrable,
+} from "../formularios";
 
 export const metadata: Metadata = { title: "Torneo" };
 
@@ -94,19 +100,31 @@ export default async function PaginaTorneoAdmin({ params }: PageProps<"/admin/to
   const torneo = datos(await supabase.from("torneo").select("*").eq("id", id).maybeSingle(), "el torneo");
   if (!torneo) notFound();
 
-  const [inscripciones, usuarios, partidos] = await Promise.all([
-    supabase.from("torneo_inscripcion").select("usuario_id").eq("torneo_id", id),
+  const [inscripciones, usuarios, partidos, sorteoRespuesta] = await Promise.all([
+    supabase.from("torneo_inscripcion").select("usuario_id, siembra").eq("torneo_id", id),
     supabase.from("usuario").select("id, carnet, nombre").eq("activo", true).order("nombre"),
     supabase.from("partido").select("id, tipo, estado").eq("torneo_id", id),
+    supabase.from("torneo_sorteo").select("semilla").eq("torneo_id", id).maybeSingle(),
   ]);
 
-  const inscritos = new Set((datos(inscripciones, "la inscripción") ?? []).map((f) => f.usuario_id));
+  const filasInscripcion = datos(inscripciones, "la inscripción") ?? [];
+  const inscritos = new Set(filasInscripcion.map((f) => f.usuario_id));
+  const siembraDe = new Map(filasInscripcion.map((f) => [f.usuario_id, f.siembra]));
   const jugadores: JugadorInscribible[] = (datos(usuarios, "los jugadores") ?? []).map((u) => ({
     ...u,
     inscrito: inscritos.has(u.id),
   }));
+  const jugadoresParaSiembra: JugadorSembrable[] = jugadores
+    .filter((j) => j.inscrito)
+    .map((j) => ({ id: j.id, nombre: j.nombre, siembra: siembraDe.get(j.id) ?? null }))
+    .sort(
+      (a, b) =>
+        (a.siembra ?? Number.MAX_SAFE_INTEGER) - (b.siembra ?? Number.MAX_SAFE_INTEGER) ||
+        a.nombre.localeCompare(b.nombre),
+    );
 
   const todos = datos(partidos, "los partidos del torneo") ?? [];
+  const sorteo = datos(sorteoRespuesta, "la siembra del torneo");
   const deGrupo = todos.filter((p) => p.tipo === "grupo");
   const gruposSinTerminar = deGrupo.filter((p) => p.estado !== "confirmado" && p.estado !== "resuelto").length;
   const deLlave = todos.filter((p) => p.tipo === "llave");
@@ -134,6 +152,11 @@ export default async function PaginaTorneoAdmin({ params }: PageProps<"/admin/to
             <Link href={`/torneos/${torneo.id}` as Route} className="font-medium text-primary underline">
               Ver el cuadro como lo ven los jugadores
             </Link>
+          </p>
+        ) : null}
+        {armado && sorteo ? (
+          <p className="text-sm text-muted-foreground">
+            {sorteo.semilla === "manual" ? "Siembra manual guardada." : `Sorteo guardado: ${sorteo.semilla}`}
           </p>
         ) : null}
       </header>
@@ -164,6 +187,7 @@ export default async function PaginaTorneoAdmin({ params }: PageProps<"/admin/to
               conGrupos={conGrupos}
               inscritos={inscritos.size}
               gruposSugeridos={gruposSugeridos(inscritos.size)}
+              jugadores={jugadoresParaSiembra}
             />
           </Paso>
         </>

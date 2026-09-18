@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      baja: {
+        Row: {
+          accion: string
+          contenido: Json
+          estado: string
+          hecho_en: string
+          hecho_por: string | null
+          id: string
+          motivo: string | null
+          nombre: string
+          objeto_id: string
+          tipo: string
+        }
+        Insert: {
+          accion: string
+          contenido?: Json
+          estado: string
+          hecho_en?: string
+          hecho_por?: string | null
+          id?: string
+          motivo?: string | null
+          nombre: string
+          objeto_id: string
+          tipo: string
+        }
+        Update: {
+          accion?: string
+          contenido?: Json
+          estado?: string
+          hecho_en?: string
+          hecho_por?: string | null
+          id?: string
+          motivo?: string | null
+          nombre?: string
+          objeto_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baja_hecho_por_fkey"
+            columns: ["hecho_por"]
+            isOneToOne: false
+            referencedRelation: "usuario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       desempate_manual: {
         Row: {
           decidido_en: string
@@ -1206,14 +1253,8 @@ export type Database = {
           nombre: string
         }[]
       }
-      contenido_del_ranking: {
-        Args: { p_ranking_id: string }
-        Returns: Json
-      }
-      contenido_del_torneo: {
-        Args: { p_torneo_id: string }
-        Returns: Json
-      }
+      contenido_del_ranking: { Args: { p_ranking_id: string }; Returns: Json }
+      contenido_del_torneo: { Args: { p_torneo_id: string }; Returns: Json }
       crear_ranking: {
         Args: {
           p_fecha_limite: string

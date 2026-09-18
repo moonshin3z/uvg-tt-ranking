@@ -89,7 +89,7 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
 
         {vista === "cuadro" ? (
           cuadro.length === 0 ? (
-            <Pie>El cuadro todavía no está armado. Aparece cuando el coordinador sortea.</Pie>
+            <Pie>El cuadro todavía no está armado. Aparece cuando el coordinador lo arme.</Pie>
           ) : (
             <>
               {/* Se desliza a lo ancho: un cuadro de 16 no cabe en un teléfono

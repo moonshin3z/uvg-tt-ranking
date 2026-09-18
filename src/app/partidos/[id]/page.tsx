@@ -1,7 +1,7 @@
 import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
-import { partidoPorId, setsDePartido } from "@/lib/partidos/consultas";
+import { partidoCancelado, partidoPorId, setsDePartido } from "@/lib/partidos/consultas";
 import { rankingPorId } from "@/lib/ranking/consultas";
 import { createClient } from "@/lib/supabase/server";
 import { textoAutoconfirmacion } from "@/lib/fechas";
@@ -10,6 +10,7 @@ import { Tope } from "@/components/tope";
 import { BotonesConfirmar, FormularioResultado } from "../formularios";
 import { abrirMarcador } from "../acciones";
 import { Button } from "@/components/ui/button";
+import { datos } from "@/lib/supabase/errores";
 
 export const metadata: Metadata = { title: "Partido" };
 
@@ -39,7 +40,9 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
     // un torneo, y cada uno juega a lo suyo.
     supabase.rpc("reglas_de_partido", { p_partido_id: id }),
   ]);
-  const setsParaGanar = reglas.data?.[0]?.sets_para_ganar ?? 2;
+  const setsParaGanar = datos(reglas, "las reglas del partido")?.[0]?.sets_para_ganar ?? 2;
+  const cancelado = partidoCancelado(p);
+  const horasAutoconfirmacion = p.torneo ? p.torneo.horas_autoconfirmacion : ranking?.horas_autoconfirmacion;
 
   // Para el coordinador mirando un partido ajeno, "yo" es el jugador A.
   const soyA = juego ? p.jugador_a === yo : true;
@@ -67,7 +70,18 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
       />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-card pb-8">
         <div className="bg-card px-4 pt-[22px] pb-7">
-          {meTocaResponder ? (
+          {cancelado ? (
+            <>
+              <Aviso>{p.torneo ? "Este torneo está cancelado." : "Este ranking está cancelado."}</Aviso>
+              <p className="mt-3 text-sm text-muted-foreground">Este partido ya no admite cambios.</p>
+              {misSets != null && susSets != null ? (
+                <TarjetaMarcador
+                  marcador={`${misSets} - ${susSets}`}
+                  sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
+                />
+              ) : null}
+            </>
+          ) : meTocaResponder ? (
             <>
               <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
                 {rival.nombre.split(" ")[0]} dice que te{" "}
@@ -86,9 +100,9 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
                 <BotonesConfirmar partidoId={p.id} />
               </Pila>
 
-              {ranking && textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion) ? (
+              {textoAutoconfirmacion(p.registrado_en, horasAutoconfirmacion ?? null) ? (
                 <Aviso>
-                  Si no respondés, {textoAutoconfirmacion(p.registrado_en, ranking.horas_autoconfirmacion)}.
+                  Si no respondés, {textoAutoconfirmacion(p.registrado_en, horasAutoconfirmacion ?? null)}.
                 </Aviso>
               ) : null}
             </>

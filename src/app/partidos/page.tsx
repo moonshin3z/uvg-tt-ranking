@@ -25,44 +25,36 @@ function contexto(p: PartidoMio): string {
 }
 
 export default async function PaginaMisPartidos({ searchParams }: PageProps<"/partidos">) {
-  const [{ registrado, bienvenida }, sesion, ranking] = await Promise.all([
+  const [{ registrado, bienvenida }, sesion, rankingActual] = await Promise.all([
     searchParams,
     requerirSesion(),
     rankingVigente(),
   ]);
   if (sesion.usuario.debe_cambiar_pin) redirect("/cambiar-pin");
 
-  if (!ranking || !["abierto", "en_desempates"].includes(ranking.estado)) {
-    return (
-      <>
-        <Tope titulo="Mis partidos" sub="Sin ranking en juego" />
-        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-          <p className="text-muted-foreground">No hay un ranking en juego ahora mismo.</p>
-        </main>
-      </>
-    );
-  }
+  const ranking = rankingActual && ["abierto", "en_desempates"].includes(rankingActual.estado) ? rankingActual : null;
 
   await autoconfirmarVencidos();
   const [mp, marcadores, deTorneo] = await Promise.all([
-    misPartidos(sesion.authId, ranking.id),
+    ranking ? misPartidos(sesion.authId, ranking.id) : Promise.resolve(null),
     misMarcadoresAbiertos(sesion.authId),
     misPartidosDeTorneo(sesion.authId),
   ]);
   const inscrito =
+    mp !== null &&
     mp.pendientes.length +
       mp.porConfirmar.length +
       mp.esperandoRival.length +
       mp.enDisputa.length +
       mp.historial.length >
-    0;
+      0;
 
   // `main` va sin padding horizontal: los rótulos y las listas del prototipo
   // llegan hasta el borde de la pantalla y traen el suyo.
   return (
     <>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-6">
-        <Tope titulo="Mis partidos" sub={ranking.nombre} />
+        <Tope titulo="Mis partidos" sub={ranking?.nombre ?? "Tus torneos y marcadores"} />
 
         {bienvenida ? (
           /* Un aviso, no una tarjeta: el diseño descartó las tarjetas para
@@ -91,14 +83,42 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
 
         {registrado ? (
           <p role="status" className="mx-4 mt-3 rounded-lg border border-uvg bg-uvg-suave px-4 py-3 text-sm">
-            Resultado registrado.{" "}
-            {ranking.horas_autoconfirmacion
-              ? `Tu rival tiene ${ranking.horas_autoconfirmacion} horas para confirmarlo.`
-              : "Falta que tu rival lo confirme."}
+            Resultado registrado. Falta que tu rival lo confirme.
           </p>
         ) : null}
 
-        {!inscrito ? (
+        {deTorneo.length > 0 ? (
+          <>
+            {/* Los de torneo van antes que los del ranking: un torneo se
+                    juega en un día y el ranking dura el semestre. */}
+            <Rotulo>Torneo</Rotulo>
+            <Lista>
+              {deTorneo.map((p) => (
+                <Fila
+                  key={p.id}
+                  nombre={p.rival.nombre}
+                  sub={contexto(p)}
+                  href={`/partidos/${p.id}` as Route}
+                  derecha={
+                    p.estado === "jugado" && !p.loRegistreYo ? (
+                      <Pastilla>Confirmar</Pastilla>
+                    ) : p.estado === "disputado" ? (
+                      <Badge variant="descenso">En disputa</Badge>
+                    ) : p.estado === "jugado" ? (
+                      <Badge variant="outline">Esperando</Badge>
+                    ) : (
+                      <Flecha />
+                    )
+                  }
+                />
+              ))}
+            </Lista>
+          </>
+        ) : null}
+
+        {!ranking || !mp ? (
+          <Pie>No hay un ranking en juego ahora mismo.</Pie>
+        ) : !inscrito ? (
           <Pie>No estás inscrito en este ranking. Hablá con el coordinador.</Pie>
         ) : (
           <>
@@ -114,35 +134,6 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
                       sub={`Dice que te ${p.gane ? "perdió" : "ganó"}${p.sets ? ` ${p.sets}` : ""}`}
                       href={`/partidos/${p.id}` as Route}
                       derecha={<Pastilla>Confirmar</Pastilla>}
-                    />
-                  ))}
-                </Lista>
-              </>
-            ) : null}
-
-            {deTorneo.length > 0 ? (
-              <>
-                {/* Los de torneo van antes que los del ranking: un torneo se
-                    juega en un día y el ranking dura el semestre. */}
-                <Rotulo>Torneo</Rotulo>
-                <Lista>
-                  {deTorneo.map((p) => (
-                    <Fila
-                      key={p.id}
-                      nombre={p.rival.nombre}
-                      sub={contexto(p)}
-                      href={`/partidos/${p.id}` as Route}
-                      derecha={
-                        p.estado === "jugado" && !p.loRegistreYo ? (
-                          <Pastilla>Confirmar</Pastilla>
-                        ) : p.estado === "disputado" ? (
-                          <Badge variant="descenso">En disputa</Badge>
-                        ) : p.estado === "jugado" ? (
-                          <Badge variant="outline">Esperando</Badge>
-                        ) : (
-                          <Flecha />
-                        )
-                      }
                     />
                   ))}
                 </Lista>
@@ -237,34 +228,33 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
               <Pie>Todavía no tenés resultados confirmados.</Pie>
             )}
 
-            <Rotulo>Marcador</Rotulo>
-            <Lista>
-              {marcadores.map((m) => (
-                <Fila
-                  key={m.id}
-                  nombre={`${m.nombreA} vs. ${m.nombreB}`}
-                  sub={
-                    m.estado === "abandonado"
-                      ? `Abandonado en ${m.setsA}-${m.setsB}`
-                      : `Sin terminar · va ${m.setsA}-${m.setsB} (${m.puntosA}-${m.puntosB})`
-                  }
-                  href={`/marcador/${m.id}` as Route}
-                  derecha={<Flecha />}
-                  ini="▮"
-                />
-              ))}
-              <Fila
-                nombre="Marcador libre"
-                sub="Para un partido que no es del ranking"
-                href="/marcador/nuevo"
-                derecha={<Flecha />}
-                sinInicial
-              />
-            </Lista>
-
             <Pie>El ranking cierra el {textoFechaLimite(ranking.fecha_limite)}.</Pie>
           </>
         )}
+        <Rotulo>Marcador</Rotulo>
+        <Lista>
+          {marcadores.map((m) => (
+            <Fila
+              key={m.id}
+              nombre={`${m.nombreA} vs. ${m.nombreB}`}
+              sub={
+                m.estado === "abandonado"
+                  ? `Abandonado en ${m.setsA}-${m.setsB}`
+                  : `Sin terminar · va ${m.setsA}-${m.setsB} (${m.puntosA}-${m.puntosB})`
+              }
+              href={`/marcador/${m.id}` as Route}
+              derecha={<Flecha />}
+              ini="▮"
+            />
+          ))}
+          <Fila
+            nombre="Marcador libre"
+            sub="Para un partido fuera de una competencia"
+            href="/marcador/nuevo"
+            derecha={<Flecha />}
+            sinInicial
+          />
+        </Lista>
       </main>
     </>
   );

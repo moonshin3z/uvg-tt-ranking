@@ -191,6 +191,22 @@ export async function cambiarActivo(formData: FormData): Promise<void> {
   revalidatePath("/admin/jugadores");
 }
 
+export type EstadoRol = { error?: string; ok?: string };
+
+/** Nombra coordinador a un jugador existente; la base protege el último rol. */
+export async function hacerCoordinador(_prev: EstadoRol, formData: FormData): Promise<EstadoRol> {
+  await requerirCoordinador();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Jugador inválido" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("asignar_rol", { p_usuario_id: id, p_rol: "coordinador" });
+  if (error) return { error: error.message.replace(/^.*?:\s*/, "") };
+
+  revalidatePath("/admin/jugadores");
+  return { ok: "Ahora es coordinador." };
+}
+
 // ---------------------------------------------------------------------------
 // Retiro de un jugador del ranking en curso
 // ---------------------------------------------------------------------------

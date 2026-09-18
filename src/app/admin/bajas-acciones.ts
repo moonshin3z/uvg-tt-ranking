@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { createClient } from "@/lib/supabase/server";
+import { datos } from "@/lib/supabase/errores";
 
 export type EstadoBaja = { error?: string; ok?: string };
 
@@ -32,7 +33,7 @@ async function nombreReal(tipo: "ranking" | "torneo", id: string): Promise<strin
     tipo === "ranking"
       ? await supabase.from("ranking").select("nombre").eq("id", id).maybeSingle()
       : await supabase.from("torneo").select("nombre").eq("id", id).maybeSingle();
-  return respuesta.data?.nombre ?? null;
+  return datos(respuesta, `el ${tipo}`)?.nombre ?? null;
 }
 
 export async function eliminar(_prev: EstadoBaja, formData: FormData): Promise<EstadoBaja> {

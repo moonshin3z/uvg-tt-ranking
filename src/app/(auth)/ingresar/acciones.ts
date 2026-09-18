@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { emailDesdeCarnet, esCarnetValido, esPinValido, normalizarCarnet } from "@/lib/auth/carnet";
+import { datos } from "@/lib/supabase/errores";
 
 export type EstadoIngreso = { error?: string; carnet?: string };
 
@@ -23,7 +24,7 @@ export async function ingresar(_prev: EstadoIngreso, formData: FormData): Promis
 
   // `debe_cambiar_pin` solo se lee por `mi_perfil`: dejó de ser una columna
   // legible desde el cliente, y la función ya resuelve sola de quién habla.
-  const { data: perfil } = await supabase.rpc("mi_perfil");
+  const perfil = datos(await supabase.rpc("mi_perfil"), "tu perfil");
 
   if (!perfil?.activo) {
     await supabase.auth.signOut();

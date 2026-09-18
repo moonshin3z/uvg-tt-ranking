@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cambiarActivo } from "./acciones";
-import { BotonDeshacerRetiro, BotonReiniciarPin, BotonRetirar } from "./formularios";
+import { BotonDeshacerRetiro, BotonHacerCoordinador, BotonReiniciarPin, BotonRetirar } from "./formularios";
 
 export type JugadorFila = {
   id: string;
@@ -135,6 +135,7 @@ export function ListaJugadores({
                 <BotonRetirar id={u.id} nombre={u.nombre} rankingId={rankingId} />
               ) : null}
               {rankingId && fueRetirado.has(u.id) ? <BotonDeshacerRetiro id={u.id} rankingId={rankingId} /> : null}
+              {u.id !== sesionId && u.activo && u.rol === "jugador" ? <BotonHacerCoordinador id={u.id} /> : null}
               {u.id !== sesionId ? <BotonActivo id={u.id} activo={u.activo} nombre={u.nombre} /> : null}
             </li>
           ))}

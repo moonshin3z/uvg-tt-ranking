@@ -1,5 +1,128 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización del 18 de septiembre de 2026: etapa 2
+
+Esta sección prevalece sobre las anteriores para los temas de partidos.
+
+- `misPartidos` usa una unión interna con la división. El filtro por ranking
+  ya descarta partidos de otros rankings, en lugar de devolverlos con división
+  nula. La consulta general de un partido conserva la unión externa para
+  admitir los de torneo, que no tienen división.
+- `/partidos` muestra torneos y marcadores independientemente de que exista
+  un ranking activo o de que el jugador participe en él. El aviso después de
+  registrar ya no toma el plazo del ranking para un partido de torneo. El
+  detalle del partido usa el plazo de su propia competencia.
+- Los torneos cancelados salen de la lista de pendientes. Los marcadores de
+  rankings o torneos cancelados salen de la lista para retomar; los libres
+  siguen disponibles. Un enlace directo al partido muestra la cancelación
+  sin acciones, y el enlace al marcador redirige a ese detalle.
+- La migración `20261008000000_partidos_cancelados.sql` agrega el rechazo de
+  cancelaciones a `exigir_partido_jugable`, `exigir_partido_editable`,
+  `reabrir_marcador` y `sincronizar_marcador`. Se partió de sus definiciones
+  actuales y se comprobó que el único cambio en los cuerpos fueran las guardas.
+  El comportamiento de guardar un marcador cuyo ranking cerró se conserva.
+- La base LOCAL tiene ahora 25 migraciones. Se reconstruyó desde cero y se
+  regeneraron y verificaron los tipos. La migración nueva no cambia firmas.
+- `npm run test:partidos` ejecuta tres pruebas reales de navegador a 320 px:
+  torneo sin ranking activo, registro y confirmación sin inscripción en el
+  ranking, y cancelación con enlaces directos. Las tres fallaron antes del
+  arreglo y pasaron después. Junto con las 13 de humo, pasaron 16 pruebas.
+- `supabase/pruebas/partidos-cancelados.sql` agrega 14 comprobaciones: siete
+  operaciones sobre ranking cancelado y siete sobre torneo cancelado. Exigen
+  que el error mencione la cancelación. Fallaron antes de la migración y
+  pasaron después; la suite completa pasó 50 comprobaciones.
+- Las consultas de marcadores y de reglas del detalle ahora manejan el error
+  de Supabase con `datos()`, en lugar de ocultarlo como vacío o valor por defecto.
+- Cambios locales sin commit ni push; producción sigue pendiente de recibir
+  la migración y la aplicación juntas. La etapa 3 cerró el bucle del PIN y la
+  revisión inicial de errores de datos; queda continuar con los pendientes de
+  producto en la sección 9.
+
+## Actualización del 18 de septiembre de 2026: etapa 3
+
+- Se reprodujo el cambio de PIN del primer ingreso con el usuario de semilla.
+  El SQL sí ponía `debe_cambiar_pin = false`; el bucle venía de que la acción
+  seguía usando la sesión memoizada antes del RPC y volvía a decidir con el
+  valor viejo. Los jugadores ahora van directamente a `/partidos?bienvenida=1`
+  después de cambiarlo. El caso está cubierto por `e2e/pin.spec.ts` y pasó en
+  12 segundos.
+- La revisión de lecturas corrigió consultas que descartaban errores en el
+  cuadro de torneos, el conteo de partidos e inscripciones, el perfil de
+  ingreso, el semestre del ranking y las exportaciones del panel. Las lecturas
+  ahora usan `datos()` o devuelven un error explícito en una acción.
+- `npm run test:pin` ejecuta la prueba del cambio de PIN contra la base local.
+
+## Actualización del 18 de septiembre de 2026: etapa 4
+
+- El coordinador puede elegir entre sorteo automático y siembra manual al
+  armar un torneo. La lista manual usa botones de subir y bajar, con objetivos
+  táctiles, para funcionar también en teléfono.
+- La acción valida que el orden incluya una sola vez a cada inscrito. En modo
+  manual manda `p_semilla = 'manual'`; la función existente guarda el orden
+  completo en `torneo_sorteo.resultado` junto con quién lo ejecutó. El panel
+  muestra `Siembra manual guardada.` después de armarlo.
+- `e2e/torneos.spec.ts` comprueba el flujo completo y
+  `npm run test:torneos` lo ejecuta contra la base local.
+
+## Actualización del 18 de septiembre de 2026: etapa 5
+
+- La lista de jugadores ahora ofrece `Hacer coordinador` a los jugadores
+  activos que no son la sesión actual. La acción llama a la función SQL
+  `asignar_rol`, que exige coordinador y mantiene la guarda del último
+  coordinador activo.
+- `e2e/jugadores.spec.ts` comprueba el ascenso desde el panel y deja el
+  usuario de semilla como jugador al terminar. Se agregó `npm run
+test:jugadores`.
+
+Al ejecutar `next dev`, Next.js generó `AGENTS.md` y `CLAUDE.md` en el repo.
+El código que los genera está en
+`node_modules/next/dist/server/lib/generate-agent-files.js`.
+
+---
+
+## Actualización del 18 de septiembre de 2026: etapa 1
+
+Esta actualización prevalece sobre el estado histórico descrito más abajo.
+
+- El commit `a896be1` ya está en `origin/main`, comprobado contra GitHub.
+- La base local tenía 21 migraciones. Se respaldó antes de reconstruirla con
+  `npm run db:reset`: ahora tiene las 24 migraciones y la semilla. El respaldo
+  está fuera del repo, en `../respaldos-locales/antes-etapa1-20260918.dump`.
+- Los tipos se regeneraron desde esa base completa. Faltaba la tabla `baja`
+  en el parche anterior; ahora está incluida.
+- `db:types` usa `scripts/tipos-db.mjs`: comprueba las migraciones locales y
+  solo reemplaza el archivo después de generar una salida válida. Una base
+  atrasada o un error de CLI conserva intacto el archivo anterior.
+- `db:types:check` compara sin escribir. El job `migraciones` de CI ejecuta
+  la misma comprobación después del reset. Supabase CLI está fijado en 2.117.0
+  en el proyecto y en el workflow. Se ignoran únicamente diferencias CRLF/LF.
+- `npm run verify` incluye ahora `format:check`, igual que el job `verify`.
+- Verificación local: tipos, lint, formato, 55 pruebas unitarias, build y
+  36 comprobaciones SQL pasaron. Las dos suites SQL que fallaban antes del
+  reset (`bajas` y `divisiones`) pasaron después.
+- El control de tipos falló con el archivo del commit anterior y pasó con el
+  regenerado. Se comprobó también sin `node_modules`, usando la CLI global,
+  como el job de CI. Con la base atrasada y con una CLI que falla se verificó
+  que el archivo de tipos conserva exactamente su contenido.
+- El primer intento de build durante la revisión falló al resolver un módulo
+  interno de Next que sí existía. Los dos intentos posteriores pasaron sin
+  cambios en Next; la causa no quedó confirmada. No se atribuyó a un arreglo.
+- Estos cambios de la etapa 1 quedan locales, sin commit ni push. El workflow
+  nuevo todavía no se ejecutó en GitHub. No se modificó producción.
+
+Siguiente etapa acordada: corregir la consulta que mezcla partidos de rankings
+distintos y separar los torneos del ranking en la pantalla de partidos. La
+revisión reprodujo que un filtro por ranking inexistente devolvía tres partidos
+del jugador de prueba; usando una unión interna devolvió cero. El código de
+esas funciones todavía no se modificó.
+
+Otra corrección al traspaso histórico: `asignar_rol` ya existe desde la
+migración `20260925000000`, incluida la protección del último coordinador
+activo. Para promover jugadores existentes hay que aprovechar esa función
+desde la interfaz, no crear otra equivalente.
+
+---
+
 Documento para el agente que continúa. Lo escribió el agente anterior el 18 de septiembre de 2026, con el repo delante. Todo lo que dice acá está verificado contra el código, no recordado.
 
 Si vas a leer una sola sección antes de tocar nada, que sea **§4 (cómo se verifica acá)**. Es la regla que hace que este proyecto no se rompa.
@@ -358,26 +481,26 @@ El `db:types` importa: los tipos de las funciones nuevas (`eliminar_ranking`, `c
 
 ### A. Pedido explícito por Iván, sin empezar
 
-**A.1 — Arrastrar jugadores para sembrar el cuadro de un torneo.**
+**A.1 — Arrastrar jugadores para sembrar el cuadro de un torneo. Resuelto en etapa 4.**
 Pedido textual: _"la opción cuando se hacen torneo que el coordinador pueda arrastrar jugadores para posicionarlo"_.
 
-Buena noticia: **el SQL ya lo soporta.** `armar_torneo(p_torneo_id uuid, p_semilla text, p_orden uuid[], p_cant_grupos smallint)` recibe el orden de siembra ya resuelto como arreglo. Hoy `src/app/admin/torneos/acciones.ts` lo llena con `ordenarSiembra(participantes, semilla)`, o sea sorteo. El trabajo es **solo de interfaz**: dejar que el coordinador reordene la lista y mandar ese orden.
+`armar_torneo(p_torneo_id uuid, p_semilla text, p_orden uuid[], p_cant_grupos smallint)` ya recibía el orden de siembra como arreglo. Ahora `src/app/admin/torneos/formularios.tsx` permite ordenarlo con botones y `src/app/admin/torneos/acciones.ts` manda el orden completo con la marca `manual`.
 
 Consideraciones:
 
-- Tiene que funcionar con el dedo en un teléfono, no solo con mouse. Los eventos de HTML5 drag and drop no funcionan bien en móvil; conviene pointer events o botones de subir/bajar como alternativa accesible.
+- Tiene que funcionar con el dedo en un teléfono, no solo con mouse. Se resolvió con botones de subir y bajar, que también son accesibles con teclado.
 - `torneo_inscripcion.siembra` ya existe (smallint, único por torneo cuando no es null) y `armar_torneo` la escribe.
-- Cuando el coordinador siembra a mano, la semilla del sorteo deja de tener sentido como prueba de imparcialidad. Hay que decidir qué se guarda y qué se muestra. **Preguntale antes de decidirlo.**
+- Cuando el coordinador siembra a mano se guarda `semilla = 'manual'` y el orden queda en `torneo_sorteo.resultado`; el panel muestra que fue una siembra manual.
 
-**A.2 — Botón de "hacer coordinador" a un jugador existente.**
-Él dijo _"metelo de una vez, es corto"_ y el turno se interrumpió antes de hacerlo. Hoy el rol se cambia a mano en la base. Va en `/admin/jugadores`. Necesita una función SQL `security definer` nueva (el grant sobre `usuario` es por columnas y no incluye `rol`), y conviene un guarda que impida quedarse sin ningún coordinador.
+**A.2 — Botón de "hacer coordinador" a un jugador existente. Resuelto en etapa 5.**
+`/admin/jugadores` llama a la función SQL `asignar_rol`, que ya existía como `security definer`, exige un coordinador y evita dejar al club sin ningún coordinador activo.
 
 ### B. Bugs reportados sin cerrar
 
-**B.1 — El cambio de PIN se repite en bucle.**
+**B.1 — El cambio de PIN se repite en bucle. Resuelto en etapa 3.**
 Reporte: _"cuando hice un usuario llamado prueba 3 y lo puse como coordinador, la pantalla que le pedía el pin se repetía constantemente a pesar de ponerlo"_.
 
-Lo que ya se descartó, verificado contra la base: `cambiar_mi_pin` es `security definer`, cambia el PIN y pone `debe_cambiar_pin = false` correctamente. O sea **el problema no está en SQL**. La hipótesis viva es caché de Next entre el redirect de la server action y `requerirCoordinador()`: la sesión ya tiene el flag en false pero la lectura que decide el redirect viene de caché. Hay que reproducirlo en vivo. Sospechosos: `src/lib/auth/coordinador.ts`, `src/app/(auth)/cambiar-pin/acciones.ts`, `src/proxy.ts`.
+Lo que ya se descartó, verificado contra la base: `cambiar_mi_pin` es `security definer`, cambia el PIN y pone `debe_cambiar_pin = false` correctamente. La causa era que la acción usaba la sesión memoizada antes del RPC y decidía el destino con el valor viejo. Ahora redirige directamente a `/partidos?bienvenida=1` después de cambiarlo, y `e2e/pin.spec.ts` cubre el caso.
 
 **B.2 — Confirmar en un teléfono real que el marcador en vivo de torneos funciona.**
 Él reportó que no había marcador en vivo para torneos. La causa era que **los torneos eran de solo lectura para los jugadores**: `misPartidos` filtraba por `division.ranking_id` y `partidoPorId` usaba `division!inner`, así que un partido de torneo (que no cuelga de ninguna división) desaparecía. Ya está arreglado: existe `misPartidosDeTorneo`, los partidos de torneo aparecen en `/partidos` con su rótulo, y `/partidos/[id]` ofrece "Llevar el marcador en vivo". **Falta que él lo confirme desde el teléfono**, porque el reporte original es anterior al arreglo.

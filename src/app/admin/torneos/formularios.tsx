@@ -142,6 +142,7 @@ export function BotonTorneo({
 }
 
 export type JugadorInscribible = { id: string; carnet: string; nombre: string; inscrito: boolean };
+export type JugadorSembrable = { id: string; nombre: string; siembra: number | null };
 
 /**
  * La lista de inscritos se guarda entera de una vez.
@@ -212,18 +213,95 @@ export function FormularioArmar({
   conGrupos,
   inscritos,
   gruposSugeridos,
+  jugadores,
 }: {
   torneoId: string;
   conGrupos: boolean;
   inscritos: number;
   gruposSugeridos: number;
+  jugadores: JugadorSembrable[];
 }) {
   const [estado, accion, pendiente] = useActionState(armarTorneo, vacio);
+  const [modo, setModo] = useState<"sorteo" | "manual">("sorteo");
+  const [orden, setOrden] = useState(() => jugadores.map((j) => j.id));
   const maximo = Math.max(2, Math.floor(inscritos / 2));
+
+  const nombreDe = new Map(jugadores.map((j) => [j.id, j.nombre]));
+
+  function mover(indice: number, delta: -1 | 1) {
+    const destino = indice + delta;
+    if (destino < 0 || destino >= orden.length) return;
+    setOrden((actual) => {
+      const siguiente = [...actual];
+      [siguiente[indice], siguiente[destino]] = [siguiente[destino], siguiente[indice]];
+      return siguiente;
+    });
+  }
 
   return (
     <form action={accion} className="flex flex-col gap-3">
       <input type="hidden" name="torneo_id" value={torneoId} />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Cómo ordenar la siembra</legend>
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="radio"
+            name="modo"
+            value="sorteo"
+            checked={modo === "sorteo"}
+            onChange={() => setModo("sorteo")}
+            className="size-4 accent-primary"
+          />
+          Sortear automáticamente
+        </label>
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="radio"
+            name="modo"
+            value="manual"
+            checked={modo === "manual"}
+            onChange={() => setModo("manual")}
+            className="size-4 accent-primary"
+          />
+          Elegir el orden manualmente
+        </label>
+      </fieldset>
+
+      {modo === "manual" ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
+            El primero queda como cabeza de serie 1. Usá los botones para acomodar la lista desde el teléfono.
+          </p>
+          <ol className="divide-y rounded-lg border" aria-label="Orden manual de siembra">
+            {orden.map((id, indice) => (
+              <li key={id} className="flex min-h-12 items-center gap-2 px-3 py-2">
+                <span className="w-6 shrink-0 text-right text-sm text-muted-foreground">{indice + 1}.</span>
+                <span className="min-w-0 flex-1 truncate text-sm">{nombreDe.get(id) ?? "Jugador desconocido"}</span>
+                <button
+                  type="button"
+                  onClick={() => mover(indice, -1)}
+                  disabled={indice === 0 || pendiente}
+                  aria-label={"Subir " + (nombreDe.get(id) ?? "jugador")}
+                  className="inline-flex size-10 items-center justify-center rounded-md border text-lg disabled:opacity-40"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => mover(indice, 1)}
+                  disabled={indice === orden.length - 1 || pendiente}
+                  aria-label={"Bajar " + (nombreDe.get(id) ?? "jugador")}
+                  className="inline-flex size-10 items-center justify-center rounded-md border text-lg disabled:opacity-40"
+                >
+                  ↓
+                </button>
+                <input type="hidden" name="orden" value={id} />
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+
       {conGrupos ? (
         <div className="flex flex-col gap-2 sm:max-w-xs">
           <Label htmlFor="cant_grupos">Cuántos grupos</Label>
@@ -245,13 +323,15 @@ export function FormularioArmar({
       )}
 
       <p className="text-sm text-muted-foreground">
-        El sorteo usa una semilla que queda guardada con el torneo, así que cualquiera puede rehacerlo y comprobar que
-        no se acomodó a nadie. Volver a armar borra los partidos que ya se hayan jugado.
+        {modo === "manual"
+          ? "Se guarda el orden completo y queda marcado como siembra manual."
+          : "El sorteo usa una semilla que queda guardada con el torneo, así que cualquiera puede rehacerlo y comprobar que no se acomodó a nadie."}{" "}
+        Volver a armar borra los partidos que ya se hayan jugado.
       </p>
 
       <Mensaje estado={estado} />
       <Button type="submit" disabled={pendiente || inscritos < 2} className="sm:self-start">
-        {pendiente ? "Armando..." : "Sortear y armar"}
+        {pendiente ? "Armando..." : modo === "manual" ? "Armar con esta siembra" : "Sortear y armar"}
       </Button>
     </form>
   );

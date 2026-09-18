@@ -36,5 +36,9 @@ export async function cambiarPin(_prev: EstadoCambioPin, formData: FormData): Pr
   // Primer ingreso: al jugador le mostramos qué hacer ahora; al coordinador,
   // su panel.
   if (sesion.usuario.rol === "coordinador") redirect("/admin/ranking");
-  redirect(sesion.usuario.debe_cambiar_pin ? "/partidos?bienvenida=1" : "/partidos");
+  // La consulta de la sesión que se hizo antes de la RPC está memoizada en
+  // este request y todavía puede traer la bandera vieja. La RPC ya terminó y
+  // dejó `debe_cambiar_pin = false`; decidir el destino con ese dato viejo
+  // hacía que el primer ingreso volviera a `/cambiar-pin` en un bucle.
+  redirect("/partidos?bienvenida=1");
 }

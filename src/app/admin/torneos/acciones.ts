@@ -114,11 +114,12 @@ export async function guardarInscritos(_prev: EstadoTorneo, formData: FormData):
 
   // El número que se reporta sale de la base, no de lo que se marcó: si algo
   // falló, lo que importa es cuántos quedaron de verdad.
-  const { count } = await supabase
+  const conteo = await supabase
     .from("torneo_inscripcion")
     .select("usuario_id", { count: "exact", head: true })
     .eq("torneo_id", torneoId);
-  const n = count ?? 0;
+  if (conteo.error) return { error: mensaje(conteo.error, "No se pudo contar la inscripción") };
+  const n = conteo.count ?? 0;
 
   if (fallaron.length > 0) {
     return {
@@ -132,11 +133,10 @@ export async function guardarInscritos(_prev: EstadoTorneo, formData: FormData):
 // Armar el cuadro
 // ---------------------------------------------------------------------------
 /**
- * El sorteo se hace acá, en el servidor, y se manda ya resuelto.
+ * El orden se decide acá, en el servidor, y se manda ya resuelto.
  *
- * La semilla queda guardada con el torneo: con ella cualquiera puede rehacer
- * el mismo sorteo y comprobar que no se acomodó a nadie. Es la misma idea que
- * en el sorteo de divisiones del ranking.
+ * En modo sorteo la semilla permite rehacer el resultado. En modo manual se
+ * guarda la marca `manual` y la lista completa queda en `torneo_sorteo.resultado`.
  */
 export async function armarTorneo(_prev: EstadoTorneo, formData: FormData): Promise<EstadoTorneo> {
   await requerirCoordinador();
@@ -156,8 +156,31 @@ export async function armarTorneo(_prev: EstadoTorneo, formData: FormData): Prom
     siembra: f.siembra,
   }));
 
-  const semilla = generarSemilla();
-  const orden = ordenarSiembra(participantes, semilla);
+  const modo = String(formData.get("modo") ?? "sorteo");
+  const esManual = modo === "manual";
+  const semilla = esManual ? "manual" : generarSemilla();
+  let orden: string[];
+
+  if (esManual) {
+    const ordenEnviado = formData.getAll("orden").map(String).filter(Boolean);
+    const inscritosSet = new Set(inscritos.map((f) => f.usuario_id));
+    const ordenSet = new Set(ordenEnviado);
+    if (
+      ordenEnviado.length !== inscritos.length ||
+      ordenSet.size !== inscritos.length ||
+      ordenEnviado.some((id) => !inscritosSet.has(id))
+    ) {
+      return { error: "La siembra manual tiene que incluir una sola vez a cada inscrito." };
+    }
+    // El helper valida la posición y deja una sola forma de construir el
+    // arreglo que recibe la función SQL.
+    orden = ordenarSiembra(
+      ordenEnviado.map((usuario_id, i) => ({ usuario_id, siembra: i + 1 })),
+      semilla,
+    );
+  } else {
+    orden = ordenarSiembra(participantes, semilla);
+  }
 
   const { error } = await supabase.rpc("armar_torneo", {
     p_torneo_id: torneoId,
@@ -171,7 +194,11 @@ export async function armarTorneo(_prev: EstadoTorneo, formData: FormData): Prom
 
   revalidatePath(`${RUTA}/${torneoId}`);
   revalidatePath("/");
-  return { ok: `Armado con ${orden.length} jugadores. Semilla ${semilla}.` };
+  return {
+    ok: esManual
+      ? `Armado con ${orden.length} jugadores. Siembra manual guardada.`
+      : `Armado con ${orden.length} jugadores. Semilla ${semilla}.`,
+  };
 }
 
 // ---------------------------------------------------------------------------

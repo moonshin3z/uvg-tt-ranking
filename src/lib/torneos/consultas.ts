@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { datos } from "@/lib/supabase/errores";
+import { datos, ErrorDeDatos } from "@/lib/supabase/errores";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type Torneo = Database["public"]["Tables"]["torneo"]["Row"];
@@ -48,13 +48,14 @@ export async function torneoEnCurso(): Promise<{ torneo: Torneo; porJugar: numbe
   );
   if (!torneo) return null;
 
-  const { count } = await supabase
+  const conteo = await supabase
     .from("partido")
     .select("id", { count: "exact", head: true })
     .eq("torneo_id", torneo.id)
     .in("estado", ["pendiente", "jugado", "disputado"]);
+  if (conteo.error) throw new ErrorDeDatos("los partidos pendientes del torneo", conteo.error);
 
-  return { torneo, porJugar: count ?? 0 };
+  return { torneo, porJugar: conteo.count ?? 0 };
 }
 
 export async function torneoPorId(id: string): Promise<Torneo | null> {
@@ -85,7 +86,7 @@ export async function cuadroDeTorneo(torneoId: string): Promise<LlaveDeCuadro[]>
   const ids = [...new Set(llaves.flatMap((l) => [l.jugador_a, l.jugador_b]).filter((x): x is string => !!x))];
   const partidoIds = llaves.map((l) => l.partido_id).filter((x): x is string => !!x);
 
-  const [nombres, partidos] = await Promise.all([
+  const [nombresRespuesta, partidosRespuesta] = await Promise.all([
     ids.length > 0
       ? supabase.from("usuario").select("id, nombre").in("id", ids)
       : Promise.resolve({ data: [], error: null }),
@@ -93,9 +94,11 @@ export async function cuadroDeTorneo(torneoId: string): Promise<LlaveDeCuadro[]>
       ? supabase.from("partido").select("id, jugador_a, sets_a, sets_b, estado").in("id", partidoIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
+  const nombres = datos(nombresRespuesta, "los nombres del cuadro");
+  const partidos = datos(partidosRespuesta, "los resultados del cuadro");
 
-  const nombrePor = new Map((nombres.data ?? []).map((u) => [u.id, u.nombre]));
-  const partidoPor = new Map((partidos.data ?? []).map((p) => [p.id, p]));
+  const nombrePor = new Map((nombres ?? []).map((u) => [u.id, u.nombre]));
+  const partidoPor = new Map((partidos ?? []).map((p) => [p.id, p]));
 
   return llaves.map((l) => {
     const p = l.partido_id ? partidoPor.get(l.partido_id) : undefined;
