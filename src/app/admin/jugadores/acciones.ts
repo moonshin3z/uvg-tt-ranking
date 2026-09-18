@@ -71,9 +71,20 @@ export async function reiniciarPin(_prev: EstadoReset, formData: FormData): Prom
   const { error } = await admin.auth.admin.updateUserById(id, { password: pin });
   if (error) return { error: `No se pudo reiniciar: ${error.message}` };
 
+  // Son dos escrituras y la segunda puede fallar sola. Sin mirar su error se
+  // mostraba un PIN nuevo con la bandera sin levantar: el jugador entraba con
+  // ese PIN y nadie le pedía cambiarlo.
   const supabase = await createClient();
-  await supabase.from("usuario").update({ debe_cambiar_pin: true }).eq("id", id);
+  const { error: eBandera } = await supabase.from("usuario").update({ debe_cambiar_pin: true }).eq("id", id);
+  if (eBandera) {
+    return {
+      error: `El PIN nuevo es ${pin}, pero no se pudo marcar que tiene que cambiarlo: ${eBandera.message}`,
+      pin,
+      carnet,
+    };
+  }
 
+  revalidatePath("/admin/jugadores");
   return { pin, carnet };
 }
 
@@ -84,7 +95,10 @@ export async function cambiarActivo(formData: FormData): Promise<void> {
   if (!id || id === sesion.authId) return; // el coordinador no se desactiva a sí mismo
 
   const supabase = await createClient();
-  await supabase.from("usuario").update({ activo }).eq("id", id);
+  const { error } = await supabase.from("usuario").update({ activo }).eq("id", id);
+  // No devuelve estado, así que lo único honesto es no callarlo: sin esto, dar
+  // de baja a alguien podía no pasar y la pantalla se veía igual.
+  if (error) throw new Error(`No se pudo cambiar el estado del jugador: ${error.message}`);
   revalidatePath("/admin/jugadores");
 }
 

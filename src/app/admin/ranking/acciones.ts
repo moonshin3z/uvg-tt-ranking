@@ -82,7 +82,14 @@ export async function crearRanking(_prev: EstadoAccion, formData: FormData): Pro
     p_n_premiados: d.n_premiados,
     p_n_ascienden: d.n_ascienden,
     p_n_descienden: d.n_descienden,
-    p_horas_autoconfirmacion: d.horas_autoconfirmacion === 0 ? undefined : d.horas_autoconfirmacion,
+    // null, no undefined. `undefined` no viaja en el JSON, PostgREST no manda
+    // el parámetro, y la función aplica su valor por omisión de 72 horas: el
+    // coordinador pedía «nunca» y le quedaba autoconfirmación a los 3 días.
+    // `autoconfirmar_vencidos` salta los rankings con la columna en null.
+    // El cast es por los tipos generados, que declaran el parámetro `number`
+    // porque en SQL es `integer`. La base sí acepta null, y comprobado que lo
+    // guarda como null: es lo que `autoconfirmar_vencidos` entiende por nunca.
+    p_horas_autoconfirmacion: (d.horas_autoconfirmacion === 0 ? null : d.horas_autoconfirmacion) as unknown as number,
     p_sets_para_ganar: d.sets_para_ganar,
     p_puntos_por_set: d.puntos_por_set,
   });

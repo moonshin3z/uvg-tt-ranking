@@ -47,7 +47,12 @@ export async function crearTorneo(_prev: EstadoTorneo, formData: FormData): Prom
     p_fecha: d.fecha,
     p_sets_para_ganar: d.sets_para_ganar,
     p_puntos_por_set: d.puntos_por_set,
-    p_horas_autoconfirmacion: d.horas_autoconfirmacion === 0 ? 72 : d.horas_autoconfirmacion,
+    // Mismo caso que en el ranking: null es «nunca», y omitir el parámetro
+    // haría que la base aplicara su valor por omisión.
+    // El cast es por los tipos generados, que declaran el parámetro `number`
+    // porque en SQL es `integer`. La base sí acepta null, y comprobado que lo
+    // guarda como null: es lo que `autoconfirmar_vencidos` entiende por nunca.
+    p_horas_autoconfirmacion: (d.horas_autoconfirmacion === 0 ? null : d.horas_autoconfirmacion) as unknown as number,
   });
   if (error || !data) return { error: mensaje(error, "No se pudo crear el torneo") };
 

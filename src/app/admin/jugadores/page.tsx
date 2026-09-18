@@ -13,14 +13,10 @@ export const metadata: Metadata = { title: "Jugadores" };
 export default async function PaginaJugadores() {
   const sesion = await requerirCoordinador();
   const supabase = await createClient();
-  const usuarios = datos(
-    await supabase
-      .from("usuario")
-      .select("id, carnet, nombre, rol, activo, debe_cambiar_pin")
-      .order("activo", { ascending: false })
-      .order("nombre"),
-    "la lista de jugadores",
-  );
+  // Por función y no por select: `debe_cambiar_pin` no se puede leer desde el
+  // navegador a propósito (es una pista de quién sigue con el PIN que le
+  // dieron), así que la lista completa la devuelve una función de coordinador.
+  const usuarios = datos(await supabase.rpc("jugadores_del_club"), "la lista de jugadores");
 
   // Quiénes están inscritos en el ranking en curso: solo a ellos se les puede
   // ofrecer el retiro.

@@ -11,6 +11,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
     // reportar el error real, no "esta URL no sirve esta aplicación".
     <html lang="es-GT" data-app="uvgtt">
       <body
+        data-error="1"
         style={{
           margin: 0,
           minHeight: "100vh",

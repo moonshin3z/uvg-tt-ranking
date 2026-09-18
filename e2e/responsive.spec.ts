@@ -29,6 +29,7 @@ async function revisar(page: Page, ruta: string) {
   await asentar(page);
   await confirmarQueEsLaApp(page);
   exigirQueNoSeaCambiarPin(page, ruta);
+  await exigirQueNoSeaError(page, ruta);
   return medir(page);
 }
 
@@ -83,6 +84,37 @@ function exigirQueNoSeaCambiarPin(page: Page, ruta: string) {
       `    update public.usuario set debe_cambiar_pin = false;`,
       ``,
     ].join("\n"),
+  );
+}
+
+/**
+ * Una pantalla que reventó no se audita: se reporta.
+ *
+ * Para una auditoría de layout, la pantalla de error es perfecta: un título,
+ * un párrafo y dos botones, nada que se salga ni nada ilegible. Así que pasaba
+ * en verde mientras la pantalla real no cargaba. Eso dejó /admin/jugadores
+ * roto desde la migración de permisos sin que ninguna corrida lo dijera.
+ */
+async function exigirQueNoSeaError(page: Page, ruta: string) {
+  const reventó = await page.locator("[data-error]").count();
+  if (reventó === 0) return;
+  const titulo = await page
+    .locator("h1")
+    .first()
+    .textContent()
+    .catch(() => null);
+  throw new Error(
+    [
+      ``,
+      `${ruta} no cargó: la aplicación mostró su pantalla de error.`,
+      titulo ? `  «${titulo.trim()}»` : ``,
+      ``,
+      `El error real queda en la consola del servidor de desarrollo. Suele ser`,
+      `una consulta que la base rechaza, no un problema de la pantalla.`,
+      ``,
+    ]
+      .filter((l) => l !== ``)
+      .join("\n"),
   );
 }
 

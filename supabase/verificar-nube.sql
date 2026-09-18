@@ -10,8 +10,8 @@
 
 with c as (
 
-  select 1 as n, 'Las 17 migraciones' as que,
-         count(*)::text || ' de 17' as valor, count(*) = 17 as bien
+  select 1 as n, 'Las 21 migraciones' as que,
+         count(*)::text || ' de 21' as valor, count(*) = 21 as bien
     from supabase_migrations.schema_migrations
 
   union all

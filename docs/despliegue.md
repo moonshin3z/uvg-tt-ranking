@@ -83,7 +83,7 @@ npx supabase link --project-ref <el ref del proyecto>
 npx supabase db push
 ```
 
-`db push` aplica las 17 migraciones en orden. **No corre la semilla**, y así
+`db push` aplica las 21 migraciones en orden. **No corre la semilla**, y así
 tiene que ser: la semilla es de desarrollo y crea nueve usuarios de prueba con
 el PIN 123456.
 
@@ -93,7 +93,7 @@ Verificá que aplicaron todas:
 npx supabase migration list
 ```
 
-Las 17 tienen que aparecer con fecha en las dos columnas, local y remoto.
+Las 21 tienen que aparecer con fecha en las dos columnas, local y remoto.
 
 Después, en el SQL Editor del panel, pegá entero `supabase/verificar-nube.sql`.
 Solo lee: no escribe ni borra nada. Devuelve una fila por revisión, y las diez

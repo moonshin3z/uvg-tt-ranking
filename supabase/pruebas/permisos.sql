@@ -177,4 +177,34 @@ begin
   raise notice 'ok · el camino normal sigue funcionando';
 end $$;
 
+
+-- -----------------------------------------------------------------------------
+-- La lista de jugadores del coordinador.
+--
+-- `debe_cambiar_pin` no se puede leer desde el navegador, a propósito: dice
+-- quién sigue con el PIN que le dieron. Pero /admin/jugadores la necesita, y
+-- estaba pidiéndola con un select normal, así que la pantalla reventaba con
+-- «permission denied for table usuario» desde la migración de permisos.
+--
+-- La función la devuelve y exige coordinador. Las dos mitades importan: que un
+-- jugador no pueda llamarla, y que la columna siga sin poder leerse directo.
+-- -----------------------------------------------------------------------------
+do $$
+declare v_n int;
+begin
+  perform pg_temp.como('20001');
+  select count(*) into v_n from public.jugadores_del_club();
+  if v_n < 2 then raise exception 'AGUJERO: el coordinador no ve la lista (trajo %)', v_n; end if;
+  reset role;
+
+  perform pg_temp.como('20002');
+  perform pg_temp.exige_error('select * from public.jugadores_del_club()',
+    'que un jugador lea la lista con debe_cambiar_pin');
+  perform pg_temp.exige_error('select debe_cambiar_pin from public.usuario limit 1',
+    'leer debe_cambiar_pin directo de la tabla');
+  reset role;
+
+  raise notice 'ok · la lista con debe_cambiar_pin es solo del coordinador';
+end $$;
+
 rollback;

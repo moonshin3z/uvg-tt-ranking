@@ -16,6 +16,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <Aviso
+      esError
       titulo="No pudimos cargar esta página"
       detalle="Puede ser la conexión o que el servidor no esté respondiendo. Probá de nuevo en unos segundos."
     >
