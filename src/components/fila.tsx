@@ -38,6 +38,12 @@ type Props = {
   /** Si la fila entera lleva a algún lado. Sin esto, la fila queda quieta. */
   href?: Route;
   /**
+   * Qué va dentro del círculo, si no son las iniciales del nombre. El prototipo
+   * lo usa para símbolos y cifras: «!» en lo urgente, «+» en crear, «↓» en
+   * exportar, el número de jugadores en la fila del club.
+   */
+  ini?: string;
+  /**
    * Sin el círculo de iniciales. En el prototipo el círculo sale solo cuando
    * la fila es una persona: las de «Cuenta», que son acciones, no lo llevan.
    */
@@ -48,7 +54,7 @@ type Props = {
 
 const FILA = "flex w-full items-center gap-3 px-4 py-[11px] min-h-[62px] text-left bg-card";
 
-function Contenido({ nombre, sub, derecha, sinInicial }: Omit<Props, "href" | "children">) {
+function Contenido({ nombre, sub, derecha, ini, sinInicial }: Omit<Props, "href" | "children">) {
   return (
     <>
       {sinInicial ? null : (
@@ -56,7 +62,7 @@ function Contenido({ nombre, sub, derecha, sinInicial }: Omit<Props, "href" | "c
           aria-hidden
           className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-uvg-suave text-[13px] font-semibold text-uvg-profundo"
         >
-          {iniciales(nombre)}
+          {ini ?? iniciales(nombre)}
         </span>
       )}
       <span className="min-w-0 flex-1">
@@ -68,8 +74,8 @@ function Contenido({ nombre, sub, derecha, sinInicial }: Omit<Props, "href" | "c
   );
 }
 
-export function Fila({ nombre, sub, derecha, href, sinInicial, children }: Props) {
-  const contenido = <Contenido nombre={nombre} sub={sub} derecha={derecha} sinInicial={sinInicial} />;
+export function Fila({ nombre, sub, derecha, href, ini, sinInicial, children }: Props) {
+  const contenido = <Contenido nombre={nombre} sub={sub} derecha={derecha} ini={ini} sinInicial={sinInicial} />;
 
   return (
     <li className="border-b border-linea-suave last:border-b-0">
@@ -97,6 +103,7 @@ export function FilaAccion({
   nombre,
   sub,
   derecha,
+  ini,
   sinInicial,
   accion,
 }: Omit<Props, "href" | "children"> & { accion: () => Promise<void> }) {
@@ -104,7 +111,7 @@ export function FilaAccion({
     <li className="border-b border-linea-suave last:border-b-0">
       <form action={accion}>
         <button type="submit" className={cn(FILA, "active:bg-uvg-suave")}>
-          <Contenido nombre={nombre} sub={sub} derecha={derecha} sinInicial={sinInicial} />
+          <Contenido nombre={nombre} sub={sub} derecha={derecha} ini={ini} sinInicial={sinInicial} />
         </button>
       </form>
     </li>
@@ -285,5 +292,33 @@ export function Segmentado({
         </Link>
       ))}
     </nav>
+  );
+}
+
+/** Un dato suelto: el rótulo a la izquierda y la cifra a la derecha. `.dato`. */
+export function Dato({ children, valor }: { children: React.ReactNode; valor: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-linea-suave px-4 py-[13px] text-[15px]">
+      <span className="text-muted-foreground">{children}</span>
+      <b className="font-semibold tabular-nums">{valor}</b>
+    </div>
+  );
+}
+
+/** La franja verde clara de arriba del panel, con el estado en una línea. */
+export function Nota({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="border-b border-border bg-uvg-suave px-4 py-[15px] text-[14px] text-pretty text-uvg-profundo">
+      {children}
+    </p>
+  );
+}
+
+/** La pastilla chica de acción a la derecha de una fila. `.btn.chico`. */
+export function PastillaChica({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-3.5 text-[14px] font-semibold text-primary-foreground">
+      {children}
+    </span>
   );
 }

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormularioAlta } from "./formularios";
 import { ListaJugadores } from "./lista";
 import { MensajeParaElGrupo } from "./mensaje-grupo";
+import { Gestion } from "@/app/admin/gestion";
 
 export const metadata: Metadata = { title: "Jugadores" };
 
@@ -57,34 +58,36 @@ export default async function PaginaJugadores() {
 
   return (
     <>
-      <MensajeParaElGrupo ranking={enCurso?.nombre ?? null} />
+      <Gestion titulo="Jugadores" sub="Altas, PIN y retiros">
+        <MensajeParaElGrupo ranking={enCurso?.nombre ?? null} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nuevo jugador</CardTitle>
-          <CardDescription>El sistema genera el PIN; el jugador lo cambia en su primer ingreso.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FormularioAlta />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Nuevo jugador</CardTitle>
+            <CardDescription>El sistema genera el PIN; el jugador lo cambia en su primer ingreso.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormularioAlta />
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Jugadores <span className="text-muted-foreground">({activos} activos)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 sm:p-0">
-          <ListaJugadores
-            jugadores={lista}
-            sesionId={sesion.authId}
-            rankingId={enCurso?.id ?? null}
-            inscritos={[...inscritos]}
-            retirados={[...retirados]}
-          />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Jugadores <span className="text-muted-foreground">({activos} activos)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-0">
+            <ListaJugadores
+              jugadores={lista}
+              sesionId={sesion.authId}
+              rankingId={enCurso?.id ?? null}
+              inscritos={[...inscritos]}
+              retirados={[...retirados]}
+            />
+          </CardContent>
+        </Card>
+      </Gestion>
     </>
   );
 }

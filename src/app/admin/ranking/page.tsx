@@ -8,6 +8,7 @@ import type { DivisionTipo, RankingRow } from "@/lib/supabase/tipos";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Gestion } from "@/app/admin/gestion";
 import { abrirRanking, cerrarFaseRegular, cerrarRanking, generarCalendario, generarDesempates } from "./acciones";
 import {
   BotonAccion,
@@ -91,7 +92,7 @@ function Exportar({ rankingId }: { rankingId: string }) {
   );
 }
 
-export default async function PaginaRanking() {
+async function CuerpoRanking() {
   await requerirCoordinador();
   const supabase = await createClient();
 
@@ -405,5 +406,13 @@ export default async function PaginaRanking() {
         </CardContent>
       </Card>
     </>
+  );
+}
+
+export default async function PaginaRanking() {
+  return (
+    <Gestion titulo="Ranking" sub="Divisiones, calendario y cierre">
+      <CuerpoRanking />
+    </Gestion>
   );
 }

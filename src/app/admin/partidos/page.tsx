@@ -8,6 +8,7 @@ import { autoconfirmarVencidos } from "@/lib/partidos/consultas";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormularioResolver } from "./formulario";
+import { Gestion } from "@/app/admin/gestion";
 
 export const metadata: Metadata = { title: "Partidos" };
 
@@ -43,7 +44,7 @@ function Resultado({ p }: { p: Fila }) {
   );
 }
 
-export default async function PaginaPartidosAdmin() {
+async function CuerpoPartidos() {
   await requerirCoordinador();
   const ranking = await rankingVigente();
   if (!ranking || !["abierto", "en_desempates"].includes(ranking.estado)) {
@@ -174,5 +175,13 @@ export default async function PaginaPartidosAdmin() {
         </CardContent>
       </Card>
     </>
+  );
+}
+
+export default async function PaginaPartidosAdmin() {
+  return (
+    <Gestion titulo="Partidos" sub="Confirmar, resolver y corregir">
+      <CuerpoPartidos />
+    </Gestion>
   );
 }
