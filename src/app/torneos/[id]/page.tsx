@@ -35,10 +35,11 @@ function Lado({
   gano: boolean;
   yo: boolean;
   /**
-   * El lugar está vacío porque al rival le tocó pasar directo, no porque
-   * falte definirlo. Se dice con todas las letras: dibujado como «por
-   * definir», un bye se lee como un partido que falta, y con cinco jugadores
-   * eso son tres lugares que parecen huecos del sistema.
+   * El lugar está vacío porque al de al lado le tocó BYE y pasa sin jugar, no
+   * porque falte definir al rival. Son dos cosas distintas y se dicen
+   * distinto: dibujados los dos como «por definir», los byes se leen como
+   * partidos que faltan, y con cinco jugadores eso son tres lugares que
+   * parecen huecos del sistema.
    */
   bye?: boolean;
 }) {
@@ -50,9 +51,7 @@ function Lado({
         !nombre && "text-faint",
       )}
     >
-      <span className={cn("truncate", yo && "font-semibold")}>
-        {nombre ?? (bye ? "pasa directo" : "por definir")}
-      </span>
+      <span className={cn("truncate", yo && "font-semibold")}>{nombre ?? (bye ? "BYE" : "por definir")}</span>
       <b className="shrink-0 font-bold">{sets ?? (nombre ? "-" : "")}</b>
     </div>
   );
