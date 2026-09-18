@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
 import { createClient } from "@/lib/supabase/server";
@@ -111,6 +112,42 @@ export async function abrirMarcador(formData: FormData): Promise<void> {
   const { data, error } = await supabase.rpc("abrir_marcador_de_partido", { p_partido_id: partidoId });
   if (error || !data) redirect(`/partidos/${partidoId}?marcador=no`);
   redirect(`/marcador/${data.id}`);
+}
+
+export type EstadoMarcadorLibre = { error?: string };
+
+/**
+ * Abre un marcador para un partido que no es del ranking.
+ *
+ * No exige que el rival tenga cuenta: son dos nombres escritos a mano. Lo que
+ * se anote acá no toca la tabla ni queda como partido; es la aplicación usada
+ * solo como marcador, que era una de las cosas que tenía que hacer desde el
+ * principio.
+ */
+export async function abrirMarcadorLibre(
+  _prev: EstadoMarcadorLibre,
+  formData: FormData,
+): Promise<EstadoMarcadorLibre> {
+  await requerirSesion();
+  const nombreA = String(formData.get("nombre_a") ?? "").trim();
+  const nombreB = String(formData.get("nombre_b") ?? "").trim();
+  if (!nombreA || !nombreB) return { error: "Poné los dos nombres." };
+
+  const sets = Number(formData.get("sets_para_ganar") ?? 2);
+  const puntos = Number(formData.get("puntos_por_set") ?? 11);
+  if (!Number.isInteger(sets) || sets < 1 || sets > 5) return { error: "Formato inválido." };
+  if (!Number.isInteger(puntos) || puntos < 5 || puntos > 21) return { error: "Puntos por set inválidos." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("abrir_marcador_libre", {
+    p_nombre_a: nombreA,
+    p_nombre_b: nombreB,
+    p_sets_para_ganar: sets,
+    p_puntos_por_set: puntos,
+  });
+  if (error || !data) return { error: error?.message.replace(/^.*?:\s*/, "") ?? "No se pudo abrir el marcador." };
+
+  redirect(`/marcador/${data.id}` as Route);
 }
 
 /**

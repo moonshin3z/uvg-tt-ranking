@@ -123,6 +123,39 @@ export async function consultarImpacto(_prev: EstadoRetiro, formData: FormData):
   return { impacto: { usuarioId, nombre, rankingId, filas: (data ?? []) as ImpactoRetiro[] } };
 }
 
+/**
+ * Deshace un retiro: lo vuelve a inscribir y repone sus partidos anulados tal
+ * como estaban antes, leyendo la bitácora.
+ *
+ * Va en un solo paso, al revés que el retiro. Retirar destruye resultados y por
+ * eso se confirma; esto los devuelve, y el peor caso de apretarlo por error es
+ * volver a retirar a alguien.
+ */
+export async function deshacerRetiro(_prev: EstadoRetiro, formData: FormData): Promise<EstadoRetiro> {
+  await requerirCoordinador();
+  const usuarioId = String(formData.get("id") ?? "");
+  const rankingId = String(formData.get("ranking_id") ?? "");
+  if (!usuarioId || !rankingId) return { error: "Falta información del jugador o del ranking" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("deshacer_retiro", {
+    p_ranking_id: rankingId,
+    p_usuario_id: usuarioId,
+  });
+  if (error) return { error: error.message.replace(/^.*?:\s*/, "") };
+
+  revalidatePath("/admin/jugadores");
+  revalidatePath("/admin/ranking");
+  revalidatePath("/admin/partidos");
+  revalidatePath("/");
+  return {
+    ok:
+      data === 0
+        ? "Vuelve a estar en la tabla. No había partidos que reponer."
+        : `Vuelve a estar en la tabla. Se repusieron ${data} partidos.`,
+  };
+}
+
 /** Paso 2: ejecuta. Anula todos sus partidos y lo saca de la tabla. */
 export async function retirarDelRanking(_prev: EstadoRetiro, formData: FormData): Promise<EstadoRetiro> {
   await requerirCoordinador();

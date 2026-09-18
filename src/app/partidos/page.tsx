@@ -197,6 +197,17 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
               <Pie>Todavía no tenés resultados confirmados.</Pie>
             )}
 
+            <Rotulo>Marcador</Rotulo>
+            <Lista>
+              <Fila
+                nombre="Marcador libre"
+                sub="Para un partido que no es del ranking"
+                href="/marcador/nuevo"
+                derecha={<Flecha />}
+                sinInicial
+              />
+            </Lista>
+
             <Pie>El ranking cierra el {textoFechaLimite(ranking.fecha_limite)}.</Pie>
           </>
         )}

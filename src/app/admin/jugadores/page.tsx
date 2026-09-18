@@ -36,15 +36,20 @@ export default async function PaginaJugadores() {
   );
 
   const inscritos = new Set<string>();
+  // Quiénes están retirados de ese mismo ranking: a ellos se les ofrece
+  // deshacerlo. Un retiro borra la inscripción, así que los dos conjuntos no se
+  // pisan nunca.
+  const retirados = new Set<string>();
   if (enCurso) {
-    const filas = datos(
-      await supabase
+    const [filas, retiros] = await Promise.all([
+      supabase
         .from("inscripcion")
         .select("usuario_id, division!inner(ranking_id)")
         .eq("division.ranking_id", enCurso.id),
-      "las inscripciones",
-    );
-    for (const f of filas ?? []) inscritos.add(f.usuario_id);
+      supabase.from("retiro").select("usuario_id").eq("ranking_id", enCurso.id),
+    ]);
+    for (const f of datos(filas, "las inscripciones") ?? []) inscritos.add(f.usuario_id);
+    for (const r of datos(retiros, "los retiros") ?? []) retirados.add(r.usuario_id);
   }
 
   const lista = usuarios ?? [];
@@ -76,6 +81,7 @@ export default async function PaginaJugadores() {
             sesionId={sesion.authId}
             rankingId={enCurso?.id ?? null}
             inscritos={[...inscritos]}
+            retirados={[...retirados]}
           />
         </CardContent>
       </Card>

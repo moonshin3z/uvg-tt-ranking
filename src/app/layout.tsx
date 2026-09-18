@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { figtree } from "@/fonts";
 import "./globals.css";
 import { Pestanas } from "@/components/pestanas";
+import { SinRed } from "@/components/sin-red";
 
 export const metadata: Metadata = {
   title: {
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="es-GT" data-app="uvgtt" className={`${figtree.variable} h-full`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         {children}
+        <SinRed />
         <Pestanas />
       </body>
     </html>

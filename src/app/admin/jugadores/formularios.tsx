@@ -8,6 +8,7 @@ import {
   consultarImpacto,
   crearJugador,
   reiniciarPin,
+  deshacerRetiro,
   retirarDelRanking,
   type EstadoAlta,
   type EstadoReset,
@@ -237,5 +238,36 @@ export function BotonRetirar({ id, nombre, rankingId }: { id: string; nombre: st
       </div>
       <p className="mt-2 text-xs text-muted-foreground">Esto no se puede deshacer desde la app.</p>
     </form>
+  );
+}
+
+/**
+ * Deshacer un retiro. Un paso, sin confirmación: repone lo que el retiro anuló.
+ */
+export function BotonDeshacerRetiro({ id, rankingId }: { id: string; rankingId: string }) {
+  const [estado, ejecutar, ejecutando] = useActionState(deshacerRetiro, {} as EstadoRetiro);
+
+  if (estado.ok)
+    return (
+      <p role="status" className="text-xs text-primary">
+        {estado.ok}
+      </p>
+    );
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <form action={ejecutar}>
+        <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="ranking_id" value={rankingId} />
+        <Button type="submit" variant="outline" size="sm" disabled={ejecutando}>
+          {ejecutando ? "Reponiendo..." : "Deshacer retiro"}
+        </Button>
+      </form>
+      {estado.error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {estado.error}
+        </p>
+      ) : null}
+    </div>
   );
 }

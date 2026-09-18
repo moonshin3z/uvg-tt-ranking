@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cambiarActivo } from "./acciones";
-import { BotonReiniciarPin, BotonRetirar } from "./formularios";
+import { BotonDeshacerRetiro, BotonReiniciarPin, BotonRetirar } from "./formularios";
 
 export type JugadorFila = {
   id: string;
@@ -65,15 +65,18 @@ export function ListaJugadores({
   sesionId,
   rankingId,
   inscritos,
+  retirados,
 }: {
   jugadores: JugadorFila[];
   sesionId: string;
   rankingId: string | null;
   inscritos: string[];
+  retirados: string[];
 }) {
   const [busqueda, setBusqueda] = useState("");
   const [soloActivos, setSoloActivos] = useState(false);
   const enRanking = useMemo(() => new Set(inscritos), [inscritos]);
+  const fueRetirado = useMemo(() => new Set(retirados), [retirados]);
 
   const visibles = useMemo(() => {
     const q = normalizar(busqueda.trim());
@@ -124,12 +127,14 @@ export function ListaJugadores({
                   {u.rol === "coordinador" ? <Badge variant="secondary">coordinador</Badge> : null}
                   {u.debe_cambiar_pin ? <Badge variant="outline">PIN sin cambiar</Badge> : null}
                   {enRanking.has(u.id) ? <Badge variant="outline">en el ranking</Badge> : null}
+                  {fueRetirado.has(u.id) ? <Badge variant="descenso">retirado</Badge> : null}
                 </p>
               </div>
               <BotonReiniciarPin id={u.id} carnet={u.carnet} />
               {rankingId && enRanking.has(u.id) ? (
                 <BotonRetirar id={u.id} nombre={u.nombre} rankingId={rankingId} />
               ) : null}
+              {rankingId && fueRetirado.has(u.id) ? <BotonDeshacerRetiro id={u.id} rankingId={rankingId} /> : null}
               {u.id !== sesionId ? <BotonActivo id={u.id} activo={u.activo} nombre={u.nombre} /> : null}
             </li>
           ))}

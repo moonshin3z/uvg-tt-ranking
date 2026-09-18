@@ -383,7 +383,6 @@ export type Database = {
       }
       ranking: {
         Row: {
-          anterior_id: string | null
           cerrado_en: string | null
           creado_en: string
           estado: Database["public"]["Enums"]["ranking_estado"]
@@ -402,7 +401,6 @@ export type Database = {
           sets_para_ganar: number
         }
         Insert: {
-          anterior_id?: string | null
           cerrado_en?: string | null
           creado_en?: string
           estado?: Database["public"]["Enums"]["ranking_estado"]
@@ -421,7 +419,6 @@ export type Database = {
           sets_para_ganar?: number
         }
         Update: {
-          anterior_id?: string | null
           cerrado_en?: string | null
           creado_en?: string
           estado?: Database["public"]["Enums"]["ranking_estado"]
@@ -1468,11 +1465,11 @@ export type Database = {
         Args: { p_ranking_id: string }
         Returns: {
           carnet: string
-          division_actual: Database["public"]["Enums"]["division_tipo"] | null
+          division_actual: Database["public"]["Enums"]["division_tipo"]
           division_propuesta: Database["public"]["Enums"]["division_tipo"]
           nombre: string
           origen: Database["public"]["Enums"]["inscripcion_origen"]
-          posicion: number | null
+          posicion: number
           usuario_id: string
         }[]
       }
@@ -1677,7 +1674,6 @@ export type Database = {
         | "descenso"
         | "permanece"
         | "manual"
-        | "nuevo"
       marcador_estado: "en_juego" | "terminado" | "abandonado"
       partido_estado:
         | "pendiente"
@@ -1840,7 +1836,6 @@ export const Constants = {
         "descenso",
         "permanece",
         "manual",
-        "nuevo",
       ],
       marcador_estado: ["en_juego", "terminado", "abandonado"],
       partido_estado: [
