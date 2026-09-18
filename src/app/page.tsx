@@ -101,9 +101,11 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
           <Franja
             nombre={torneo.torneo.nombre}
             sub={
-              torneo.porJugar > 0
-                ? `En juego · quedan ${torneo.porJugar} partido${torneo.porJugar === 1 ? "" : "s"}`
-                : "En juego"
+              torneo.torneo.estado === "inscripcion"
+                ? "Inscripción abierta · hablá con el coordinador para anotarte"
+                : torneo.porJugar > 0
+                  ? `En juego · quedan ${torneo.porJugar} partido${torneo.porJugar === 1 ? "" : "s"}`
+                  : "En juego"
             }
             href={`/torneos/${torneo.torneo.id}` as Route}
           />

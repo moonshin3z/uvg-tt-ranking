@@ -96,17 +96,35 @@ export async function guardarInscritos(_prev: EstadoTorneo, formData: FormData):
   const agregar = [...marcados].filter((id) => !ya.has(id));
   const quitar = [...ya].filter((id) => !marcados.has(id));
 
+  // No se corta en el primero que falla. Antes sí, y eso dejaba la lista a
+  // medias sin decir quién había quedado afuera: el coordinador armaba el
+  // cuadro creyendo que estaban todos y descubría al que faltaba cuando ya
+  // estaba sorteado.
+  const fallaron: string[] = [];
   for (const id of agregar) {
     const { error } = await supabase.rpc("inscribir_en_torneo", { p_torneo_id: torneoId, p_usuario_id: id });
-    if (error) return { error: mensaje(error, "No se pudo inscribir a alguien") };
+    if (error) fallaron.push(`inscribir (${mensaje(error, "falló")})`);
   }
   for (const id of quitar) {
     const { error } = await supabase.rpc("sacar_de_torneo", { p_torneo_id: torneoId, p_usuario_id: id });
-    if (error) return { error: mensaje(error, "No se pudo sacar a alguien") };
+    if (error) fallaron.push(`sacar (${mensaje(error, "falló")})`);
   }
 
   revalidatePath(`${RUTA}/${torneoId}`);
-  const n = marcados.size;
+
+  // El número que se reporta sale de la base, no de lo que se marcó: si algo
+  // falló, lo que importa es cuántos quedaron de verdad.
+  const { count } = await supabase
+    .from("torneo_inscripcion")
+    .select("usuario_id", { count: "exact", head: true })
+    .eq("torneo_id", torneoId);
+  const n = count ?? 0;
+
+  if (fallaron.length > 0) {
+    return {
+      error: `Quedaron ${n} inscrito${n === 1 ? "" : "s"}, pero ${fallaron.length} operación${fallaron.length === 1 ? "" : "es"} falló: ${fallaron.join("; ")}`,
+    };
+  }
   return { ok: `${n} inscrito${n === 1 ? "" : "s"}.` };
 }
 

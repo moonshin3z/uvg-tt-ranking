@@ -3,7 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
 import { rankingVigente } from "@/lib/ranking/consultas";
-import { autoconfirmarVencidos, misMarcadoresAbiertos, misPartidos, type PartidoMio } from "@/lib/partidos/consultas";
+import {
+  autoconfirmarVencidos,
+  misMarcadoresAbiertos,
+  misPartidos,
+  misPartidosDeTorneo,
+  type PartidoMio,
+} from "@/lib/partidos/consultas";
 import { Badge } from "@/components/ui/badge";
 import { Fila, Flecha, Lista, Marcador, Pastilla, Pie, Rotulo } from "@/components/fila";
 import { Tope } from "@/components/tope";
@@ -14,6 +20,7 @@ export const metadata: Metadata = { title: "Mis partidos" };
 
 /** La línea chica de la fila: de dónde sale el partido. */
 function contexto(p: PartidoMio): string {
+  if (!p.division) return `${p.torneo?.nombre ?? "Torneo"} · ${p.tipo === "grupo" ? "fase de grupos" : "llave"}`;
   return p.tipo === "desempate" ? `${p.division} · desempate` : p.division;
 }
 
@@ -37,9 +44,10 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
   }
 
   await autoconfirmarVencidos();
-  const [mp, marcadores] = await Promise.all([
+  const [mp, marcadores, deTorneo] = await Promise.all([
     misPartidos(sesion.authId, ranking.id),
     misMarcadoresAbiertos(sesion.authId),
+    misPartidosDeTorneo(sesion.authId),
   ]);
   const inscrito =
     mp.pendientes.length +
@@ -106,6 +114,35 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
                       sub={`Dice que te ${p.gane ? "perdió" : "ganó"}${p.sets ? ` ${p.sets}` : ""}`}
                       href={`/partidos/${p.id}` as Route}
                       derecha={<Pastilla>Confirmar</Pastilla>}
+                    />
+                  ))}
+                </Lista>
+              </>
+            ) : null}
+
+            {deTorneo.length > 0 ? (
+              <>
+                {/* Los de torneo van antes que los del ranking: un torneo se
+                    juega en un día y el ranking dura el semestre. */}
+                <Rotulo>Torneo</Rotulo>
+                <Lista>
+                  {deTorneo.map((p) => (
+                    <Fila
+                      key={p.id}
+                      nombre={p.rival.nombre}
+                      sub={contexto(p)}
+                      href={`/partidos/${p.id}` as Route}
+                      derecha={
+                        p.estado === "jugado" && !p.loRegistreYo ? (
+                          <Pastilla>Confirmar</Pastilla>
+                        ) : p.estado === "disputado" ? (
+                          <Badge variant="descenso">En disputa</Badge>
+                        ) : p.estado === "jugado" ? (
+                          <Badge variant="outline">Esperando</Badge>
+                        ) : (
+                          <Flecha />
+                        )
+                      }
                     />
                   ))}
                 </Lista>

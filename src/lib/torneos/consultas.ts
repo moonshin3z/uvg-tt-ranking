@@ -37,7 +37,10 @@ export async function torneoEnCurso(): Promise<{ torneo: Torneo; porJugar: numbe
     await supabase
       .from("torneo")
       .select("*")
-      .eq("estado", "en_juego")
+      // También los que están en inscripción: si el torneo no aparece hasta que
+      // el coordinador arma el cuadro, nadie se entera de que hay que anotarse.
+      // Eso fue justo lo que pasó la primera vez que se creó uno.
+      .in("estado", ["inscripcion", "en_juego"])
       .order("creado_en", { ascending: false })
       .limit(1)
       .maybeSingle(),

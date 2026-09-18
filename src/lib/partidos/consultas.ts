@@ -7,7 +7,10 @@ export type PartidoMio = {
   id: string;
   tipo: PartidoTipo;
   estado: PartidoEstado;
-  division: DivisionTipo;
+  /** Null cuando el partido es de un torneo: ahí no hay divisiones. */
+  division: DivisionTipo | null;
+  /** El torneo del que cuelga, si cuelga de uno. */
+  torneo: { id: string; nombre: string } | null;
   rival: { id: string; nombre: string; carnet: string };
   soyA: boolean;
   gane: boolean | null;
@@ -23,7 +26,9 @@ export type PartidoMio = {
 const SELECT_PARTIDO = `
   id, tipo, estado, jugador_a, jugador_b, ganador, sets_a, sets_b,
   registrado_por, registrado_en, confirmado_en, disputa_motivo, resolucion,
-  division!inner(tipo, ranking_id),
+  torneo_id,
+  division(tipo, ranking_id),
+  torneo(id, nombre),
   a:usuario!partido_jugador_a_fkey(id, nombre, carnet),
   b:usuario!partido_jugador_b_fkey(id, nombre, carnet)
 `;
@@ -42,7 +47,9 @@ type FilaPartido = {
   confirmado_en: string | null;
   disputa_motivo: string | null;
   resolucion: string | null;
-  division: { tipo: DivisionTipo; ranking_id: string };
+  torneo_id: string | null;
+  division: { tipo: DivisionTipo; ranking_id: string } | null;
+  torneo: { id: string; nombre: string } | null;
   a: { id: string; nombre: string; carnet: string };
   b: { id: string; nombre: string; carnet: string };
 };
@@ -57,7 +64,8 @@ export function desdeMiPerspectiva(p: FilaPartido, yo: string): PartidoMio {
     id: p.id,
     tipo: p.tipo,
     estado: p.estado,
-    division: p.division.tipo,
+    division: p.division?.tipo ?? null,
+    torneo: p.torneo,
     rival,
     soyA,
     gane,
@@ -84,6 +92,10 @@ export async function misPartidos(yo: string, rankingId: string): Promise<MisPar
     await supabase
       .from("partido")
       .select(SELECT_PARTIDO)
+      // `not.is` además del filtro: sin él, un partido de torneo (que no tiene
+      // división) se colaba, porque el filtro sobre una relación ausente no
+      // descarta la fila cuando la unión es externa.
+      .not("division_id", "is", null)
       .eq("division.ranking_id", rankingId)
       .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
       .order("registrado_en", { ascending: false, nullsFirst: false }),
@@ -176,4 +188,29 @@ export async function misMarcadoresAbiertos(yo: string): Promise<MarcadorAbierto
     partidoId: m.partido_id,
     actualizado: m.actualizado_en,
   }));
+}
+
+/**
+ * Mis partidos de torneo.
+ *
+ * Van aparte de los del ranking porque no comparten nada: un partido de torneo
+ * no tiene división, no suma puntos en la tabla y se juega con las reglas de su
+ * torneo. Hasta ahora `misPartidos` filtraba por `division.ranking_id`, así que
+ * a un jugador no le aparecía nunca su partido de torneo: no podía registrar el
+ * resultado, ni confirmarlo, ni abrir el marcador. El torneo era de solo
+ * lectura para todos menos el coordinador.
+ */
+export async function misPartidosDeTorneo(yo: string): Promise<PartidoMio[]> {
+  const supabase = await createClient();
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(SELECT_PARTIDO)
+      .not("torneo_id", "is", null)
+      .or(`jugador_a.eq.${yo},jugador_b.eq.${yo}`)
+      .in("estado", ["pendiente", "jugado", "disputado"])
+      .order("registrado_en", { ascending: false, nullsFirst: false }),
+    "tus partidos de torneo",
+  );
+  return ((data ?? []) as unknown as FilaPartido[]).map((p) => desdeMiPerspectiva(p, yo));
 }

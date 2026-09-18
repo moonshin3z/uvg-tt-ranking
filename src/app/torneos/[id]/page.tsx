@@ -28,11 +28,19 @@ function Lado({
   sets,
   gano,
   yo,
+  bye = false,
 }: {
   nombre: string | null;
   sets: number | null;
   gano: boolean;
   yo: boolean;
+  /**
+   * El lugar está vacío porque al rival le tocó pasar directo, no porque
+   * falte definirlo. Se dice con todas las letras: dibujado como «por
+   * definir», un bye se lee como un partido que falta, y con cinco jugadores
+   * eso son tres lugares que parecen huecos del sistema.
+   */
+  bye?: boolean;
 }) {
   return (
     <div
@@ -42,7 +50,9 @@ function Lado({
         !nombre && "text-faint",
       )}
     >
-      <span className={cn("truncate", yo && "font-semibold")}>{nombre ?? "por definir"}</span>
+      <span className={cn("truncate", yo && "font-semibold")}>
+        {nombre ?? (bye ? "pasa directo" : "por definir")}
+      </span>
       <b className="shrink-0 font-bold">{sets ?? (nombre ? "-" : "")}</b>
     </div>
   );
@@ -96,12 +106,14 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
                       .map((l) => (
                         <div key={l.posicion} className="overflow-hidden rounded-md border border-border">
                           <Lado
+                            bye={l.b != null && l.a == null && l.ganador != null}
                             nombre={l.a?.nombre ?? null}
                             sets={l.setsA}
                             gano={!!l.ganador && l.ganador === l.a?.id}
                             yo={!!yo && l.a?.id === yo}
                           />
                           <Lado
+                            bye={l.a != null && l.b == null && l.ganador != null}
                             nombre={l.b?.nombre ?? null}
                             sets={l.setsB}
                             gano={!!l.ganador && l.ganador === l.b?.id}

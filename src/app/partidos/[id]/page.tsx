@@ -33,7 +33,8 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
   const supabase = await createClient();
   const [puntos, ranking, reglas] = await Promise.all([
     setsDePartido(id),
-    rankingPorId(p.division.ranking_id),
+    // Un partido de torneo no cuelga de ningún ranking.
+    p.division ? rankingPorId(p.division.ranking_id) : Promise.resolve(null),
     // Las reglas salen del contenedor del partido, que puede ser un ranking o
     // un torneo, y cada uno juega a lo suyo.
     supabase.rpc("reglas_de_partido", { p_partido_id: id }),
@@ -48,7 +49,9 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
 
   const misSets = soyA ? p.sets_a : p.sets_b;
   const susSets = soyA ? p.sets_b : p.sets_a;
-  const contexto = `División ${p.division.tipo}${p.tipo === "desempate" ? " · desempate" : ""}`;
+  const contexto = p.division
+    ? `División ${p.division.tipo}${p.tipo === "desempate" ? " · desempate" : ""}`
+    : `${p.torneo?.nombre ?? "Torneo"} · ${p.tipo === "grupo" ? "fase de grupos" : "llave"}`;
 
   // Me toca responder: lo registró el otro y todavía no está cerrado.
   const meTocaResponder = juego && p.estado === "jugado" && p.registrado_por !== yo;
