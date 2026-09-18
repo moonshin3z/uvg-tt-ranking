@@ -97,4 +97,52 @@ begin
 
   raise notice 'ok · el heredado no se sortea, y los nuevos entran en Menor';
 end $$;
+
+-- -----------------------------------------------------------------------------
+-- Un ranking sin divisiones se repara solo.
+--
+-- No es un estado que hoy se pueda producir, pero lo fue: los rankings creados
+-- entre las migraciones 27 y 1001 nacieron sin división Mayor ni Menor, porque
+-- la 27 le quitó sin querer a `crear_ranking` la línea que las crea. Esos
+-- rankings siguen existiendo en las bases que ya estaban andando, y al sortear
+-- reventaban con «null value in column division_id», que no le dice nada a
+-- nadie.
+-- -----------------------------------------------------------------------------
+do $$
+declare v_rk uuid; v_sem uuid; v_asig jsonb; v_n int; v_divs int;
+begin
+  select id into v_sem from public.semestre limit 1;
+  delete from public.ranking where semestre_id = v_sem and numero = 2;
+
+  -- Se crea a mano, sin pasar por `crear_ranking`, justamente para que nazca
+  -- sin divisiones como nacían los de entonces.
+  insert into public.ranking (semestre_id, numero, nombre, fecha_limite, estado)
+  values (v_sem, 2::smallint, 'Sin divisiones', current_date + 30, 'borrador')
+  returning id into v_rk;
+
+  if (select count(*) from public.division where ranking_id = v_rk) <> 0 then
+    raise exception 'La prueba no sirve: el ranking nació con divisiones';
+  end if;
+
+  select jsonb_agg(jsonb_build_object('usuario_id', u.id,
+           'division', case when u.n % 2 = 0 then 'mayor' else 'menor' end))
+    into v_asig
+    from (select id, row_number() over (order by carnet) n from public.usuario
+           where activo limit 6) u;
+
+  perform pg_temp.como('20001');
+  v_n := public.armar_divisiones(v_rk, v_asig, null);
+  reset role;
+
+  select count(*) into v_divs from public.division where ranking_id = v_rk;
+  if v_divs <> 2 then
+    raise exception 'AGUJERO: quedó con % divisiones y debía repararse a 2', v_divs;
+  end if;
+  if v_n <> 6 then
+    raise exception 'AGUJERO: inscribió % jugadores y eran 6', v_n;
+  end if;
+
+  raise notice 'ok · un ranking sin divisiones se repara al asignar';
+end $$;
+
 rollback;
