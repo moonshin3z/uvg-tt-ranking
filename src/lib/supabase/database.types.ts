@@ -441,6 +441,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "ranking_anterior_id_fkey"
+            columns: ["anterior_id"]
+            isOneToOne: false
+            referencedRelation: "ranking"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ranking_semestre_id_fkey"
             columns: ["semestre_id"]
             isOneToOne: false
@@ -1191,39 +1198,23 @@ export type Database = {
           nombre: string
         }[]
       }
-      crear_ranking:
-        | {
-            Args: {
-              p_fecha_limite: string
-              p_horas_autoconfirmacion?: number
-              p_n_ascienden?: number
-              p_n_descienden?: number
-              p_n_premiados?: number
-              p_nombre: string
-              p_numero: number
-              p_pts_derrota?: number
-              p_pts_victoria?: number
-              p_semestre_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_fecha_limite: string
-              p_horas_autoconfirmacion?: number
-              p_n_ascienden?: number
-              p_n_descienden?: number
-              p_n_premiados?: number
-              p_nombre: string
-              p_numero: number
-              p_pts_derrota?: number
-              p_pts_victoria?: number
-              p_puntos_por_set?: number
-              p_semestre_id: string
-              p_sets_para_ganar?: number
-            }
-            Returns: string
-          }
+      crear_ranking: {
+        Args: {
+          p_fecha_limite: string
+          p_horas_autoconfirmacion?: number
+          p_n_ascienden?: number
+          p_n_descienden?: number
+          p_n_premiados?: number
+          p_nombre: string
+          p_numero: number
+          p_pts_derrota?: number
+          p_pts_victoria?: number
+          p_puntos_por_set?: number
+          p_semestre_id: string
+          p_sets_para_ganar?: number
+        }
+        Returns: string
+      }
       crear_ranking_siguiente: {
         Args: {
           p_asignacion?: Json
@@ -1392,17 +1383,6 @@ export type Database = {
         Args: { p_posicion: number; p_ronda: number; p_torneo_id: string }
         Returns: undefined
       }
-      jugadores_del_club: {
-        Args: never
-        Returns: {
-          activo: boolean
-          carnet: string
-          debe_cambiar_pin: boolean
-          id: string
-          nombre: string
-          rol: Database["public"]["Enums"]["rol"]
-        }[]
-      }
       mi_perfil: {
         Args: never
         Returns: {
@@ -1479,17 +1459,18 @@ export type Database = {
         Args: { p_ranking_id: string }
         Returns: {
           carnet: string
-          division_actual: Database["public"]["Enums"]["division_tipo"] | null
+          division_actual: Database["public"]["Enums"]["division_tipo"]
           division_propuesta: Database["public"]["Enums"]["division_tipo"]
           nombre: string
           origen: Database["public"]["Enums"]["inscripcion_origen"]
-          posicion: number | null
+          posicion: number
           usuario_id: string
         }[]
       }
       ranking_de_partido: {
         Args: { p_partido_id: string }
         Returns: {
+          anterior_id: string | null
           cerrado_en: string | null
           creado_en: string
           estado: Database["public"]["Enums"]["ranking_estado"]

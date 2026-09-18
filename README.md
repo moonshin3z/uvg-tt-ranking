@@ -35,13 +35,26 @@ Usuarios del seed (PIN `123456` para todos):
 
 ## Comandos
 
-| Comando                     | Qué hace                                                  |
-| --------------------------- | --------------------------------------------------------- |
-| `npm run verify`            | typecheck + lint + tests + build (lo mismo que corre CI)  |
-| `npm test`                  | tests unitarios (vitest)                                  |
-| `npm run db:reset`          | recrea la BD local con migraciones + seed                 |
-| `npm run db:types`          | regenera `src/lib/supabase/database.types.ts`             |
-| `npm run db:diff -- nombre` | genera una migración a partir de cambios hechos en Studio |
+| Comando                     | Qué hace                                                     |
+| --------------------------- | ------------------------------------------------------------ |
+| `npm run verify`            | typecheck + lint + tests + build (lo mismo que corre CI)     |
+| `npm test`                  | tests unitarios (vitest)                                     |
+| `npm run db:reset`          | recrea la BD local con migraciones + seed                    |
+| `npm run db:types`          | regenera `src/lib/supabase/database.types.ts`                |
+| `npm run db:diff -- nombre` | genera una migración a partir de cambios hechos en Studio    |
+| `npm run test:sql`          | las comprobaciones de `supabase/pruebas/` contra la BD local |
+| `npm run test:humo`         | que cada pantalla cargue, con y sin sesión (navegador)       |
+| `npm run test:responsive`   | auditoría de layout en tres anchos (navegador)               |
+
+Los dos últimos necesitan la base local con la semilla (`npm run db:reset`) y
+levantan el servidor de desarrollo solos. `test:humo` no escribe nada, así que
+se puede repetir sin volver a sembrar.
+
+`test:humo` existe por una razón concreta: la auditoría de responsive mide
+layout, y la pantalla de error de la aplicación tiene un layout impecable. Con
+eso, `/admin/jugadores` estuvo reventando con «permission denied» desde la
+migración de permisos y ninguna corrida lo dijo. La de humo no mira cómo se ve
+nada, solo que la aplicación no haya mostrado su pantalla de error.
 
 ## Estructura
 

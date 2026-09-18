@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { auditar, LETRA_MIN, TACTIL_MIN, type Hallazgo } from "./auditoria";
 import { confirmarQueEsLaApp } from "./identidad";
+import { COORDINADOR, JUGADOR, exigirQueCargue, ingresar } from "./sesion";
 import { PANTALLAS, RUTAS_COORDINADOR, RUTAS_JUGADOR, RUTAS_PUBLICAS } from "./pantallas";
 
 /**
@@ -29,7 +30,7 @@ async function revisar(page: Page, ruta: string) {
   await asentar(page);
   await confirmarQueEsLaApp(page);
   exigirQueNoSeaCambiarPin(page, ruta);
-  await exigirQueNoSeaError(page, ruta);
+  await exigirQueCargue(page, ruta);
   return medir(page);
 }
 
@@ -84,37 +85,6 @@ function exigirQueNoSeaCambiarPin(page: Page, ruta: string) {
       `    update public.usuario set debe_cambiar_pin = false;`,
       ``,
     ].join("\n"),
-  );
-}
-
-/**
- * Una pantalla que reventó no se audita: se reporta.
- *
- * Para una auditoría de layout, la pantalla de error es perfecta: un título,
- * un párrafo y dos botones, nada que se salga ni nada ilegible. Así que pasaba
- * en verde mientras la pantalla real no cargaba. Eso dejó /admin/jugadores
- * roto desde la migración de permisos sin que ninguna corrida lo dijera.
- */
-async function exigirQueNoSeaError(page: Page, ruta: string) {
-  const reventó = await page.locator("[data-error]").count();
-  if (reventó === 0) return;
-  const titulo = await page
-    .locator("h1")
-    .first()
-    .textContent()
-    .catch(() => null);
-  throw new Error(
-    [
-      ``,
-      `${ruta} no cargó: la aplicación mostró su pantalla de error.`,
-      titulo ? `  «${titulo.trim()}»` : ``,
-      ``,
-      `El error real queda en la consola del servidor de desarrollo. Suele ser`,
-      `una consulta que la base rechaza, no un problema de la pantalla.`,
-      ``,
-    ]
-      .filter((l) => l !== ``)
-      .join("\n"),
   );
 }
 
@@ -177,48 +147,13 @@ for (const pantalla of PANTALLAS) {
   });
 }
 
-/**
- * Las pantallas con sesión necesitan credenciales de un usuario de prueba.
- * Sin ellas la auditoría se salta esas rutas en vez de fallar, para que la
- * prueba siga sirviendo en una máquina recién clonada.
- */
-// Por omisión, los usuarios que crea `supabase/seed.sql`, que son fijos y
-// están documentados ahí. Antes había que exportar cuatro variables en cada
-// terminal, y si uno se olvidaba, las 15 pruebas con sesión se saltaban en
-// silencio: la corrida decía "4 passed" y parecía que todo estaba bien.
-const CARNET = process.env.E2E_CARNET ?? "20002";
-const PIN = process.env.E2E_PIN ?? "123456";
-const CARNET_COORD = process.env.E2E_CARNET_COORD ?? "20001";
-const PIN_COORD = process.env.E2E_PIN_COORD ?? "123456";
-
-async function ingresar(page: Page, carnet: string, pin: string) {
-  await page.goto("/ingresar", { waitUntil: "load" });
-  await confirmarQueEsLaApp(page);
-
-  // 8 segundos alcanzan de sobra en local. Con el timeout por defecto, una URL
-  // equivocada tardaba 45 s por prueba y la corrida entera media hora.
-  const campo = page.getByLabel(/carnet/i);
-  await campo.waitFor({ state: "visible", timeout: 8_000 }).catch(() => {
-    throw new Error(
-      `No apareció el campo de carnet en ${page.url()}.\n` +
-        `Si la app es la correcta, revisá que /ingresar cargue bien.`,
-    );
-  });
-  await campo.fill(carnet);
-  await page.getByLabel(/pin/i).fill(pin);
-  await page.getByRole("button", { name: /ingresar/i }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/ingresar"), { timeout: 15_000 });
-}
-
 test.describe("con sesión de jugador", () => {
-  test.skip(!CARNET || !PIN, "Falta E2E_CARNET y E2E_PIN");
-
   for (const pantalla of PANTALLAS) {
     test.describe(pantalla.nombre, () => {
       test.use({ viewport: { width: pantalla.width, height: pantalla.height } });
       for (const ruta of RUTAS_JUGADOR) {
         test(`${ruta} se adapta`, async ({ page }) => {
-          await ingresar(page, CARNET!, PIN!);
+          await ingresar(page, JUGADOR.carnet, JUGADOR.pin);
           const hallazgos = await revisar(page, ruta);
           expect(hallazgos, informe(ruta, pantalla.nombre, hallazgos, page.url())).toEqual([]);
         });
@@ -228,14 +163,12 @@ test.describe("con sesión de jugador", () => {
 });
 
 test.describe("con sesión de coordinador", () => {
-  test.skip(!CARNET_COORD || !PIN_COORD, "Falta E2E_CARNET_COORD y E2E_PIN_COORD");
-
   for (const pantalla of PANTALLAS) {
     test.describe(pantalla.nombre, () => {
       test.use({ viewport: { width: pantalla.width, height: pantalla.height } });
       for (const ruta of RUTAS_COORDINADOR) {
         test(`${ruta} se adapta`, async ({ page }) => {
-          await ingresar(page, CARNET_COORD!, PIN_COORD!);
+          await ingresar(page, COORDINADOR.carnet, COORDINADOR.pin);
           const hallazgos = await revisar(page, ruta);
           expect(hallazgos, informe(ruta, pantalla.nombre, hallazgos, page.url())).toEqual([]);
         });

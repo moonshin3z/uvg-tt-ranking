@@ -12,14 +12,15 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:responsive": "playwright test",
+    "test:responsive": "playwright test responsive auditoria identidad",
     "test:sql": "node scripts/pruebas-sql.mjs",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts",
-    "db:diff": "supabase db diff -f"
+    "db:diff": "supabase db diff -f",
+    "test:humo": "playwright test humo"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
