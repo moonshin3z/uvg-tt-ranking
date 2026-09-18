@@ -8,21 +8,26 @@ import { confirmarQueEsLaApp } from "./identidad";
  * y están documentados ahí. Antes había que exportar cuatro variables en cada
  * terminal, y si uno se olvidaba, las pruebas con sesión se saltaban en
  * silencio: la corrida decía "4 passed" y parecía que todo estaba bien.
+ *
+ * `||` y no `??`: una variable borrada con `setx VAR ""` en Windows sigue
+ * existiendo, vacía, y `??` solo cae al valor por omisión con null o undefined.
+ * Con `??` una variable "borrada" dejaba el carnet en cadena vacía.
  */
+const dato = (v: string | undefined, porOmision: string) => (v ?? "").trim() || porOmision;
 export const COORDINADOR = {
-  carnet: process.env.E2E_CARNET_COORD ?? "20001",
-  pin: process.env.E2E_PIN_COORD ?? "123456",
+  carnet: dato(process.env.E2E_CARNET_COORD, "20001"),
+  pin: dato(process.env.E2E_PIN_COORD, "123456"),
 };
 
 export const JUGADOR = {
-  carnet: process.env.E2E_CARNET ?? "20002",
-  pin: process.env.E2E_PIN ?? "123456",
+  carnet: dato(process.env.E2E_CARNET, "20002"),
+  pin: dato(process.env.E2E_PIN, "123456"),
 };
 
 /** El rival del jugador de arriba, para probar registrar y confirmar. */
 export const RIVAL = {
-  carnet: process.env.E2E_CARNET_RIVAL ?? "20003",
-  pin: process.env.E2E_PIN_RIVAL ?? "123456",
+  carnet: dato(process.env.E2E_CARNET_RIVAL, "20003"),
+  pin: dato(process.env.E2E_PIN_RIVAL, "123456"),
 };
 
 export async function ingresar(page: Page, carnet: string, pin: string) {
@@ -54,10 +59,16 @@ export async function salir(page: Page) {
  * Es la comprobación más barata que existe y la que más falta hacía: una
  * pantalla que revienta se ve impecable para una auditoría de layout, así que
  * /admin/jugadores estuvo roto desde la migración de permisos sin que ninguna
- * corrida lo dijera. El error boundary sale marcado con `data-error`.
+ * corrida lo dijera. El error boundary sale marcado con `data-uvgtt-error`.
  */
 export async function exigirQueCargue(page: Page, ruta: string) {
-  if ((await page.locator("[data-error]").count()) === 0) return;
+  // `page.evaluate` y no `page.locator`: los selectores de Playwright
+  // atraviesan el shadow DOM, y el overlay de desarrollo de Next trae dentro
+  // del suyo un `<div data-error="false">`. Con el locator, las trece pruebas
+  // daban positivo en pantallas que habían cargado perfectas. `querySelector`
+  // se queda en el DOM normal, que es donde está lo nuestro.
+  const reventó = await page.evaluate(() => document.querySelector("[data-uvgtt-error]") !== null);
+  if (!reventó) return;
   const titulo = await page
     .locator("h1")
     .first()

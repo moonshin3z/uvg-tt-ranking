@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { datos } from "@/lib/supabase/errores";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormularioAlta } from "./formularios";
+import { AltaEnLote } from "./lote";
 import { ListaJugadores } from "./lista";
 import { MensajeParaElGrupo } from "./mensaje-grupo";
 import { Gestion } from "@/app/admin/gestion";
@@ -59,8 +60,22 @@ export default async function PaginaJugadores() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Nuevo jugador</CardTitle>
-            <CardDescription>El sistema genera el PIN; el jugador lo cambia en su primer ingreso.</CardDescription>
+            <CardTitle>Dar de alta a todo el club</CardTitle>
+            <CardDescription>
+              Pegá la lista desde Excel y el sistema crea las cuentas con su PIN. Primero te muestra qué entendió.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AltaEnLote />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Un jugador suelto</CardTitle>
+            <CardDescription>
+              Para el que llega después. El sistema genera el PIN; el jugador lo cambia en su primer ingreso.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FormularioAlta />

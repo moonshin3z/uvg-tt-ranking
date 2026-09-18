@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { emailDesdeCarnet, esCarnetValido, normalizarCarnet } from "@/lib/auth/carnet";
 import { generarPin } from "@/lib/auth/pin";
+import { leerLote, type FilaLote } from "@/lib/jugadores/lote";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,6 +57,94 @@ export async function crearJugador(_prev: EstadoAlta, formData: FormData): Promi
 
   revalidatePath("/admin/jugadores");
   return { creado: { carnet, nombre, pin } };
+}
+
+// ---------------------------------------------------------------------------
+// Alta en lote, pegando la lista desde Excel
+// ---------------------------------------------------------------------------
+export type ResultadoLote = {
+  carnet: string;
+  nombre: string;
+  /** El PIN solo existe si la cuenta se creó en esta corrida. */
+  pin?: string;
+  /** Por qué no se creó: ya existía, o falló. */
+  nota?: string;
+};
+
+export type EstadoLote = {
+  error?: string;
+  /** Lo que se entendió del texto, sin haber creado nada. */
+  revision?: { filas: FilaLote[]; buenas: number; conProblema: number };
+  /** Lo que quedó creado, con los PIN. */
+  creadas?: ResultadoLote[];
+};
+
+/**
+ * Paso 1: leer la lista y decir qué se entendió. No escribe nada.
+ *
+ * Existe como paso aparte a propósito. Crear veinte cuentas es irreversible en
+ * la práctica —hay que borrarlas una por una desde el panel de Supabase—, así
+ * que el coordinador tiene que ver la tabla interpretada antes de que se
+ * escriba algo.
+ */
+export async function revisarLote(_prev: EstadoLote, formData: FormData): Promise<EstadoLote> {
+  await requerirCoordinador();
+  const filas = leerLote(String(formData.get("lista") ?? ""));
+  if (filas.length === 0) return { error: "No encontré ninguna fila. Pegá la lista con carnet y nombre." };
+
+  const conProblema = filas.filter((f) => f.problema).length;
+  return { revision: { filas, buenas: filas.length - conProblema, conProblema } };
+}
+
+/**
+ * Paso 2: crear. Solo corre si ninguna fila tiene problemas.
+ *
+ * Vuelve a leer el mismo texto en vez de confiar en lo que mandó la pantalla:
+ * lo que decide qué se crea es el servidor, no el navegador.
+ *
+ * Un carnet que ya tiene cuenta no es un error que detenga el lote, es una
+ * fila con nota. Es lo que pasa cuando se agrega gente nueva a una lista que
+ * ya se importó antes, y frenar todo por eso obligaría a editar la hoja.
+ */
+export async function crearLote(_prev: EstadoLote, formData: FormData): Promise<EstadoLote> {
+  await requerirCoordinador();
+  const filas = leerLote(String(formData.get("lista") ?? ""));
+  if (filas.length === 0) return { error: "No encontré ninguna fila." };
+
+  const malas = filas.filter((f) => f.problema);
+  if (malas.length > 0) {
+    return {
+      error: `Hay ${malas.length} fila${malas.length === 1 ? "" : "s"} con problemas. Arreglalas antes de crear; no se creó ninguna cuenta.`,
+      revision: { filas, buenas: filas.length - malas.length, conProblema: malas.length },
+    };
+  }
+
+  const admin = createAdminClient();
+  const creadas: ResultadoLote[] = [];
+
+  for (const f of filas) {
+    const pin = generarPin();
+    const { error } = await admin.auth.admin.createUser({
+      email: emailDesdeCarnet(f.carnet),
+      password: pin,
+      email_confirm: true,
+      user_metadata: { carnet: f.carnet, nombre: f.nombre },
+    });
+
+    if (!error) {
+      creadas.push({ carnet: f.carnet, nombre: f.nombre, pin });
+      continue;
+    }
+    const yaExiste = /already|exists|registered/i.test(error.message);
+    creadas.push({
+      carnet: f.carnet,
+      nombre: f.nombre,
+      nota: yaExiste ? "Ya tenía cuenta; no se tocó" : `No se pudo crear: ${error.message}`,
+    });
+  }
+
+  revalidatePath("/admin/jugadores");
+  return { creadas };
 }
 
 export type EstadoReset = { error?: string; pin?: string; carnet?: string };

@@ -20,6 +20,12 @@ import { COORDINADOR, JUGADOR, exigirQueCargue, ingresar, salir } from "./sesion
  * sin volver a sembrar.
  */
 
+// En desarrollo, Next compila cada ruta la primera vez que alguien la pide, y
+// en una máquina ocupada eso puede pasar del timeout por omisión de 45 s. No es
+// lentitud de la aplicación: la segunda visita es instantánea. Se sube solo
+// para esta prueba, que es la que estrena rutas.
+test.describe.configure({ timeout: 120_000 });
+
 const PUBLICAS = ["/", "/rankings", "/reglas", "/ingresar"] as const;
 
 const DEL_JUGADOR = ["/partidos", "/marcador/nuevo"] as const;
