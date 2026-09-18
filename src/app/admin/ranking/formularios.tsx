@@ -163,7 +163,24 @@ export type JugadorAsignable = {
   division: "mayor" | "menor" | null;
 };
 
-export function FormularioDivisiones({ rankingId, jugadores }: { rankingId: string; jugadores: JugadorAsignable[] }) {
+/**
+ * `hereda`: el ranking sacó sus divisiones del anterior, así que no se sortea.
+ *
+ * El sorteo es una sola vez, en el primer ranking del club. De ahí en adelante
+ * los lugares salen de la tabla anterior, y volver a sortear borraría todos los
+ * ascensos y descensos. La base lo rechaza; acá además no se ofrece, para que
+ * nadie llegue a intentarlo. La asignación manual sí queda, que es como se sube
+ * a un jugador nuevo o se corrige un caso raro.
+ */
+export function FormularioDivisiones({
+  rankingId,
+  jugadores,
+  hereda = false,
+}: {
+  rankingId: string;
+  jugadores: JugadorAsignable[];
+  hereda?: boolean;
+}) {
   const [estadoSorteo, accionSorteo, pendienteSorteo] = useActionState(sortear, vacio);
   const [estadoManual, accionManual, pendienteManual] = useActionState(asignarManual, vacio);
   const pendiente = pendienteSorteo || pendienteManual;
@@ -209,7 +226,7 @@ export function FormularioDivisiones({ rankingId, jugadores }: { rankingId: stri
               aria-label={`División de ${j.nombre}`}
               className="min-h-9 rounded-md border border-input bg-background px-2 text-sm"
             >
-              <option value="">Sortear</option>
+              <option value="">{hereda ? "Sin asignar" : "Sortear"}</option>
               <option value="mayor">Mayor</option>
               <option value="menor">Menor</option>
             </select>
@@ -220,16 +237,19 @@ export function FormularioDivisiones({ rankingId, jugadores }: { rankingId: stri
       <Mensaje estado={estadoSorteo.error || estadoSorteo.ok ? estadoSorteo : estadoManual} />
 
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" formAction={accionSorteo} disabled={pendiente}>
-          {pendienteSorteo ? "Sorteando..." : "Sortear divisiones"}
-        </Button>
-        <Button type="submit" formAction={accionManual} variant="outline" disabled={pendiente}>
-          {pendienteManual ? "Guardando..." : "Guardar asignación manual"}
+        {hereda ? null : (
+          <Button type="submit" formAction={accionSorteo} disabled={pendiente}>
+            {pendienteSorteo ? "Sorteando..." : "Sortear divisiones"}
+          </Button>
+        )}
+        <Button type="submit" formAction={accionManual} variant={hereda ? "default" : "outline"} disabled={pendiente}>
+          {pendienteManual ? "Guardando..." : "Guardar asignación"}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Sortear reparte a los marcados al azar (mitad a Mayor, mitad a Menor) e ignora la columna de división. Guardar
-        manual usa la división elegida por jugador. Ambos reemplazan la asignación anterior.
+        {hereda
+          ? "Este ranking hereda sus divisiones del anterior, así que no se sortea: los lugares ya salieron de la tabla. Acá solo se corrige a mano, por ejemplo para subir a alguien que entró nuevo. Guardar reemplaza la asignación completa."
+          : "Sortear reparte a los marcados al azar (mitad a Mayor, mitad a Menor) e ignora la columna de división. Guardar usa la división elegida por jugador. Ambos reemplazan la asignación anterior."}
       </p>
     </form>
   );

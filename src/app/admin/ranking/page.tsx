@@ -139,13 +139,17 @@ export default async function PaginaRanking() {
                 <ul className="divide-y">
                   {(propuesta ?? []).map((j) => (
                     <li key={j.usuario_id} className="flex items-center gap-3 px-4 py-2 text-sm sm:px-6">
-                      <span className="w-6 text-right text-muted-foreground">{j.posicion}</span>
+                      <span className="w-6 text-right text-muted-foreground">{j.posicion ?? "—"}</span>
                       <span className="min-w-0 flex-1 truncate">{j.nombre}</span>
-                      <span className="text-xs text-muted-foreground capitalize">{j.division_actual}</span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {j.division_actual ?? "sin ranking previo"}
+                      </span>
                       {j.origen === "ascenso" ? (
                         <Badge variant="ascenso">sube</Badge>
                       ) : j.origen === "descenso" ? (
                         <Badge variant="descenso">baja</Badge>
+                      ) : j.origen === "nuevo" ? (
+                        <Badge variant="secondary">nuevo</Badge>
                       ) : (
                         <span className="w-10" />
                       )}
@@ -157,7 +161,8 @@ export default async function PaginaRanking() {
             <Paso n={1} titulo="Ranking siguiente" listo={false}>
               <p className="mb-3 text-sm text-muted-foreground">
                 Se crea en borrador con las divisiones ya armadas: no hay sorteo, los lugares salen de la tabla
-                anterior. Podés ajustarlos antes de abrirlo.
+                anterior. Quien no jugó el ranking pasado entra en Menor. Podés ajustarlo todo a mano antes de
+                abrirlo.
               </p>
               <FormularioSiguiente
                 rankingAnterior={ultimoCerrado.id}
@@ -240,7 +245,7 @@ export default async function PaginaRanking() {
           extra={`Mayor ${nMayor}, Menor ${nMenor}, ${conteo.regular} partidos.${sorteo ? ` Sorteo ${sorteo.semilla}.` : ""}`}
         />
         <Paso n={1} titulo="Divisiones" listo={nMayor >= 2 && nMenor >= 2}>
-          <FormularioDivisiones rankingId={enCurso.id} jugadores={jugadores} />
+          <FormularioDivisiones rankingId={enCurso.id} jugadores={jugadores} hereda={enCurso.anterior_id !== null} />
         </Paso>
         <Paso n={2} titulo="Calendario round robin" listo={conteo.regular === esperados && conteo.regular > 0}>
           <p className="mb-3 text-sm text-muted-foreground">
