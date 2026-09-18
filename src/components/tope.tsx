@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { obtenerSesion } from "@/lib/auth/sesion";
+import { MenuUsuario } from "@/components/menu-usuario";
 
 /**
  * La barra de arriba, copiada de `docs/diseno/prototipo.html`.
@@ -42,9 +43,7 @@ export async function Tope({
         {sub ? <p className="truncate text-[12.5px] text-muted-foreground">{sub}</p> : null}
       </div>
       {sesion ? (
-        <span className="shrink-0 text-[13px] whitespace-nowrap text-muted-foreground">
-          {nombreCorto(sesion.usuario.nombre)}
-        </span>
+        <MenuUsuario nombre={sesion.usuario.nombre} carnet={sesion.usuario.carnet} />
       ) : (
         <Link
           href="/ingresar"
@@ -55,11 +54,4 @@ export async function Tope({
       )}
     </header>
   );
-}
-
-/** "Iván Roble Mérida" → "Iván R." */
-function nombreCorto(nombre: string): string {
-  const partes = nombre.trim().split(/\s+/).filter(Boolean);
-  if (partes.length < 2) return partes[0] ?? "";
-  return `${partes[0]} ${partes[1][0]}.`;
 }

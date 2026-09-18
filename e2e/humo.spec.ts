@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { confirmarQueEsLaApp } from "./identidad";
 import { COORDINADOR, JUGADOR, exigirQueCargue, ingresar, salir } from "./sesion";
 
@@ -92,5 +92,19 @@ test.describe("con sesión de coordinador", () => {
     await page.goto("/admin/jugadores", { waitUntil: "load" });
     await exigirQueCargue(page, "/admin/jugadores");
     await page.getByText(JUGADOR.carnet, { exact: false }).first().waitFor({ state: "visible", timeout: 8_000 });
+  });
+
+  test("el nombre abre el perfil y la opción de cerrar sesión", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Cuenta de Coordinador Demo" }).click();
+    const perfil = page.getByRole("menuitem", { name: "Mi perfil" });
+    await expect(perfil).toHaveAttribute("href", `/jugador/${COORDINADOR.carnet}`);
+    await perfil.click();
+    await expect(page).toHaveURL(new RegExp(`/jugador/${COORDINADOR.carnet}$`));
+
+    await page.goto("/");
+    await page.getByRole("button", { name: "Cuenta de Coordinador Demo" }).click();
+    await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/ingresar$/);
   });
 });

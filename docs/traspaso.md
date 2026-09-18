@@ -1,5 +1,12 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: menú del usuario
+
+- El nombre corto de la esquina superior derecha ahora es un botón. Abre un
+  menú pequeño con solo **Mi perfil** y **Cerrar sesión**.
+- El menú se cierra al elegir una opción, tocar afuera o presionar Escape. Se
+  mantiene dentro del encabezado existente y no agrega otra navegación.
+
 ## Actualización: eliminar un partido sin terminar
 
 - La pantalla del marcador muestra **Eliminar partido** mientras nadie haya
