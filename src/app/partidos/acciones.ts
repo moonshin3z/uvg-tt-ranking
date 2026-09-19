@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
 import { createClient } from "@/lib/supabase/server";
+import type { LadoSaque } from "@/lib/marcador/saque";
 
 export type EstadoResultado = { error?: string; ok?: string };
 
@@ -146,6 +147,19 @@ export async function eliminarMarcador(marcadorId: string): Promise<{ error?: st
   revalidatePath("/partidos");
   revalidatePath("/admin/partidos");
   return {};
+}
+
+/** Sin lado elegido, la base sortea y guarda el primer saque en un solo paso. */
+export async function elegirSaque(marcadorId: string, lado?: LadoSaque) {
+  await requerirSesion();
+  if (lado !== undefined && lado !== "a" && lado !== "b") return { error: "Elegí uno de los dos jugadores." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("elegir_saque_marcador", {
+    p_marcador_id: marcadorId,
+    p_saca: lado,
+  });
+  if (error || !data) return { error: limpiar(error?.message, "No se pudo guardar el saque. Probá de nuevo.") };
+  return { marcador: data };
 }
 
 export type EstadoMarcadorLibre = { error?: string };

@@ -1,5 +1,22 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: elegir o sortear el primer saque
+
+- Al abrir un marcador nuevo aparece **¿Quién saca primero?**, con los dos
+  nombres y **Sortear**. Elegir o sortear lleva directamente al marcador.
+- El primer saque se guarda en la base; recargar o volver no vuelve a sortear.
+  Los marcadores anteriores con actividad se retoman suponiendo el primer saque
+  de A, que era el comportamiento anterior.
+- En individuales el saque cambia cada dos puntos, cada punto desde 10–10 y
+  alterna quién empieza cada set. Deshacer recalcula también el saque.
+  Referencia: reglas 2.13.3 y 2.13.6 de los
+  [estatutos ITTF 2026](https://db.ittf.com/sites/default/files/public/2026-02/2026_Statutes_v1_consolidated_clean.pdf).
+  En formatos personalizados se aplica el cambio por punto desde el empate
+  a un punto del objetivo, conservando la secuencia del saque.
+- `20261011000000_saque_inicial.sql` añade `marcador.primer_saque` y
+  `elegir_saque_marcador`; conserva la firma de sincronización para los clientes
+  anteriores. La selección exige ser dueño del marcador o coordinador.
+
 ## Actualización: menú del usuario
 
 - El nombre corto de la esquina superior derecha ahora es un botón. Abre un
@@ -471,7 +488,7 @@ docs/despliegue.md
 
 Los archivos con pruebas unitarias: `auth/carnet`, `fechas`, `ranking/sorteo`, `ranking/tabla`, `torneos/sorteo`, `jugadores/lote`. 55 pruebas en total.
 
-### Las 27 migraciones
+### Las 28 migraciones
 
 ```
 20260914 nucleo_ranking            tablas base, enums, RLS, es_coordinador()
@@ -501,6 +518,7 @@ Los archivos con pruebas unitarias: `auth/carnet`, `fechas`, `ranking/sorteo`, `
 20261008 partidos_cancelados       bloquea cambios dentro de competencias canceladas
 20261009 eliminar_torneo_simple    elimina torneos en cualquier estado
 20261010 eliminar_marcador         elimina un marcador inconcluso sin borrar su partido
+20261011 saque_inicial             elección o sorteo persistente y turnos de saque
 ```
 
 ---

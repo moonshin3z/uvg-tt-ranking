@@ -189,6 +189,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id: string | null
+          primer_saque: string | null
           puntos_a: number
           puntos_b: number
           puntos_por_set: number
@@ -210,6 +211,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id?: string | null
+          primer_saque?: string | null
           puntos_a?: number
           puntos_b?: number
           puntos_por_set?: number
@@ -231,6 +233,7 @@ export type Database = {
           nombre_a?: string
           nombre_b?: string
           partido_id?: string | null
+          primer_saque?: string | null
           puntos_a?: number
           puntos_b?: number
           puntos_por_set?: number
@@ -1030,6 +1033,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id: string | null
+          primer_saque: string | null
           puntos_a: number
           puntos_b: number
           puntos_por_set: number
@@ -1065,6 +1069,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id: string | null
+          primer_saque: string | null
           puntos_a: number
           puntos_b: number
           puntos_por_set: number
@@ -1355,6 +1360,37 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      elegir_saque_marcador: {
+        Args: { p_marcador_id: string; p_saca?: string }
+        Returns: {
+          actualizado_en: string
+          aviso: string | null
+          codigo: string
+          creado_en: string
+          dueno: string
+          estado: Database["public"]["Enums"]["marcador_estado"]
+          historial: Json
+          id: string
+          nombre_a: string
+          nombre_b: string
+          partido_id: string | null
+          primer_saque: string | null
+          puntos_a: number
+          puntos_b: number
+          puntos_por_set: number
+          saca: string | null
+          sets_a: number
+          sets_b: number
+          sets_para_ganar: number
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marcador"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       eliminar_marcador: { Args: { p_marcador_id: string }; Returns: string }
       eliminar_ranking: {
         Args: { p_motivo?: string; p_ranking_id: string }
@@ -1586,6 +1622,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id: string | null
+          primer_saque: string | null
           puntos_a: number
           puntos_b: number
           puntos_por_set: number
@@ -1712,6 +1749,7 @@ export type Database = {
           nombre_a: string
           nombre_b: string
           partido_id: string | null
+          primer_saque: string | null
           puntos_a: number
           puntos_b: number
           puntos_por_set: number

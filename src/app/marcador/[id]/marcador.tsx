@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { eliminarMarcador, sincronizarMarcador } from "@/app/partidos/acciones";
+import { Shuffle } from "lucide-react";
+import { elegirSaque, eliminarMarcador, sincronizarMarcador } from "@/app/partidos/acciones";
+import { turnoDeSaque, type LadoSaque } from "@/lib/marcador/saque";
 
 /**
  * El marcador en vivo, copiado de `.marcador` del prototipo.
@@ -44,6 +46,7 @@ export function Marcador({
     historial: [number, number][];
     version: number;
     estado: string;
+    primerSaque: LadoSaque | null;
   };
 }) {
   const router = useRouter();
@@ -57,6 +60,14 @@ export function Marcador({
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const version = useRef(inicial.version);
+  // Los marcadores de la versión anterior ya empezaban con A. Se retoman
+  // así incluso si una pestaña antigua anotó después de aplicar la migración.
+  const [primerSaque, setPrimerSaque] = useState<LadoSaque | null>(
+    inicial.primerSaque ??
+      (inicial.version > 0 || inicial.puntosA + inicial.puntosB + inicial.setsA + inicial.setsB > 0 ? "a" : null),
+  );
+  const [eligiendo, setEligiendo] = useState(false);
+  const solicitudSaque = useRef(false);
 
   // Tres cosas distintas que conviene no mezclar:
   //   · `terminado`: alguien llegó a los sets. La base no deja guardar un
@@ -67,9 +78,33 @@ export function Marcador({
   //     abierto y se puede retomar.
   const abandonado = inicial.estado === "abandonado";
   const terminado = sa >= setsParaGanar || sb >= setsParaGanar;
-  // El saque cambia cada dos puntos.
-  const puntosDelSet = a + b;
-  const sacaA = Math.floor(puntosDelSet / 2) % 2 === 0;
+  const faltaSaque = primerSaque === null && !terminado && !abandonado;
+  const sacaA = turnoDeSaque(primerSaque ?? "a", a, b, sa + sb, puntosPorSet) === "a";
+
+  async function empezar(lado?: LadoSaque) {
+    if (solicitudSaque.current || guardando) return;
+    solicitudSaque.current = true;
+    setEligiendo(true);
+    setAviso(null);
+    try {
+      const r = await elegirSaque(id, lado);
+      if (r.error || !r.marcador) return setAviso(r.error ?? "No se pudo guardar el saque.");
+      const m = r.marcador;
+      if (m.primer_saque !== "a" && m.primer_saque !== "b") return setAviso("No se pudo guardar el saque.");
+      version.current = Number(m.version);
+      setA(m.puntos_a);
+      setB(m.puntos_b);
+      setSa(m.sets_a);
+      setSb(m.sets_b);
+      setHistorial(m.historial as [number, number][]);
+      setPrimerSaque(m.primer_saque);
+    } catch {
+      setAviso("No se pudo guardar el saque. Revisá la conexión y probá de nuevo.");
+    } finally {
+      solicitudSaque.current = false;
+      setEligiendo(false);
+    }
+  }
 
   const mandar = useCallback(
     (estado: { a: number; b: number; sa: number; sb: number; hist: [number, number][] }, fin: boolean) => {
@@ -82,18 +117,18 @@ export function Marcador({
         setsA: estado.sa,
         setsB: estado.sb,
         historial: estado.hist,
-        saca: Math.floor((estado.a + estado.b) / 2) % 2 === 0 ? "a" : "b",
+        saca: turnoDeSaque(primerSaque ?? "a", estado.a, estado.b, estado.sa + estado.sb, puntosPorSet),
         estado: fin ? "terminado" : "en_juego",
       }).then((r) => {
         if (r.error) setAviso(r.error);
         else if (r.aviso) setAviso(r.aviso);
       });
     },
-    [id],
+    [id, primerSaque, puntosPorSet],
   );
 
   function sumar(lado: "a" | "b") {
-    if (terminado) return;
+    if (terminado || faltaSaque || abandonado || guardando) return;
     setPasos((p) => [...p, JSON.stringify({ a, b, sa, sb, historial })]);
 
     let na = lado === "a" ? a + 1 : a;
@@ -176,7 +211,7 @@ export function Marcador({
     <button
       type="button"
       onClick={() => sumar(lado)}
-      disabled={terminado}
+      disabled={terminado || faltaSaque || abandonado || guardando}
       aria-label={`Sumar un punto a ${nombre}`}
       className={cn(
         "flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden border-0 bg-transparent p-2 text-white active:bg-white/[0.06]",
@@ -199,45 +234,93 @@ export function Marcador({
         >
           Salir
         </button>
-        <span className="truncate">{aviso ?? `Al mejor de ${setsParaGanar * 2 - 1} · a ${puntosPorSet} puntos`}</span>
+        <span className="truncate">{`Al mejor de ${setsParaGanar * 2 - 1} · a ${puntosPorSet} puntos`}</span>
         <span />
       </div>
 
-      {mitad("b", nombreB, b, sb, girado)}
+      {aviso ? (
+        <p role="alert" className="px-4 py-2 text-center text-sm text-amber-200">
+          {aviso}
+        </p>
+      ) : null}
 
-      <div className="flex shrink-0 items-center justify-between gap-2.5 border-y border-white/[0.12] bg-white/[0.07] px-3.5 py-[9px]">
-        <button
-          type="button"
-          onClick={deshacer}
-          disabled={pasos.length === 0}
-          className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] font-medium text-white/[0.82] disabled:opacity-35"
+      {faltaSaque ? (
+        <section
+          aria-labelledby="elegir-saque"
+          aria-busy={eligiendo}
+          className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-6 py-5"
         >
-          Deshacer
-        </button>
-        <span className="text-center text-[15px] font-semibold tracking-[0.02em]">
-          {sa}-{sb}
-          <small className="block text-center text-[12.5px] font-normal text-white/[0.55]">
-            {terminado ? "partido terminado" : `saca ${(sacaA ? nombreA : nombreB).split(" ")[0]}`}
-          </small>
-        </span>
-        <button
-          type="button"
-          onClick={() => setGirado((g) => !g)}
-          title="Girar la mitad de arriba"
-          aria-pressed={girado}
-          className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] text-white/[0.82]"
-        >
-          ⇅
-        </button>
-      </div>
+          <div className="mx-auto grid w-full max-w-xs gap-3">
+            <h1 id="elegir-saque" className="mb-2 text-center text-[25px] font-semibold tracking-tight text-balance">
+              ¿Quién saca primero?
+            </h1>
+            {(
+              [
+                ["a", nombreA],
+                ["b", nombreB],
+              ] as const
+            ).map(([lado, nombre]) => (
+              <button
+                key={lado}
+                type="button"
+                aria-label={`Saca primero ${nombre}`}
+                onClick={() => void empezar(lado)}
+                disabled={eligiendo || guardando}
+                className="min-h-14 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-[17px] font-medium break-words transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
+              >
+                {nombre}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => void empezar()}
+              disabled={eligiendo || guardando}
+              className="mt-2 inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#7ad14f] px-4 py-3 text-[17px] font-semibold text-[#07220a] transition-transform active:scale-[0.98] disabled:opacity-50"
+            >
+              <Shuffle aria-hidden className="size-5" />
+              {eligiendo ? "Preparando…" : "Sortear"}
+            </button>
+          </div>
+        </section>
+      ) : (
+        <>
+          {mitad("b", nombreB, b, sb, girado)}
 
-      {mitad("a", nombreA, a, sa, false)}
+          <div className="flex shrink-0 items-center justify-between gap-2.5 border-y border-white/[0.12] bg-white/[0.07] px-3.5 py-[9px]">
+            <button
+              type="button"
+              onClick={deshacer}
+              disabled={pasos.length === 0 || guardando || abandonado}
+              className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] font-medium text-white/[0.82] disabled:opacity-35"
+            >
+              Deshacer
+            </button>
+            <span className="text-center text-[15px] font-semibold tracking-[0.02em]">
+              {sa}-{sb}
+              <small aria-live="polite" className="block text-center text-[12.5px] font-normal text-white/[0.55]">
+                {terminado ? "partido terminado" : `saca ${(sacaA ? nombreA : nombreB).split(" ")[0]}`}
+              </small>
+            </span>
+            <button
+              type="button"
+              onClick={() => setGirado((g) => !g)}
+              title="Girar la mitad de arriba"
+              aria-pressed={girado}
+              className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] text-white/[0.82]"
+            >
+              ⇅
+            </button>
+          </div>
+
+          {mitad("a", nombreA, a, sa, false)}
+        </>
+      )}
 
       <div className="shrink-0 px-3.5 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
         {abandonado ? (
           <p className="mb-2 text-center text-[13.5px] text-white/[0.62]">Este partido quedó sin terminar.</p>
         ) : null}
-        {abandonado ? null : (
+        {abandonado || faltaSaque ? null : (
           <div className="flex flex-col gap-2">
             <button
               type="button"
@@ -253,7 +336,7 @@ export function Marcador({
           <button
             type="button"
             onClick={eliminar}
-            disabled={guardando}
+            disabled={guardando || eligiendo}
             className="mt-1 min-h-10 w-full text-[14px] font-medium text-white/[0.62] disabled:opacity-60"
           >
             {guardando ? "Eliminando..." : "Eliminar partido"}

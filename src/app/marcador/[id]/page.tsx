@@ -40,6 +40,7 @@ export default async function PaginaMarcador({ params }: PageProps<"/marcador/[i
         historial: (m.historial as [number, number][]) ?? [],
         version: Number(m.version),
         estado: m.estado,
+        primerSaque: m.primer_saque === "a" || m.primer_saque === "b" ? m.primer_saque : null,
       }}
     />
   );
