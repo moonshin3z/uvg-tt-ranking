@@ -52,6 +52,30 @@ información a las pantallas.
 - Se revisó visualmente a 390 px. Pasaron las 44 pruebas responsive en 320,
   390 y 1440 px, además de tipos, lint, formato, 55 unitarias y build.
 
+## Actualización: segunda pasada de fluidez
+
+La primera pasada dejaba la app correcta pero rígida: todo cortado por rayas
+de borde a borde y casi nada de movimiento. Esta pasada cambia la forma y el
+movimiento en los componentes compartidos, sin agregar opciones ni texto:
+
+- Las listas (`Lista`), la tabla de posiciones, los grupos del torneo, los
+  datos del panel y la nota son tarjetas: flotan sobre el fondo con esquinas
+  de 20px y sombra suave (`tarjeta` y `shadow-tarjeta` en `globals.css`). Los
+  divisores de adentro no llegan al borde. Las pantallas que tenían `main`
+  blanco pasaron a `bg-background` para que las tarjetas se vean.
+- La zona de la tabla se marca con el número de posición dentro de un círculo
+  verde o rojo, en vez de la barra de 3px. Las filas entran en cascada.
+- El selector Mayor/Menor y Grupos/Cuadro tiene una píldora que se desliza
+  (`SEG_*` y `pildora()` en `fila.tsx`).
+- La franja del torneo en curso es una tarjeta verde con un punto que late; el
+  rótulo urgente también late. El perfil tiene la cabecera curva y las cifras
+  flotando encima.
+- Pestañas con píldora detrás del ícono activo y la bolita sobre el ícono.
+- `--radius` subió de 10px a 14px, y la entrada de pantalla de 180 a 320 ms.
+
+Todo sigue apagándose con `prefers-reduced-motion`. La referencia visual es el
+artefacto "Club TM UVG Fluido".
+
 ## Actualización: eliminación simple de torneos
 
 Esta decisión de Iván reemplaza las restricciones históricas de borrado de

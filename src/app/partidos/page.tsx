@@ -53,7 +53,7 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
   // llegan hasta el borde de la pantalla y traen el suyo.
   return (
     <>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-6">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-6">
         <Tope titulo="Mis partidos" sub={ranking?.nombre ?? "Tus torneos y marcadores"} />
 
         {bienvenida ? (

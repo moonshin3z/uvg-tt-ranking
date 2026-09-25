@@ -59,7 +59,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
   const difSets = historial.reduce((n, h) => n + (h.pg - h.pp), 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
       <CabeceraPerfil
         nombre={jugador.nombre}
         bajo={`Carnet ${jugador.carnet} · División ${actual ? actual.division : "sin asignar"}${

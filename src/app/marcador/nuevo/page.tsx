@@ -19,7 +19,7 @@ export default async function PaginaMarcadorNuevo() {
   return (
     <>
       <Tope titulo="Marcador libre" sub="Un partido que no es del ranking" atras="/partidos" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
         <FormularioMarcadorLibre nombrePropio={sesion.usuario.nombre} />
         <Pie>
           Esto no se registra en el ranking ni cuenta para la tabla. Sirve para llevar la cuenta de un amistoso, un

@@ -139,8 +139,8 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
         sub={contexto}
         atras={volver as Route}
       />
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-card pb-8">
-        <div className="bg-card px-4 pt-[22px] pb-7">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-background pb-8">
+        <div className="px-5 pt-[22px] pb-7">
           {cancelado ? (
             <>
               <Aviso>{p.torneo ? "Este torneo está cancelado." : "Este ranking está cancelado."}</Aviso>

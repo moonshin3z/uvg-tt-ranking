@@ -59,7 +59,7 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
     // Sin padding horizontal: el selector, la tabla y las listas llegan hasta
     // el borde y traen el suyo, como en el prototipo.
     <>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
         <Tope
           titulo={ranking.nombre}
           sub={`${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · División ${division === "mayor" ? "Mayor" : "Menor"}`}

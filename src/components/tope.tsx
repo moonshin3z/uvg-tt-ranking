@@ -28,7 +28,7 @@ export async function Tope({
   const sesion = await obtenerSesion();
 
   return (
-    <header className="sticky top-0 z-10 flex min-h-14 items-center gap-2.5 border-b border-border bg-card/95 px-4 py-[9px] shadow-[0_1px_0_rgba(19,23,20,0.02)] backdrop-blur-md">
+    <header className="sticky top-0 z-10 flex min-h-14 items-center gap-2.5 bg-background/85 px-4 py-[9px] shadow-[0_1px_0_var(--linea-suave)] backdrop-blur-md backdrop-saturate-150">
       {atras ? (
         <Link
           href={atras}

@@ -76,7 +76,7 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
   return (
     <>
       <Tope titulo={torneo.nombre} sub={ESTADO[torneo.estado] ?? torneo.estado} atras="/" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
         {hayGrupos ? (
           <Segmentado
             actual={vista}
@@ -94,16 +94,16 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
             <>
               {/* Se desliza a lo ancho: un cuadro de 16 no cabe en un teléfono
                   y comprimirlo lo vuelve ilegible. */}
-              <div className="flex gap-2.5 overflow-x-auto bg-card p-4">
+              <div className="flex snap-x gap-2.5 overflow-x-auto px-4 pt-1 pb-4">
                 {rondas.map((r) => (
-                  <div key={r} className="flex min-w-[136px] flex-1 flex-col justify-around gap-3">
+                  <div key={r} className="flex min-w-[140px] flex-1 snap-start flex-col justify-around gap-3.5">
                     <p className="text-center text-[13px] font-medium text-muted-foreground">
                       {nombreDeRonda(r, ultima)}
                     </p>
                     {cuadro
                       .filter((l) => l.ronda === r)
                       .map((l) => (
-                        <div key={l.posicion} className="overflow-hidden rounded-md border border-border">
+                        <div key={l.posicion} className="overflow-hidden rounded-[14px] bg-card shadow-tarjeta">
                           <Lado
                             bye={l.b != null && l.a == null && l.ganador != null}
                             nombre={l.a?.nombre ?? null}
@@ -135,68 +135,79 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
             {grupos.map((g) => (
               <div key={g.nombre}>
                 <Rotulo>Grupo {g.nombre}</Rotulo>
-                <table className="w-full table-fixed border-collapse bg-card">
-                  <caption className="sr-only">Grupo {g.nombre}</caption>
-                  <colgroup>
-                    <col className="w-11" />
-                    <col />
-                    <col className="w-8" />
-                    <col className="w-8" />
-                    <col className="w-12" />
-                  </colgroup>
-                  <thead>
-                    <tr className="text-[12.5px] text-faint">
-                      <th scope="col" className="px-1 pb-[9px] pl-4 text-right font-normal">
-                        #
-                      </th>
-                      <th scope="col" className="px-1 pb-[9px] text-left font-normal">
-                        Jugador
-                      </th>
-                      <th scope="col" className="px-1 pb-[9px] text-right font-normal">
-                        PJ
-                      </th>
-                      <th scope="col" className="px-1 pb-[9px] text-right font-normal">
-                        PG
-                      </th>
-                      <th scope="col" className="px-1 pr-4 pb-[9px] text-right font-normal">
-                        Dif
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {g.filas.map((f) => {
-                      const clasifica = f.posicion <= (torneo.clasifican_por_grupo ?? 2);
-                      const esYo = f.usuario_id === yo;
-                      return (
-                        <tr
-                          key={f.usuario_id}
-                          className={cn("border-t border-linea-suave", esYo && "font-bold text-foreground")}
-                        >
-                          <td
+                <div className="tarjeta">
+                  <table className="tabla-anim w-full table-fixed border-collapse">
+                    <caption className="sr-only">Grupo {g.nombre}</caption>
+                    <colgroup>
+                      <col className="w-11" />
+                      <col />
+                      <col className="w-8" />
+                      <col className="w-8" />
+                      <col className="w-12" />
+                    </colgroup>
+                    <thead>
+                      <tr className="text-[12.5px] text-faint">
+                        <th scope="col" className="px-1 pt-3 pb-[7px] pl-4 text-left font-normal">
+                          #
+                        </th>
+                        <th scope="col" className="px-1 pb-[9px] text-left font-normal">
+                          Jugador
+                        </th>
+                        <th scope="col" className="px-1 pb-[9px] text-right font-normal">
+                          PJ
+                        </th>
+                        <th scope="col" className="px-1 pb-[9px] text-right font-normal">
+                          PG
+                        </th>
+                        <th scope="col" className="px-1 pr-4 pb-[9px] text-right font-normal">
+                          Dif
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.filas.map((f, n) => {
+                        const clasifica = f.posicion <= (torneo.clasifican_por_grupo ?? 2);
+                        const esYo = f.usuario_id === yo;
+                        return (
+                          <tr
+                            key={f.usuario_id}
+                            style={{ "--n": n } as React.CSSProperties}
                             className={cn(
-                              "h-[46px] border-l-[3px] border-l-transparent px-1 pl-[13px] text-right text-[14px] text-faint",
-                              clasifica && "border-l-zona-ascenso",
-                              esYo && "text-foreground",
+                              "border-t border-linea-suave",
+                              esYo && "bg-[#f4faf6] font-bold text-foreground",
                             )}
                           >
-                            {f.posicion}
-                          </td>
-                          <th scope="row" className="h-[46px] truncate px-1 text-left font-[inherit] text-[15.5px]">
-                            {f.nombre}
-                            {f.empatado_sin_resolver ? (
-                              <span className="ml-1.5 text-[12.5px] font-normal text-destructive">empate</span>
-                            ) : null}
-                          </th>
-                          <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pj}</td>
-                          <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pg}</td>
-                          <td className="h-[46px] px-1 pr-4 text-right text-[16px] font-semibold">
-                            {f.dif_sets > 0 ? `+${f.dif_sets}` : f.dif_sets}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            <td className="h-12 px-1 pl-3 text-left">
+                              <span
+                                className={cn(
+                                  "inline-grid size-7 place-items-center rounded-full text-[13.5px]",
+                                  clasifica
+                                    ? "bg-uvg-suave font-bold text-primary"
+                                    : esYo
+                                      ? "text-foreground"
+                                      : "text-faint",
+                                )}
+                              >
+                                {f.posicion}
+                              </span>
+                            </td>
+                            <th scope="row" className="h-[46px] truncate px-1 text-left font-[inherit] text-[15.5px]">
+                              {f.nombre}
+                              {f.empatado_sin_resolver ? (
+                                <span className="ml-1.5 text-[12.5px] font-normal text-destructive">empate</span>
+                              ) : null}
+                            </th>
+                            <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pj}</td>
+                            <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pg}</td>
+                            <td className="h-[46px] px-1 pr-4 text-right text-[16px] font-semibold">
+                              {f.dif_sets > 0 ? `+${f.dif_sets}` : f.dif_sets}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ))}
             <p className="flex flex-wrap gap-x-[18px] gap-y-1.5 px-4 pt-2 pb-3 text-[12.5px] text-muted-foreground">

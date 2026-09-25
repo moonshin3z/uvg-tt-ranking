@@ -51,7 +51,7 @@ export default async function Panel() {
   return (
     <>
       <Tope titulo="Panel" sub="Coordinación del club" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-card pb-8">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
         <Nota>
           {ranking
             ? `${ranking.nombre} en juego. ${
@@ -87,7 +87,7 @@ export default async function Panel() {
         {ranking ? (
           <>
             <Rotulo>{ranking.nombre}</Rotulo>
-            <div className="border-t border-linea-suave">
+            <div className="tarjeta">
               <Dato valor={inscritos}>Inscritos</Dato>
               <Dato valor={`${cerrados} de ${partidos.length}`}>Partidos jugados</Dato>
               <Dato valor={fechaLarga(ranking.fecha_limite)}>Cierra</Dato>

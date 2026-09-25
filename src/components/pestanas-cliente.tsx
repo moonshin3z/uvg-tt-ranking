@@ -36,7 +36,7 @@ export function PestanasCliente({ pestanas }: { pestanas: Pestana[] }) {
   return (
     <nav
       aria-label="Secciones"
-      className="sticky bottom-0 z-10 flex border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_18px_rgba(19,23,20,0.04)] backdrop-blur-md"
+      className="sticky bottom-0 z-10 flex bg-card/90 px-2 pt-1.5 pb-[max(8px,env(safe-area-inset-bottom,0px))] shadow-[0_-1px_0_var(--linea-suave)] backdrop-blur-md backdrop-saturate-150"
     >
       {pestanas.map((p) => {
         const esta = p === actual;
@@ -50,27 +50,26 @@ export function PestanasCliente({ pestanas }: { pestanas: Pestana[] }) {
               // 12px y no los 11.5 del prototipo: 12 es el piso de legibilidad
               // que revisa la auditoría, y medio pixel no se nota. Bajar el
               // piso para acomodar un componente es al revés de para qué está.
-              "relative flex min-h-[54px] flex-1 flex-col items-center justify-center gap-0.5 px-0.5 pt-2 pb-[7px] text-xs font-semibold transition-[color,transform] duration-200 ease-out active:scale-[0.94]",
+              "group flex min-h-[52px] flex-1 flex-col items-center justify-center gap-[3px] px-0.5 py-1 text-xs font-semibold transition-colors duration-300 ease-out",
               esta ? "text-primary" : "text-muted-foreground",
             )}
           >
+            {/* La sección activa se marca con una píldora detrás del ícono,
+                no moviendo el ícono de lugar. */}
             <span
-              aria-hidden
               className={cn(
-                "grid size-6 place-items-center rounded-md transition-[background-color,transform] duration-200 ease-out",
-                esta && "-translate-y-0.5 bg-uvg-suave",
+                "relative grid h-[30px] w-14 place-items-center rounded-full transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-active:scale-90",
+                esta && "bg-uvg-suave",
               )}
             >
-              <Icono className="size-[17px]" strokeWidth={esta ? 2.4 : 1.9} />
-            </span>
-            <span>
-              {p.texto}
+              <Icono aria-hidden className="size-5" strokeWidth={esta ? 2.2 : 1.9} />
               {p.bolita ? (
-                <span className="ml-1 inline-block min-w-[18px] rounded-full bg-destructive px-[5px] align-[1px] text-[10.5px] leading-[18px] font-bold text-destructive-foreground">
+                <span className="absolute -top-0.5 right-2 min-w-[18px] rounded-full bg-destructive px-[5px] text-center text-[10.5px] leading-[18px] font-bold text-destructive-foreground ring-2 ring-card">
                   {p.bolita}
                 </span>
               ) : null}
             </span>
+            <span>{p.texto}</span>
           </Link>
         );
       })}
