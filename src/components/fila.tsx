@@ -261,7 +261,7 @@ export function Franja({ nombre, sub, href }: { nombre: string; sub: string; hre
   return (
     <Link
       href={href}
-      className="mx-3.5 mt-1.5 mb-2.5 flex min-h-[60px] items-center gap-3 rounded-[20px] bg-[linear-gradient(135deg,#0a6b38,#06381f)] px-3.5 py-3 text-white shadow-[0_12px_26px_-16px_rgba(6,56,31,0.7)] transition-transform duration-200 ease-out active:scale-[0.985]"
+      className="mx-3.5 mt-3 flex min-h-[60px] items-center gap-3 rounded-[20px] bg-[linear-gradient(135deg,#0a6b38,#06381f)] px-3.5 py-3 text-white shadow-[0_12px_26px_-16px_rgba(6,56,31,0.7)] transition-transform duration-200 ease-out active:scale-[0.985]"
     >
       <span
         aria-hidden
@@ -277,12 +277,56 @@ export function Franja({ nombre, sub, href }: { nombre: string; sub: string; hre
 }
 
 /**
+ * La franja de tus partidos, arriba de la tabla y de la franja del torneo.
+ *
+ * Es lo que la portada le reclama a quien tiene sesión: un resultado por
+ * confirmar, un desempate o los partidos que le quedan. Blanca y no verde
+ * oscura para no competir con la del torneo; la cifra en el círculo es lo
+ * primero que se lee. Sin nada pendiente no se dibuja.
+ */
+export function FranjaPartidos({
+  cifra,
+  titulo,
+  sub,
+  href,
+  urgente = false,
+}: {
+  cifra: number;
+  titulo: string;
+  sub: string;
+  href: Route;
+  /** Rojo en vez de verde: un resultado que se confirma solo si no respondés. */
+  urgente?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className="mx-3.5 mt-3 flex min-h-[64px] items-center gap-3 rounded-[20px] bg-card px-3.5 py-3 shadow-tarjeta transition-transform duration-200 ease-out active:scale-[0.985]"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-full text-[16px] font-bold",
+          urgente ? "bg-malo-suave text-destructive" : "bg-uvg-suave text-primary",
+        )}
+      >
+        {cifra}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-semibold tracking-[-0.01em]">{titulo}</span>
+        <span className="mt-px block text-[12.5px] text-pretty text-muted-foreground">{sub}</span>
+      </span>
+      <Flecha />
+    </Link>
+  );
+}
+
+/**
  * Las piezas del selector segmentado. La opción elegida la marca una píldora
  * blanca que se desliza de una opción a la otra en vez de saltar: la
  * navegación conserva el mismo elemento, así que la transición corre sola.
  */
-export const SEG_PISTA =
-  "relative mx-4 mt-1.5 mb-3 grid auto-cols-fr grid-flow-col rounded-full bg-[#e3e9e2] p-[3px]";
+export const SEG_PISTA = "relative mx-4 mt-3 mb-3 grid auto-cols-fr grid-flow-col rounded-full bg-[#e3e9e2] p-[3px]";
 export const SEG_PILDORA =
   "absolute inset-y-[3px] left-[3px] rounded-full bg-card shadow-[0_1px_3px_rgba(6,56,31,0.12),0_4px_10px_-6px_rgba(6,56,31,0.2)] transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
 export const SEG_OPCION =

@@ -81,6 +81,11 @@ movimiento en los componentes compartidos, sin agregar opciones ni texto:
   flotando encima.
 - Pestañas con píldora detrás del ícono activo y la bolita sobre el ícono.
 - `--radius` subió de 10px a 14px, y la entrada de pantalla de 180 a 320 ms.
+- La portada tiene una franja blanca de tus partidos (`FranjaPartidos`),
+  arriba de la del torneo. Dice, en orden de urgencia, un resultado por
+  confirmar (en rojo), un desempate o los partidos que te quedan con la fecha
+  de cierre. Uno solo lleva directo al partido. Sin nada pendiente no sale.
+  Reemplaza la tarjeta vieja con el botón "Ver".
 
 Todo sigue apagándose con `prefers-reduced-motion`. La referencia visual es el
 artefacto "Club TM UVG Fluido".

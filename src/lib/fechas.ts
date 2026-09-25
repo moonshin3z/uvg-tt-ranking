@@ -6,8 +6,18 @@
 
 const ZONA = "America/Guatemala";
 
+/**
+ * Una columna `date` llega como "2026-10-24", sin hora, y `new Date` la lee
+ * como medianoche UTC: en Guatemala eso es el día anterior a las 6 p.m. Se
+ * ancla al mediodía UTC, que es el mismo día acá. Un instante con hora se
+ * deja como está.
+ */
+function instante(iso: string): Date {
+  return new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00Z` : iso);
+}
+
 export function formatearFecha(iso: string): string {
-  return new Intl.DateTimeFormat("es-GT", { day: "numeric", month: "short", timeZone: ZONA }).format(new Date(iso));
+  return new Intl.DateTimeFormat("es-GT", { day: "numeric", month: "short", timeZone: ZONA }).format(instante(iso));
 }
 
 export function formatearFechaLarga(iso: string): string {
@@ -16,7 +26,7 @@ export function formatearFechaLarga(iso: string): string {
     day: "numeric",
     month: "long",
     timeZone: ZONA,
-  }).format(new Date(iso));
+  }).format(instante(iso));
 }
 
 /** Días calendario entre hoy y una fecha (negativo si ya pasó). */

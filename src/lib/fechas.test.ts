@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { diasHasta, horasParaAutoconfirmar, textoAutoconfirmacion, textoFechaLimite } from "./fechas";
+import {
+  diasHasta,
+  formatearFecha,
+  formatearFechaLarga,
+  horasParaAutoconfirmar,
+  textoAutoconfirmacion,
+  textoFechaLimite,
+} from "./fechas";
 
 const ahora = new Date("2026-09-15T18:00:00Z");
 
@@ -13,6 +20,21 @@ describe("diasHasta", () => {
 
   it("acepta fechas con hora", () => {
     expect(diasHasta("2026-09-20T00:00:00Z", ahora)).toBe(5);
+  });
+});
+
+describe("formatearFecha", () => {
+  // La fecha límite de un ranking es una columna `date`: llega como
+  // "2026-10-24", sin hora. Leída como medianoche UTC, en Guatemala caía el
+  // día anterior y la portada decía que el ranking cerraba el 23.
+  it("una fecha sin hora es ese mismo día en Guatemala", () => {
+    expect(formatearFecha("2026-10-24")).toMatch(/\b24\b/);
+    expect(formatearFechaLarga("2026-10-24")).toMatch(/sábado.*\b24\b/);
+  });
+
+  it("un instante se sigue mostrando en hora de Guatemala", () => {
+    // 03:00 UTC del 15 son las 21:00 del 14 en Guatemala.
+    expect(formatearFecha("2026-09-15T03:00:00Z")).toMatch(/\b14\b/);
   });
 });
 
