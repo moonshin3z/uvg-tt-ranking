@@ -52,6 +52,15 @@ información a las pantallas.
 - Se revisó visualmente a 390 px. Pasaron las 44 pruebas responsive en 320,
   390 y 1440 px, además de tipos, lint, formato, 55 unitarias y build.
 
+## Commits sin coautores
+
+Ningún commit que vaya a `main` puede llevar `Co-Authored-By:` en el mensaje.
+El proyecto está en el plan gratuito de Vercel y el repo es privado: si un
+commit trae un coautor que no es miembro del proyecto en Vercel, el despliegue
+se bloquea y producción se queda en la versión anterior sin avisar en ningún
+otro lado. Pasó con `dd3e215` (el rediseño fluido): llegó a GitHub y no a
+producción. El autor tiene que ser Iván y nadie más.
+
 ## Actualización: segunda pasada de fluidez
 
 La primera pasada dejaba la app correcta pero rígida: todo cortado por rayas
