@@ -10,6 +10,8 @@ import {
 } from "@/lib/jugadores/consultas";
 import { normalizarCarnet } from "@/lib/auth/carnet";
 import { CabeceraPerfil, Cifras, Fila, FilaAccion, Flecha, Lista, Marcador, Pie, Rotulo } from "@/components/fila";
+import { GLIFO } from "@/components/iconos";
+import { Tope } from "@/components/tope";
 import { salir } from "@/app/(auth)/ingresar/acciones";
 
 export async function generateMetadata({ params }: PageProps<"/jugador/[carnet]">): Promise<Metadata> {
@@ -26,14 +28,25 @@ function formatearFecha(iso: string) {
   }).format(new Date(iso));
 }
 
+const DIVISION: Record<string, string> = { mayor: "Mayor", menor: "Menor" };
+
 /** Premio, ascenso o descenso que le tocó en un ranking ya cerrado. */
 function distincion(f: FilaHistorial) {
   if (f.ranking_estado !== "cerrado") return null;
-  if (f.posicion <= f.n_premiados) return { texto: `${f.posicion}º`, variante: "premio" as const };
-  if (f.division === "menor" && f.posicion <= f.n_ascienden) return { texto: "subió", variante: "ascenso" as const };
+  if (f.posicion <= f.n_premiados) return { texto: "premio", bueno: true };
+  if (f.division === "menor" && f.posicion <= f.n_ascienden) return { texto: "subió", bueno: true };
   if (f.division === "mayor" && f.posicion > f.jugadores_division - f.n_descienden)
-    return { texto: "bajó", variante: "descenso" as const };
+    return { texto: "bajó", bueno: false };
   return null;
+}
+
+/** "Cerrado · terminó 6.º en Mayor" o "En juego · va 4.º de 10 en Mayor". */
+function lineaHistorial(f: FilaHistorial, soyYo: boolean) {
+  const division = DIVISION[f.division] ?? f.division;
+  if (f.ranking_estado === "cerrado") {
+    return `Cerrado · ${soyYo ? "terminaste" : "terminó"} ${f.posicion}.º en ${division}`;
+  }
+  return `En juego · ${soyYo ? "vas" : "va"} ${f.posicion}.º de ${f.jugadores_division} en ${division}`;
 }
 
 export default async function PerfilJugador({ params }: PageProps<"/jugador/[carnet]">) {
@@ -58,18 +71,23 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
   const puesto = actual && actual.ranking_estado !== "cerrado" ? `${actual.posicion}.º` : undefined;
   const difSets = historial.reduce((n, h) => n + (h.pg - h.pp), 0);
 
+  const division = actual ? (DIVISION[actual.division] ?? actual.division) : null;
+
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
+      {/* La barra arranca transparente sobre el verde; el nombre aparece en
+          ella recién al bajar, cuando la cabecera ya se fue. */}
+      <Tope titulo={jugador.nombre} grande={false} alBajar={150} atras={soyYo ? undefined : "/"} />
       <CabeceraPerfil
         nombre={jugador.nombre}
-        bajo={`Carnet ${jugador.carnet} · División ${actual ? actual.division : "sin asignar"}${
+        bajo={`Carnet ${jugador.carnet} · ${division ? `División ${division}` : "sin división"}${
           jugador.activo ? "" : " · dado de baja"
         }`}
         puesto={puesto}
         detalle={
           actual && puesto ? (
             <>
-              de {actual.jugadores_division} en {actual.division}
+              de {actual.jugadores_division} en {division}
               <br />
               {actual.pts} {actual.pts === 1 ? "punto" : "puntos"}, {actual.pj} jugados
             </>
@@ -82,7 +100,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
           ["Jugados", totales.pj],
           ["Ganados", totales.pg],
           ["Perdidos", totales.pp],
-          ["Sets", difSets >= 0 ? `+${difSets}` : difSets],
+          ["Sets", difSets > 0 ? `+${difSets}` : difSets],
         ]}
       />
 
@@ -103,10 +121,16 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
             return (
               <Fila
                 key={h.ranking_id}
+                sinInicial
                 nombre={h.ranking_nombre}
-                sub={`${h.division} · puesto ${h.posicion} de ${h.jugadores_division} · ${h.pg}-${h.pp}`}
+                sub={lineaHistorial(h, soyYo)}
                 href={`/rankings/${h.ranking_id}` as Route}
-                derecha={d ? <Marcador texto={d.texto} gano={d.variante !== "descenso"} /> : <Flecha />}
+                derecha={
+                  <>
+                    {d ? <Marcador texto={d.texto} gano={d.bueno} /> : null}
+                    <Flecha />
+                  </>
+                }
               />
             );
           })}
@@ -136,18 +160,14 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
           <Lista>
             <Fila
               nombre="Cambiar mi PIN"
-              sub="El que usás para ingresar"
               href="/cambiar-pin"
               derecha={<Flecha />}
-              sinInicial
+              icono={{ glifo: GLIFO.llave, color: "var(--gris)" }}
             />
-            <FilaAccion
-              nombre="Salir"
-              sub="Cerrar sesión en este teléfono"
-              accion={salir}
-              derecha={<Flecha />}
-              sinInicial
-            />
+          </Lista>
+          <div className="h-3.5" />
+          <Lista>
+            <FilaAccion nombre="Cerrar sesión" accion={salir} peligro />
           </Lista>
         </>
       ) : null}

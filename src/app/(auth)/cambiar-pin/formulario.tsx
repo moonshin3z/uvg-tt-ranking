@@ -1,9 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cambiarPin, type EstadoCambioPin } from "./acciones";
 
 const inicial: EstadoCambioPin = {};
@@ -12,45 +9,52 @@ export function FormularioCambioPin() {
   const [estado, accion, pendiente] = useActionState(cambiarPin, inicial);
 
   return (
-    <form action={accion} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="pin">PIN nuevo</Label>
-        <Input
-          id="pin"
-          name="pin"
-          type="password"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
-          autoComplete="new-password"
-          autoFocus
-          required
-          placeholder="6 dígitos"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="confirmacion">Repetí el PIN</Label>
-        <Input
-          id="confirmacion"
-          name="confirmacion"
-          type="password"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={6}
-          autoComplete="new-password"
-          required
-        />
+    <form action={accion} noValidate>
+      <div className="grupo">
+        <label className="campo">
+          <span>Nuevo</span>
+          <input
+            id="pin"
+            name="pin"
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            autoComplete="new-password"
+            autoFocus
+            required
+            placeholder="6 dígitos"
+            aria-label="PIN nuevo"
+          />
+        </label>
+        <label className="campo">
+          <span>Repetir</span>
+          <input
+            id="confirmacion"
+            name="confirmacion"
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            autoComplete="new-password"
+            required
+            placeholder="El mismo otra vez"
+            aria-label="Repetí el PIN"
+          />
+        </label>
       </div>
 
       {estado.error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="alerta">
           {estado.error}
         </p>
       ) : null}
 
-      <Button type="submit" size="lg" disabled={pendiente} className="mt-2">
-        {pendiente ? "Guardando..." : "Guardar PIN"}
-      </Button>
+      <div className="pila-botones mt-[22px]">
+        <button type="submit" className="btn bloque" disabled={pendiente}>
+          {pendiente ? "Guardando…" : "Guardar PIN"}
+        </button>
+      </div>
     </form>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { rankingVigente } from "@/lib/ranking/consultas";
 import { formatearFecha, textoFechaLimite } from "@/lib/fechas";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Pie, Rotulo } from "@/components/fila";
 import { Tope } from "@/components/tope";
 
 export const metadata: Metadata = {
@@ -12,12 +12,10 @@ export const metadata: Metadata = {
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{titulo}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3 text-sm leading-relaxed text-pretty">{children}</CardContent>
-    </Card>
+    <section>
+      <Rotulo>{titulo}</Rotulo>
+      <div className="grupo flex flex-col gap-3 px-4 py-3.5 text-[15px] leading-relaxed text-pretty">{children}</div>
+    </section>
   );
 }
 
@@ -35,21 +33,17 @@ export default async function PaginaReglas() {
   return (
     <>
       <Tope titulo="Cómo funciona" sub="Reglamento del ranking" atras="/" />
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6 sm:py-8">
-        <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Cómo funciona el ranking</h1>
-          {r ? (
-            <p className="text-sm text-muted-foreground">
-              Estas son las reglas del <span className="font-medium">{r.nombre}</span>. La fecha límite es el{" "}
-              {formatearFecha(r.fecha_limite)}, o sea que {textoFechaLimite(r.fecha_limite)}.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Todavía no hay un ranking en curso. Cuando el coordinador publique uno, acá vas a ver sus reglas
-              exactas.
-            </p>
-          )}
-        </header>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col pb-8">
+        {r ? (
+          <Pie>
+            Estas son las reglas del <span className="font-semibold">{r.nombre}</span>. La fecha límite es el{" "}
+            {formatearFecha(r.fecha_limite)}, o sea que {textoFechaLimite(r.fecha_limite)}.
+          </Pie>
+        ) : (
+          <Pie>
+            Todavía no hay un ranking en curso. Cuando el coordinador publique uno, acá vas a ver sus reglas exactas.
+          </Pie>
+        )}
 
         <Seccion titulo="Divisiones y calendario">
           <p>

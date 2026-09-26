@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { DIBUJO } from "@/components/iconos";
 
 /** Pantalla de mensaje a página completa: errores, 404, estados vacíos grandes. */
 export function Aviso({
@@ -28,22 +28,23 @@ export function Aviso({
   return (
     <main
       {...(esError ? { "data-uvgtt-error": "1" } : {})}
-      className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 py-16 text-center"
+      className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-16"
     >
-      <span aria-hidden className="text-4xl">
-        🏓
-      </span>
-      <h1 className="text-xl font-bold tracking-tight text-balance">{titulo}</h1>
-      {detalle ? <p className="text-pretty text-muted-foreground">{detalle}</p> : null}
-      <div className="mt-2 flex flex-wrap justify-center gap-2">{children}</div>
+      {/* La pantalla vacía del prototipo: el dibujo, qué pasó y qué hacer. */}
+      <div className="vacio">
+        {esError ? DIBUJO.sinRed : DIBUJO.pregunta}
+        <h1 className="t">{titulo}</h1>
+        {detalle ? <p className="d">{detalle}</p> : null}
+        <div className="acciones-vacio">{children}</div>
+      </div>
     </main>
   );
 }
 
 export function BotonInicio() {
   return (
-    <Button asChild variant="outline">
-      <Link href="/">Ir a la tabla</Link>
-    </Button>
+    <Link href="/" className="btn gris">
+      Ir a la tabla
+    </Link>
   );
 }

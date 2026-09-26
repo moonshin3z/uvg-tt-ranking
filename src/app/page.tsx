@@ -4,15 +4,26 @@ import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
 import { rankingVigente, tablaDeDivision, ultimosResultados } from "@/lib/ranking/consultas";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
-import { Franja, FranjaPartidos, Lista, Pie, Rotulo } from "@/components/fila";
-import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
-import { Tope } from "@/components/tope";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import {
+  Fila,
+  Franja,
+  FranjaPartidos,
+  Lista,
+  Marcador,
+  Nota,
+  Pie,
+  Rotulo,
+  Vacio,
+  primerNombre,
+} from "@/components/fila";
+import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
+import { DIBUJO } from "@/components/iconos";
+import { Tope } from "@/components/tope";
 import { EnVivo } from "@/components/en-vivo";
 import { misPartidos, type MisPartidos } from "@/lib/partidos/consultas";
 
-import { formatearFecha, textoFechaLimite } from "@/lib/fechas";
+import { cuandoPaso, formatearFecha, textoFechaLimite } from "@/lib/fechas";
 
 const plural = (n: number, uno: string, varios: string) => (n === 1 ? uno : varios);
 
@@ -85,14 +96,18 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
 
   if (!ranking) {
     return (
-      <>
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
         <Tope titulo="Ranking UVG" sub="Sin ranking en juego" />
-        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
-          <p className="text-muted-foreground">
-            Todavía no hay un ranking abierto. Volvé cuando el coordinador lo publique.
-          </p>
-        </main>
-      </>
+        <Vacio
+          dibujo={DIBUJO.trofeo}
+          titulo="Todavía no arrancó el ranking"
+          detalle="Cuando el coordinador arme las divisiones y haga el sorteo, la tabla aparece acá y te avisamos qué partidos te tocan."
+        >
+          <Link href="/reglas" className="btn gris">
+            Cómo funciona
+          </Link>
+        </Vacio>
+      </main>
     );
   }
 
@@ -105,96 +120,69 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
   const franja = mios ? franjaDePartidos(mios, ranking.fecha_limite) : null;
 
   return (
-    // Sin padding horizontal: el selector, la tabla y las listas llegan hasta
-    // el borde y traen el suyo, como en el prototipo.
-    <>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
-        <Tope
-          titulo={ranking.nombre}
-          sub={`${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · División ${division === "mayor" ? "Mayor" : "Menor"}`}
+    // Sin padding horizontal: los bloques traen su propio margen, como en el
+    // prototipo.
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
+      <Tope
+        titulo={ranking.nombre}
+        sub={`${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · cierra el ${formatearFecha(ranking.fecha_limite)}`}
+      />
+
+      {motivo === "solo-coordinador" ? <Nota>Esa sección es solo para el coordinador.</Nota> : null}
+
+      {franja ? (
+        <FranjaPartidos
+          cifra={franja.cifra}
+          titulo={franja.titulo}
+          sub={franja.sub}
+          href={franja.href}
+          urgente={franja.urgente}
         />
+      ) : null}
 
-        {motivo === "solo-coordinador" ? (
-          <p role="status" className="mx-4 mt-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground">
-            Esa sección es solo para el coordinador.
-          </p>
-        ) : null}
+      {/* La franja del torneo solo existe mientras hay uno en curso. */}
+      {torneo ? (
+        <Franja
+          nombre={torneo.torneo.nombre}
+          etiqueta={torneo.torneo.estado === "inscripcion" ? "Inscripción" : "En vivo"}
+          sub={
+            torneo.torneo.estado === "inscripcion"
+              ? "Hablá con el coordinador para anotarte"
+              : torneo.porJugar > 0
+                ? `Quedan ${torneo.porJugar} partido${torneo.porJugar === 1 ? "" : "s"}`
+                : "Sin partidos por jugar"
+          }
+          href={`/torneos/${torneo.torneo.id}` as Route}
+        />
+      ) : null}
 
-        {franja ? (
-          <FranjaPartidos
-            cifra={franja.cifra}
-            titulo={franja.titulo}
-            sub={franja.sub}
-            href={franja.href}
-            urgente={franja.urgente}
-          />
-        ) : null}
+      <SelectorDivision actual={division} />
+      <EnVivo />
 
-        {/* La franja del torneo solo existe mientras hay uno en curso. */}
-        {torneo ? (
-          <Franja
-            nombre={torneo.torneo.nombre}
-            sub={
-              torneo.torneo.estado === "inscripcion"
-                ? "Inscripción abierta · hablá con el coordinador para anotarte"
-                : torneo.porJugar > 0
-                  ? `En juego · quedan ${torneo.porJugar} partido${torneo.porJugar === 1 ? "" : "s"}`
-                  : "En juego"
-            }
-            href={`/torneos/${torneo.torneo.id}` as Route}
-          />
-        ) : null}
+      <LeyendaZonas division={division} />
+      <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
 
-        <SelectorDivision actual={division} />
-        <EnVivo />
+      <Pie>
+        Cada pareja juega una vez. La victoria vale {ranking.pts_victoria}{" "}
+        {ranking.pts_victoria === 1 ? "punto" : "puntos"}.
+      </Pie>
 
-        <LeyendaZonas division={division} />
-        <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
-
-        <Pie>
-          {ranking.nombre}. Cada pareja juega una vez; la victoria vale {ranking.pts_victoria}{" "}
-          {ranking.pts_victoria === 1 ? "punto" : "puntos"}.
-          <br />
-          Cierra el {formatearFecha(ranking.fecha_limite)}.
-        </Pie>
-
-        <Rotulo>Últimos resultados</Rotulo>
-        {resultados.length === 0 ? (
-          <Pie>Aún no hay partidos confirmados.</Pie>
-        ) : (
-          <Lista>
-            {resultados.map((r) => (
-              <li
-                key={r.id}
-                className="flex min-h-[46px] items-center gap-3 border-b border-linea-suave px-4 py-2 text-sm last:border-b-0"
-              >
-                <span className="w-12 shrink-0 text-xs text-muted-foreground">
-                  {r.fecha ? formatearFecha(r.fecha) : ""}
-                </span>
-                <span className="min-w-0 flex-1 truncate">
-                  <Link
-                    href={`/jugador/${encodeURIComponent(r.ganador.carnet)}`}
-                    className="font-medium underline-offset-4 hover:underline"
-                  >
-                    {r.ganador.nombre}
-                  </Link>
-                  <span className="text-muted-foreground"> venció a </span>
-                  <Link
-                    href={`/jugador/${encodeURIComponent(r.perdedor.carnet)}`}
-                    className="underline-offset-4 hover:underline"
-                  >
-                    {r.perdedor.nombre}
-                  </Link>
-                </span>
-                {r.sets ? <span className="tabular shrink-0 font-medium">{r.sets}</span> : null}
-                <Badge variant="outline" className="hidden shrink-0 capitalize sm:inline-flex">
-                  {r.division}
-                </Badge>
-              </li>
-            ))}
-          </Lista>
-        )}
-      </main>
-    </>
+      <Rotulo>Últimos resultados</Rotulo>
+      {resultados.length === 0 ? (
+        <Pie>Aún no hay partidos confirmados.</Pie>
+      ) : (
+        <Lista>
+          {resultados.map((r) => (
+            <Fila
+              key={r.id}
+              sinInicial
+              nombre={`${r.ganador.nombre} le ganó a ${primerNombre(r.perdedor.nombre)}`}
+              sub={`${r.fecha ? `${cuandoPaso(r.fecha)} · ` : ""}División ${r.division === "mayor" ? "Mayor" : "Menor"}`}
+              derecha={r.sets ? <Marcador texto={r.sets} gano={false} /> : null}
+            />
+          ))}
+        </Lista>
+      )}
+    </main>
   );
 }

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { abrirMarcadorLibre, type EstadoMarcadorLibre } from "@/app/partidos/acciones";
 
-const claseSelect = "min-h-11 rounded-md border border-input bg-background px-3 text-base text-foreground";
+const claseSelect = "min-h-11 rounded-[10px] border-0 bg-relleno px-3 text-base text-foreground";
 
 export function FormularioMarcadorLibre({ nombrePropio }: { nombrePropio: string }) {
   const [estado, accion, pendiente] = useActionState(abrirMarcadorLibre, {} as EstadoMarcadorLibre);

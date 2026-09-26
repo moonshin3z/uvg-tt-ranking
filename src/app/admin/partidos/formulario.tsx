@@ -37,7 +37,7 @@ export function FormularioResolver({
             setDecision(e.target.value);
             setConfirmando(false);
           }}
-          className="min-h-10 rounded-md border border-input bg-background px-2 text-sm"
+          className="min-h-10 rounded-[10px] border-0 bg-relleno px-2 text-sm"
         >
           <option value="" disabled>
             Decisión...
@@ -49,7 +49,7 @@ export function FormularioResolver({
         <input
           name="nota"
           placeholder="Nota (queda en la bitácora)"
-          className="min-h-10 w-full min-w-10 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+          className="min-h-10 w-full min-w-10 flex-1 rounded-[10px] border-0 bg-relleno px-3 text-sm"
         />
         {anula && !confirmando ? (
           <Button type="button" variant="destructive" size="sm" onClick={() => setConfirmando(true)}>

@@ -44,7 +44,7 @@ export function AltaEnLote() {
           rows={8}
           spellCheck={false}
           placeholder={EJEMPLO}
-          className="min-h-40 rounded-md border border-input bg-background p-3 text-base leading-relaxed"
+          className="min-h-40 rounded-[10px] border-0 bg-relleno p-3 text-base leading-relaxed"
         />
         <p className="text-sm text-muted-foreground">
           Seleccionás las dos columnas en Excel o Sheets, Ctrl+C, y pegás acá. El orden de las columnas no importa y

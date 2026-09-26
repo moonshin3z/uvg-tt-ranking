@@ -3,18 +3,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  "inline-flex items-center rounded-full px-2.5 py-1 text-[13px] leading-none font-semibold tracking-normal whitespace-nowrap",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "text-foreground",
+        default: "bg-uvg-suave text-primary",
+        secondary: "bg-relleno text-muted-foreground",
+        outline: "bg-relleno text-muted-foreground",
         // El verde de las zonas (#0b9e51) es para rellenos: como texto da 3.3:1
         // sobre blanco y no llega al mínimo. Para la letra va el verde fuerte.
-        premio: "border-transparent bg-zona-premio/15 text-primary",
-        ascenso: "border-transparent bg-zona-ascenso/15 text-primary",
-        descenso: "border-transparent bg-zona-descenso/15 text-zona-descenso",
+        premio: "bg-uvg-suave text-primary",
+        ascenso: "bg-uvg-suave text-primary",
+        descenso: "bg-malo-suave text-destructive",
       },
     },
     defaultVariants: { variant: "default" },

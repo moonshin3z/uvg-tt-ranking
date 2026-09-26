@@ -3,8 +3,6 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUserRound, LayoutDashboard, Swords, Table2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export type Pestana = {
   href: Route;
@@ -14,16 +12,45 @@ export type Pestana = {
   raiz: string;
 };
 
-const ICONOS = {
-  tabla: Table2,
-  partidos: Swords,
-  panel: LayoutDashboard,
-  perfil: CircleUserRound,
+/** Los íconos rellenos de la barra, los del prototipo de iOS. */
+const ICONOS: Record<Pestana["icono"], React.ReactNode> = {
+  tabla: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="3" y="12.5" width="5.2" height="8.5" rx="1.7" />
+      <rect x="9.4" y="3.5" width="5.2" height="17.5" rx="1.7" />
+      <rect x="15.8" y="8.5" width="5.2" height="12.5" rx="1.7" />
+    </svg>
+  ),
+  partidos: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <circle cx="14.2" cy="9.3" r="6.3" />
+      <path d="M9.3 14.7 5 19" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+      <circle cx="19.4" cy="18.8" r="2.1" />
+    </svg>
+  ),
+  panel: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.2" />
+      <rect x="13" y="3.5" width="7.5" height="7.5" rx="2.2" />
+      <rect x="3.5" y="13" width="7.5" height="7.5" rx="2.2" />
+      <rect x="13" y="13" width="7.5" height="7.5" rx="2.2" />
+    </svg>
+  ),
+  perfil: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="9.6" r="3.4" fill="#fff" />
+      <path d="M5.8 18.2c1.3-2.4 3.5-3.7 6.2-3.7s4.9 1.3 6.2 3.7A8 8 0 0 1 12 20.5a8 8 0 0 1-6.2-2.3z" fill="#fff" />
+    </svg>
+  ),
 };
 
 /**
- * La parte que necesita saber en qué pantalla estás, para marcar la pestaña
- * actual. El prototipo la pinta en verde; el resto queda en gris.
+ * La barra de pestañas flotante, de cristal, del prototipo de iOS.
+ *
+ * La pestaña actual la marca una píldora gris que se desliza de una a otra:
+ * la barra vive en el layout y no se vuelve a montar al navegar, así que al
+ * cambiar de pestaña la transición corre sola.
  */
 export function PestanasCliente({ pestanas }: { pestanas: Pestana[] }) {
   const ruta = usePathname();
@@ -32,47 +59,36 @@ export function PestanasCliente({ pestanas }: { pestanas: Pestana[] }) {
   const actual = pestanas
     .filter((p) => (p.raiz === "/" ? ruta === "/" : ruta.startsWith(p.raiz)))
     .sort((a, b) => b.raiz.length - a.raiz.length)[0];
+  const i = actual ? pestanas.indexOf(actual) : -1;
 
   return (
-    <nav
-      aria-label="Secciones"
-      className="sticky bottom-0 z-10 flex bg-card/90 px-2 pt-1.5 pb-[max(8px,env(safe-area-inset-bottom,0px))] shadow-[0_-1px_0_var(--linea-suave)] backdrop-blur-md backdrop-saturate-150"
-    >
-      {pestanas.map((p) => {
-        const esta = p === actual;
-        const Icono = ICONOS[p.icono];
-        return (
-          <Link
-            key={p.texto}
-            href={p.href}
-            aria-current={esta ? "page" : undefined}
-            className={cn(
-              // 12px y no los 11.5 del prototipo: 12 es el piso de legibilidad
-              // que revisa la auditoría, y medio pixel no se nota. Bajar el
-              // piso para acomodar un componente es al revés de para qué está.
-              "group flex min-h-[52px] flex-1 flex-col items-center justify-center gap-[3px] px-0.5 py-1 text-xs font-semibold transition-colors duration-300 ease-out",
-              esta ? "text-primary" : "text-muted-foreground",
-            )}
-          >
-            {/* La sección activa se marca con una píldora detrás del ícono,
-                no moviendo el ícono de lugar. */}
-            <span
-              className={cn(
-                "relative grid h-[30px] w-14 place-items-center rounded-full transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-active:scale-90",
-                esta && "bg-uvg-suave",
-              )}
-            >
-              <Icono aria-hidden className="size-5" strokeWidth={esta ? 2.2 : 1.9} />
+    <>
+      <div className="bajo-tabbar" aria-hidden />
+      <nav aria-label="Secciones" className="tabbar">
+        <span
+          aria-hidden
+          className="lozenge"
+          style={{
+            width: `calc((100% - 8px) / ${pestanas.length})`,
+            transform: `translateX(${Math.max(0, i) * 100}%)`,
+            opacity: i < 0 ? 0 : 1,
+          }}
+        />
+        {pestanas.map((p) => (
+          <Link key={p.texto} href={p.href} aria-current={p === actual ? "page" : undefined}>
+            <span className="ic">
+              {ICONOS[p.icono]}
               {p.bolita ? (
-                <span className="absolute -top-0.5 right-2 min-w-[18px] rounded-full bg-destructive px-[5px] text-center text-[10.5px] leading-[18px] font-bold text-destructive-foreground ring-2 ring-card">
+                <span className="bolita">
                   {p.bolita}
+                  <span className="sr-only"> por responder</span>
                 </span>
               ) : null}
             </span>
             <span>{p.texto}</span>
           </Link>
-        );
-      })}
-    </nav>
+        ))}
+      </nav>
+    </>
   );
 }

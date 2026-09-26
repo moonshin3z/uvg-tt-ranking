@@ -68,7 +68,7 @@ test.describe("con sesión de jugador", () => {
     await exigirQueCargue(page, ruta);
     // La fila de salir solo sale en el perfil propio: si no está, la sesión no
     // es de quien creemos y el resto de la prueba no significa nada.
-    await page.getByRole("button", { name: /salir/i }).waitFor({ state: "visible", timeout: 8_000 });
+    await page.getByRole("button", { name: /cerrar sesión/i }).waitFor({ state: "visible", timeout: 8_000 });
   });
 });
 
@@ -94,17 +94,14 @@ test.describe("con sesión de coordinador", () => {
     await page.getByText(JUGADOR.carnet, { exact: false }).first().waitFor({ state: "visible", timeout: 8_000 });
   });
 
-  test("el nombre abre el perfil y la opción de cerrar sesión", async ({ page }) => {
+  test("la pestaña Perfil abre el perfil propio y ahí se cierra la sesión", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Cuenta de Coordinador Demo" }).click();
-    const perfil = page.getByRole("menuitem", { name: "Mi perfil" });
+    const perfil = page.getByRole("navigation", { name: "Secciones" }).getByRole("link", { name: "Perfil" });
     await expect(perfil).toHaveAttribute("href", `/jugador/${COORDINADOR.carnet}`);
     await perfil.click();
     await expect(page).toHaveURL(new RegExp(`/jugador/${COORDINADOR.carnet}$`));
 
-    await page.goto("/");
-    await page.getByRole("button", { name: "Cuenta de Coordinador Demo" }).click();
-    await page.getByRole("menuitem", { name: "Cerrar sesión" }).click();
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await expect(page).toHaveURL(/\/ingresar$/);
   });
 });

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { figtree } from "@/fonts";
+import { inter } from "@/fonts";
 import "./globals.css";
 import { Pestanas } from "@/components/pestanas";
 import { SinRed } from "@/components/sin-red";
@@ -34,7 +34,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   // Un solo modo, un solo color: el mismo fondo de la app, para que la barra
   // del navegador no corte contra la pantalla.
-  themeColor: "#f1f4f0",
+  themeColor: "#f2f2f7",
 };
 
 /**
@@ -49,11 +49,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es-GT"
       data-app="uvgtt"
       data-scroll-behavior="smooth"
-      className={`${figtree.variable} h-full`}
+      className={`${inter.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        {children}
+        {/* `#app` es lo que se achica detrás de una hoja abierta. */}
+        <div id="app" className="flex min-h-full flex-1 flex-col bg-background">
+          {children}
+        </div>
         <SinRed />
         <Pestanas />
       </body>

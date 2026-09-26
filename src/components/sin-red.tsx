@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 /**
- * La franja de «sin conexión», del estado `sin-red` del prototipo.
+ * El aviso de «sin conexión», del estado `sin-red` del prototipo: una
+ * tarjeta oscura que flota encima de la barra de pestañas.
  *
  * Aparece cuando el teléfono pierde la señal, que en una cancha de la U pasa
  * seguido. El prototipo lo dibuja como una pantalla entera porque ahí la tabla
@@ -35,11 +36,7 @@ export function SinRed() {
   if (!sinRed) return null;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="sticky bottom-[calc(56px+env(safe-area-inset-bottom,0px))] z-20 border-t border-malo-suave bg-malo-suave px-4 py-2.5 text-[13px] text-malo-hondo"
-    >
+    <div role="status" aria-live="polite" className="sin-red">
       Sin conexión. El marcador sigue funcionando y se pone al día solo; registrar o confirmar un resultado va a tener
       que esperar a que vuelva la señal.
     </div>

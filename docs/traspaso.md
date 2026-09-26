@@ -1,5 +1,21 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: el lenguaje de iOS
+
+La app quedó igual al prototipo de iOS (`docs/diseno/prototipo-ios.html`, artefacto "Club TM UVG iOS"), salvo el perfil, que conserva la cabecera con el degradé verde.
+
+- **Estilos**: las piezas viven en `src/app/globals.css`, en `@layer components`, con los mismos nombres de clase que el prototipo (`.grupo`, `.celda`, `.av`, `.icono`, `.seccion`, `.cuenta`, `.pie`, `.btn`, `.seg`, `.tabla`, `.npos`, `.vivo`, `.heroe`, `.marcador-grande`, `.chips`, `.perfil-cab`, `.cifras`, `.estado-ranking`, `.cuadro`, `.llave`, `.campo`, `.tabbar`, `.nav`, `.hoja`, `.acciones`, `.aviso-flotante`, `.marcador`). Así se comparan línea por línea. Los componentes de `src/components/fila.tsx` arman el marcado con esas clases.
+- **Letra**: la del sistema en iPhone y Mac (San Francisco); Inter en el resto, empaquetada en `src/fonts/inter-variable.woff2` (48 KB, solo latino). Figtree salió del repo.
+- **Colores**: fondo `#f2f2f7`, el verde `#098645` como acento y para letra, `#0b9e51` de relleno, el rojo del sistema `#ff3b30` de relleno y `#d70015` como letra.
+- **Barra de arriba** (`tope.tsx` + `barra-nav.tsx`): título grande que se recoge al bajar en las pantallas de cada pestaña; título fijo con la flecha de cristal en las de detalle; en el perfil, transparente sobre el verde hasta bajar 150 px. Sin sesión, a la derecha va «Ingresar». El menú del usuario de arriba se fue: la cuenta vive en la pestaña Perfil («Cambiar mi PIN» y «Cerrar sesión»).
+- **Pestañas** (`pestanas-cliente.tsx`): barra flotante de cristal con los íconos rellenos del prototipo y una píldora que se desliza a la pestaña actual. Las etiquetas van a 12 px y no a 10.5 como en iOS, por el piso de la auditoría.
+- **Anotar un resultado**: ahora es una hoja que sube desde abajo (`AnotarResultado` en `partidos/formularios.tsx`), con contadores de más y menos, el resumen en palabras y «Registrar» arriba. Se cierra con Cancelar, con Escape, tocando afuera o arrastrándola hacia abajo. Detrás, la pantalla se achica (`html.con-hoja #app`).
+- **Disputar**: hoja de acciones con el porqué, el campo para contarlo, el botón rojo y Cancelar aparte. Disputar un resultado ya confirmado se hace desde el detalle del partido (las filas de «Jugados» llevan ahí), no desde la lista.
+- **Al responder** un resultado se vuelve a Partidos con el aviso que baja desde arriba (`?listo=confirmado`, `?listo=disputa`, `?registrado=1`).
+- **Las hojas van fuera de `#app`** con un portal: `#app` se achica con un transform y un `position: fixed` adentro dejaría de medirse contra la pantalla.
+- Las e2e que tocaban el menú de usuario, la bitácora y el registro de un resultado se actualizaron a la interfaz nueva (`humo`, `partidos`, `eventos`).
+- **Verificación**: además de `typecheck`, `lint`, `format:check`, pruebas y `build`, se corrió la auditoría de `e2e/auditoria.ts` contra 26 rutas a 320, 390 y 1440 px con datos falsos: cero hallazgos.
+
 ## Actualización: nombre e ícono
 
 La app se llama **Ranking UVG**. Iván lo eligió entre doce opciones (artefacto "Nombre de la App del Club").

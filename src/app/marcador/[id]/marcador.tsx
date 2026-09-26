@@ -200,60 +200,70 @@ export function Marcador({
   }
 
   const pips = (n: number) => (
-    <span className="flex gap-[7px]">
+    <span className="pips" aria-hidden>
       {Array.from({ length: setsParaGanar }, (_, i) => (
-        <i key={i} className={cn("block size-2.5 rounded-full", i < n ? "bg-[#7ad14f]" : "bg-white/[0.22]")} />
+        <i key={i} className={i < n ? "on" : undefined} />
       ))}
     </span>
   );
 
+  // El destello verde sale de donde tocó el dedo.
+  function destello(e: React.PointerEvent<HTMLButtonElement>, girada: boolean) {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    let x = e.clientX - r.left;
+    let y = e.clientY - r.top;
+    if (girada) {
+      x = r.width - x;
+      y = r.height - y;
+    }
+    el.style.setProperty("--x", `${x}px`);
+    el.style.setProperty("--y", `${y}px`);
+    el.classList.add("toque");
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("toque")));
+  }
+
   const mitad = (lado: "a" | "b", nombre: string, puntos: number, sets: number, girar: boolean) => (
     <button
       type="button"
+      onPointerDown={(e) => destello(e, girar)}
       onClick={() => sumar(lado)}
       disabled={terminado || faltaSaque || abandonado || guardando}
       aria-label={`Sumar un punto a ${nombre}`}
-      className={cn(
-        "flex min-h-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden border-0 bg-transparent p-2 text-white active:bg-white/[0.06]",
-        girar && "rotate-180",
-      )}
+      className={cn("mitad", girar && "girada")}
     >
-      <span className="max-w-[92%] truncate text-[15px] text-white/70">{nombre}</span>
-      <span className="tabular text-[96px] leading-[0.84] font-bold tracking-[-0.06em]">{puntos}</span>
+      <span className="quien">{nombre}</span>
+      <span key={puntos} className={cn("pts tabular", puntos > 0 && "pop")}>
+        {puntos}
+      </span>
       {pips(sets)}
     </button>
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#07200f] text-white">
-      <div className="flex shrink-0 items-center justify-between gap-2.5 px-3.5 pt-[calc(10px+env(safe-area-inset-top,0px))] pb-2 text-[13px] text-white/60">
+    <div className="marcador">
+      <div className="mtop">
         <button
           type="button"
+          className="cristal-osc"
           onClick={() => router.push(partidoId ? `/partidos/${partidoId}` : "/partidos")}
-          className="min-h-10 px-2.5 text-[15px] text-white"
         >
           Salir
         </button>
-        <span className="truncate">{`Al mejor de ${setsParaGanar * 2 - 1} · a ${puntosPorSet} puntos`}</span>
-        <span />
+        <span>{`Al mejor de ${setsParaGanar * 2 - 1} · a ${puntosPorSet} puntos`}</span>
+        <span className="w-[74px] shrink-0" aria-hidden />
       </div>
 
       {aviso ? (
-        <p role="alert" className="px-4 py-2 text-center text-sm text-amber-200">
+        <p role="alert" className="px-4 py-2 text-center text-[15px] text-[#ffd60a]">
           {aviso}
         </p>
       ) : null}
 
       {faltaSaque ? (
-        <section
-          aria-labelledby="elegir-saque"
-          aria-busy={eligiendo}
-          className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-6 py-5"
-        >
-          <div className="mx-auto grid w-full max-w-xs gap-3">
-            <h1 id="elegir-saque" className="mb-2 text-center text-[25px] font-semibold tracking-tight text-balance">
-              ¿Quién saca primero?
-            </h1>
+        <section aria-labelledby="elegir-saque" aria-busy={eligiendo} className="saque">
+          <div className="mx-auto w-full max-w-xs">
+            <h1 id="elegir-saque">¿Quién saca primero?</h1>
             {(
               [
                 ["a", nombreA],
@@ -266,7 +276,7 @@ export function Marcador({
                 aria-label={`Saca primero ${nombre}`}
                 onClick={() => void empezar(lado)}
                 disabled={eligiendo || guardando}
-                className="min-h-14 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-[17px] font-medium break-words transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
+                className="opcion cristal-osc"
               >
                 {nombre}
               </button>
@@ -275,7 +285,7 @@ export function Marcador({
               type="button"
               onClick={() => void empezar()}
               disabled={eligiendo || guardando}
-              className="mt-2 inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#7ad14f] px-4 py-3 text-[17px] font-semibold text-[#07220a] transition-transform active:scale-[0.98] disabled:opacity-50"
+              className="sortear"
             >
               <Shuffle aria-hidden className="size-5" />
               {eligiendo ? "Preparando…" : "Sortear"}
@@ -286,18 +296,13 @@ export function Marcador({
         <>
           {mitad("b", nombreB, b, sb, girado)}
 
-          <div className="flex shrink-0 items-center justify-between gap-2.5 border-y border-white/[0.12] bg-white/[0.07] px-3.5 py-[9px]">
-            <button
-              type="button"
-              onClick={deshacer}
-              disabled={pasos.length === 0 || guardando || abandonado}
-              className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] font-medium text-white/[0.82] disabled:opacity-35"
-            >
+          <div className="mcentro cristal-osc">
+            <button type="button" onClick={deshacer} disabled={pasos.length === 0 || guardando || abandonado}>
               Deshacer
             </button>
-            <span className="text-center text-[15px] font-semibold tracking-[0.02em]">
+            <span className="marca">
               {sa}-{sb}
-              <small aria-live="polite" className="block text-center text-[12.5px] font-normal text-white/[0.55]">
+              <small aria-live="polite">
                 {terminado ? "partido terminado" : `saca ${(sacaA ? nombreA : nombreB).split(" ")[0]}`}
               </small>
             </span>
@@ -305,8 +310,8 @@ export function Marcador({
               type="button"
               onClick={() => setGirado((g) => !g)}
               title="Girar la mitad de arriba"
+              aria-label="Girar la mitad de arriba"
               aria-pressed={girado}
-              className="min-h-10 min-w-10 rounded-lg px-3 text-[14px] text-white/[0.82]"
             >
               ⇅
             </button>
@@ -316,30 +321,18 @@ export function Marcador({
         </>
       )}
 
-      <div className="shrink-0 px-3.5 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
+      <div className="mbot">
         {abandonado ? (
-          <p className="mb-2 text-center text-[13.5px] text-white/[0.62]">Este partido quedó sin terminar.</p>
+          <p className="mb-2 text-center text-[15px] text-white/[0.62]">Este partido quedó sin terminar.</p>
         ) : null}
         {abandonado || faltaSaque ? null : (
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={terminar}
-              disabled={guardando}
-              className="min-h-12 w-full rounded-md bg-[#7ad14f] text-[16px] font-semibold text-[#07220a] disabled:opacity-60"
-            >
-              {guardando ? "Guardando..." : terminado ? "Registrar el resultado" : "Terminar"}
-            </button>
-          </div>
+          <button type="button" onClick={terminar} disabled={guardando} className="terminar">
+            {guardando ? "Guardando…" : terminado ? "Registrar el resultado" : "Terminar"}
+          </button>
         )}
         {terminado ? null : (
-          <button
-            type="button"
-            onClick={eliminar}
-            disabled={guardando || eligiendo}
-            className="mt-1 min-h-10 w-full text-[14px] font-medium text-white/[0.62] disabled:opacity-60"
-          >
-            {guardando ? "Eliminando..." : "Eliminar partido"}
+          <button type="button" onClick={eliminar} disabled={guardando || eligiendo} className="eliminar">
+            {guardando ? "Eliminando…" : "Eliminar partido"}
           </button>
         )}
       </div>

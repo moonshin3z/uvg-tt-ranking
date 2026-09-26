@@ -111,10 +111,13 @@ test.describe("partidos independientes del ranking", () => {
     await expect(page.getByText("No estás inscrito en este ranking. Hablá con el coordinador.")).toBeVisible();
     await expect(page.getByText("Jugados", { exact: true })).toHaveCount(0);
     await page.locator(`a[href='/partidos/${partido}']`).click();
-    await page.getByRole("button", { name: "Sumar un set a Ana López", exact: true }).click({ clickCount: 2 });
-    await page.getByRole("button", { name: "Registrar", exact: true }).click();
+    // El resultado se anota en la hoja que sube desde abajo.
+    await page.getByRole("button", { name: "Anotar el resultado", exact: true }).click();
+    const hoja = page.getByRole("dialog", { name: "Anotar resultado" });
+    await hoja.getByRole("button", { name: "Sumar un set a Ana López", exact: true }).click({ clickCount: 2 });
+    await hoja.getByRole("button", { name: "Registrar", exact: true }).click();
     await expect(page).toHaveURL(/\/partidos\?registrado=1$/);
-    await expect(page.getByText(/Resultado registrado/)).toBeVisible();
+    await expect(page.getByText(/Registrado\. Falta la confirmación/)).toBeVisible();
     await salir(page);
     await ingresar(page, "20003", "123456");
     await page.goto(`/partidos/${partido}`);

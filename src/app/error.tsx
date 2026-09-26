@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { Aviso, BotonInicio } from "@/components/aviso";
-import { Button } from "@/components/ui/button";
 
 /**
  * Captura cualquier error de renderizado o de consulta dentro de la app.
@@ -20,7 +19,9 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       titulo="No pudimos cargar esta página"
       detalle="Puede ser la conexión o que el servidor no esté respondiendo. Probá de nuevo en unos segundos."
     >
-      <Button onClick={reset}>Reintentar</Button>
+      <button type="button" className="btn" onClick={reset}>
+        Reintentar
+      </button>
       <BotonInicio />
     </Aviso>
   );

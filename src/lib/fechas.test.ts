@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  cuandoPaso,
   diasHasta,
+  formatearDia,
   formatearFecha,
   formatearFechaLarga,
   horasParaAutoconfirmar,
@@ -65,5 +67,25 @@ describe("autoconfirmación", () => {
     expect(textoAutoconfirmacion("2026-09-15T12:00:00Z", 10, ahora)).toBe("se confirma solo en 4 horas");
     expect(textoAutoconfirmacion("2026-09-15T12:00:00Z", 7, ahora)).toBe("se confirma solo en 1 hora");
     expect(textoAutoconfirmacion("2026-09-10T12:00:00Z", 72, ahora)).toBe("se confirma en cualquier momento");
+  });
+});
+
+describe("cuandoPaso", () => {
+  // ahora = 15 de septiembre, 12:00 en Guatemala
+  it("dice Hoy y Ayer contando días de Guatemala", () => {
+    expect(cuandoPaso("2026-09-15T15:00:00Z", ahora)).toBe("Hoy");
+    // 14 de septiembre a las 11 p.m. en Guatemala, aunque en UTC ya es el 15.
+    expect(cuandoPaso("2026-09-15T05:00:00Z", ahora)).toBe("Ayer");
+    expect(cuandoPaso("2026-09-14T08:00:00Z", ahora)).toBe("Ayer");
+  });
+
+  it("antes de ayer da la fecha corta", () => {
+    expect(cuandoPaso("2026-09-12T18:00:00Z", ahora)).toMatch(/\b12\b/);
+  });
+});
+
+describe("formatearDia", () => {
+  it("da el día y el mes completo", () => {
+    expect(formatearDia("2026-09-14")).toMatch(/^14 de septiembre$/);
   });
 });

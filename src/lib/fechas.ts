@@ -29,6 +29,27 @@ export function formatearFechaLarga(iso: string): string {
   }).format(instante(iso));
 }
 
+/** "14 de septiembre". */
+export function formatearDia(iso: string): string {
+  return new Intl.DateTimeFormat("es-GT", { day: "numeric", month: "long", timeZone: ZONA }).format(instante(iso));
+}
+
+/** El día de un instante en Guatemala, como "2026-09-25". */
+function diaEnGuatemala(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: ZONA }).format(d);
+}
+
+/**
+ * "Hoy", "Ayer" o "14 sept": cuándo pasó algo, contado en días de Guatemala.
+ * Es lo que dice la lista de últimos resultados.
+ */
+export function cuandoPaso(iso: string, ahora = new Date()): string {
+  const dia = diaEnGuatemala(instante(iso));
+  if (dia === diaEnGuatemala(ahora)) return "Hoy";
+  if (dia === diaEnGuatemala(new Date(ahora.getTime() - 86_400_000))) return "Ayer";
+  return formatearFecha(iso);
+}
+
 /** Días calendario entre hoy y una fecha (negativo si ya pasó). */
 export function diasHasta(fecha: string, ahora = new Date()): number {
   const dia = 86_400_000;

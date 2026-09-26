@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
 import { cuadroDeTorneo, gruposDeTorneo, nombreDeRonda, torneoPorId } from "@/lib/torneos/consultas";
 import { Pie, Rotulo, Segmentado } from "@/components/fila";
+import { Tabla } from "@/components/tabla-posiciones";
 import { Tope } from "@/components/tope";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +21,8 @@ const ESTADO: Record<string, string> = {
 };
 
 /**
- * Un lado de una llave: el nombre y los sets. El que ganó va en negrita con
- * fondo verde lavado; un lugar todavía sin definir, en gris.
+ * Un lado de una llave: el nombre y los sets. El que ganó va en negrita, con
+ * sus sets en verde; un lugar todavía sin definir, en gris claro.
  */
 function Lado({
   nombre,
@@ -44,15 +45,9 @@ function Lado({
   bye?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-1.5 px-[11px] py-[9px] text-[13.5px] not-first:border-t not-first:border-linea-suave",
-        gano && "bg-uvg-suave font-semibold",
-        !nombre && "text-faint",
-      )}
-    >
-      <span className={cn("truncate", yo && "font-semibold")}>{nombre ?? (bye ? "BYE" : "por definir")}</span>
-      <b className="shrink-0 font-bold">{sets ?? (nombre ? "-" : "")}</b>
+    <div className={cn("lado", gano && "gana", !nombre && "vacio-lado")}>
+      <span className={cn(yo && "font-semibold")}>{nombre ?? (bye ? "BYE" : "Por definir")}</span>
+      <b>{sets ?? (nombre ? "–" : "")}</b>
     </div>
   );
 }
@@ -76,9 +71,11 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
   return (
     <>
       <Tope titulo={torneo.nombre} sub={ESTADO[torneo.estado] ?? torneo.estado} atras="/" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
+        <div className="h-1.5" />
         {hayGrupos ? (
           <Segmentado
+            etiqueta="Vista del torneo"
             actual={vista}
             opciones={[
               { valor: "grupos", etiqueta: "Grupos", href: `/torneos/${id}?ver=grupos` as Route },
@@ -94,16 +91,14 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
             <>
               {/* Se desliza a lo ancho: un cuadro de 16 no cabe en un teléfono
                   y comprimirlo lo vuelve ilegible. */}
-              <div className="flex snap-x gap-2.5 overflow-x-auto px-4 pt-1 pb-4">
+              <div className="cuadro">
                 {rondas.map((r) => (
-                  <div key={r} className="flex min-w-[140px] flex-1 snap-start flex-col justify-around gap-3.5">
-                    <p className="text-center text-[13px] font-medium text-muted-foreground">
-                      {nombreDeRonda(r, ultima)}
-                    </p>
+                  <div key={r} className="ronda">
+                    <p className="rh">{nombreDeRonda(r, ultima)}</p>
                     {cuadro
                       .filter((l) => l.ronda === r)
                       .map((l) => (
-                        <div key={l.posicion} className="overflow-hidden rounded-[14px] bg-card shadow-tarjeta">
+                        <div key={l.posicion} className="llave">
                           <Lado
                             bye={l.b != null && l.a == null && l.ganador != null}
                             nombre={l.a?.nombre ?? null}
@@ -135,87 +130,28 @@ export default async function PaginaTorneo({ params, searchParams }: PageProps<"
             {grupos.map((g) => (
               <div key={g.nombre}>
                 <Rotulo>Grupo {g.nombre}</Rotulo>
-                <div className="tarjeta">
-                  <table className="tabla-anim w-full table-fixed border-collapse">
-                    <caption className="sr-only">Grupo {g.nombre}</caption>
-                    <colgroup>
-                      <col className="w-11" />
-                      <col />
-                      <col className="w-8" />
-                      <col className="w-8" />
-                      <col className="w-12" />
-                    </colgroup>
-                    <thead>
-                      <tr className="text-[12.5px] text-faint">
-                        <th scope="col" className="px-1 pt-3 pb-[7px] pl-4 text-left font-normal">
-                          #
-                        </th>
-                        <th scope="col" className="px-1 pb-[9px] text-left font-normal">
-                          Jugador
-                        </th>
-                        <th scope="col" className="px-1 pb-[9px] text-right font-normal">
-                          PJ
-                        </th>
-                        <th scope="col" className="px-1 pb-[9px] text-right font-normal">
-                          PG
-                        </th>
-                        <th scope="col" className="px-1 pr-4 pb-[9px] text-right font-normal">
-                          Dif
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.filas.map((f, n) => {
-                        const clasifica = f.posicion <= (torneo.clasifican_por_grupo ?? 2);
-                        const esYo = f.usuario_id === yo;
-                        return (
-                          <tr
-                            key={f.usuario_id}
-                            style={{ "--n": n } as React.CSSProperties}
-                            className={cn(
-                              "border-t border-linea-suave",
-                              esYo && "bg-[#f4faf6] font-bold text-foreground",
-                            )}
-                          >
-                            <td className="h-12 px-1 pl-3 text-left">
-                              <span
-                                className={cn(
-                                  "inline-grid size-7 place-items-center rounded-full text-[13.5px]",
-                                  clasifica
-                                    ? "bg-uvg-suave font-bold text-primary"
-                                    : esYo
-                                      ? "text-foreground"
-                                      : "text-faint",
-                                )}
-                              >
-                                {f.posicion}
-                              </span>
-                            </td>
-                            <th scope="row" className="h-[46px] truncate px-1 text-left font-[inherit] text-[15.5px]">
-                              {f.nombre}
-                              {f.empatado_sin_resolver ? (
-                                <span className="ml-1.5 text-[12.5px] font-normal text-destructive">empate</span>
-                              ) : null}
-                            </th>
-                            <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pj}</td>
-                            <td className="h-[46px] px-1 text-right text-[14px] text-muted-foreground">{f.pg}</td>
-                            <td className="h-[46px] px-1 pr-4 text-right text-[16px] font-semibold">
-                              {f.dif_sets > 0 ? `+${f.dif_sets}` : f.dif_sets}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <Tabla
+                  titulo={`Grupo ${g.nombre}`}
+                  ultima="Dif"
+                  filas={g.filas.map((f) => ({
+                    id: f.usuario_id,
+                    posicion: f.posicion,
+                    nombre: f.nombre,
+                    pj: f.pj,
+                    pg: f.pg,
+                    ultima: f.dif_sets > 0 ? `+${f.dif_sets}` : f.dif_sets < 0 ? `−${-f.dif_sets}` : "0",
+                    zona: f.posicion <= (torneo.clasifican_por_grupo ?? 2) ? "bueno" : null,
+                    yo: f.usuario_id === yo,
+                    marca: f.empatado_sin_resolver ? "empate" : undefined,
+                  }))}
+                />
               </div>
             ))}
-            <p className="flex flex-wrap gap-x-[18px] gap-y-1.5 px-4 pt-2 pb-3 text-[12.5px] text-muted-foreground">
-              <span className="inline-flex items-center gap-[7px]">
-                <i aria-hidden className="inline-block h-3.5 w-[3px] rounded-[2px] bg-zona-ascenso" />
-                Clasifican a la llave
-              </span>
-            </p>
+            <Pie>
+              {torneo.clasifican_por_grupo === 1
+                ? "El primero de cada grupo pasa a la llave."
+                : `Los ${torneo.clasifican_por_grupo ?? 2} primeros de cada grupo pasan a la llave.`}
+            </Pie>
           </>
         )}
       </main>

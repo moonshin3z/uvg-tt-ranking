@@ -1,0 +1,1213 @@
+<title>Club TM UVG iOS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================================
+   Club de Tenis de Mesa UVG · prototipo con lenguaje de iPhone
+   Mismos datos, pantallas y reglas que el prototipo fluido. Cambia el idioma
+   visual: títulos grandes que se recogen en la barra, listas agrupadas como
+   Ajustes, barra de pestañas flotante de cristal, pantallas que entran desde
+   la derecha y se deslizan desde el borde para volver, hoja que sube desde
+   abajo para anotar y hoja de acciones para disputar.
+   En iPhone la letra es la del sistema (San Francisco). En el resto, Inter.
+   Un solo modo, claro, igual que la app.
+   =========================================================================== */
+:root{
+  --fondo:#f2f2f7;
+  --celda:#ffffff;
+  --texto:#111113;
+  --sec:#6c6c70;
+  --ter:#aeaeb2;
+  --sep:rgba(60,60,67,.24);
+  --resalte:#e5e5ea;
+
+  /* El verde de la app hace de color de acento del sistema. */
+  --tinte:#098645;
+  --tinte-vivo:#0b9e51;
+  --tinte-lavado:rgba(11,158,81,.13);
+  --rojo:#ff3b30;
+  --rojo-texto:#d70015;
+  --rojo-lavado:rgba(255,59,48,.12);
+  --naranja:#ff9500;
+  --azul:#007aff;
+  --gris:#8e8e93;
+  --relleno:rgba(118,118,128,.12);
+  --relleno-2:rgba(118,118,128,.22);
+
+  --r-grupo:18px;
+  --curva:cubic-bezier(.32,.72,0,1);
+  --fuente:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{margin:0;background:#e6e6eb;color:var(--texto);font-family:var(--fuente);font-size:17px;line-height:1.3;
+  letter-spacing:-.015em;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit;letter-spacing:inherit}
+button,[role="button"]{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+p{margin:0}
+svg{display:block}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--tinte);outline-offset:2px;border-radius:10px}
+.solo-lector{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* ---------- escena del prototipo ---------- */
+.escena{min-height:100%;display:flex;gap:40px;align-items:flex-start;justify-content:center;padding:32px 16px}
+.riel{width:268px;flex:0 0 268px;min-width:0;padding-top:4px}
+.riel h1{margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.025em}
+.riel .lead{margin:0 0 6px;font-size:14px;color:var(--sec);text-wrap:pretty}
+.riel h2{margin:22px 0 7px 14px;font-size:13px;font-weight:600;color:var(--sec);letter-spacing:-.005em}
+.riel .lista{background:#fff;border-radius:14px;overflow:hidden}
+.riel .lista button{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  min-height:44px;padding:0 14px;border:0;background:#fff;text-align:left;font-size:15px;cursor:pointer}
+.riel .lista button+button::before{content:"";position:absolute;top:0;left:14px;right:0;height:.5px;background:var(--sep)}
+.riel .lista button:active{background:var(--resalte)}
+.riel .lista .tilde{color:var(--tinte);opacity:0}
+.riel .lista button[aria-current="true"] .tilde{opacity:1}
+.riel .lista .chev{color:#c4c4c7}
+.riel .nota{margin-top:18px;padding:12px 14px;background:#fff;border-radius:14px;font-size:13px;color:var(--sec);text-wrap:pretty;line-height:1.45}
+
+.marco{position:relative;width:390px;max-width:100%;flex:0 0 390px;height:844px;max-height:calc(100vh - 64px);
+  border-radius:48px;overflow:hidden;isolation:isolate;background:#000;
+  box-shadow:0 0 0 9px #1c1c1e,0 0 0 10px #3a3a3c,0 40px 80px -30px rgba(0,0,0,.5)}
+.app{position:absolute;inset:0;background:var(--fondo);overflow:hidden;border-radius:inherit;transform-origin:50% 0;
+  transition:transform .5s var(--curva),border-radius .5s var(--curva)}
+.marco.con-hoja .app{transform:translateY(10px) scale(.92);border-radius:22px}
+
+@media (max-width:900px){
+  .escena{flex-direction:column;align-items:stretch;gap:24px;padding:24px 16px}
+  .marco{order:1;width:100%;flex:none;height:min(800px,calc(100dvh - 48px));min-height:560px;margin:0 auto;max-width:420px}
+  .riel{order:2;width:100%;flex:none;max-width:420px;margin:0 auto}
+}
+@media (max-width:520px){
+  .escena{padding:0;gap:0}
+  .riel{padding:20px 16px 36px;max-width:none}
+  .marco{width:100%;max-width:none;margin:0;height:100dvh;min-height:520px;border-radius:0;box-shadow:none}
+}
+
+/* ---------- pila de pantallas ---------- */
+.pila{position:absolute;inset:0;overflow:hidden}
+.pantalla{position:absolute;inset:0;background:var(--fondo);will-change:transform;
+  box-shadow:-1px 0 0 rgba(0,0,0,.04),-18px 0 36px -12px rgba(0,0,0,.14)}
+.pantalla .scroll{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:54px 0 112px;touch-action:pan-y;
+  scrollbar-width:none}
+.pantalla .scroll::-webkit-scrollbar{display:none}
+.pantalla.sin-tabs .scroll{padding-bottom:40px}
+.sombra-push{position:absolute;inset:0;background:rgba(0,0,0,.1);pointer-events:none;z-index:6}
+.pantalla.entra-fade{animation:fundido .18s ease-out both}
+@keyframes fundido{from{opacity:.4}to{opacity:1}}
+
+/* ---------- barra de navegación ---------- */
+.nav{position:absolute;top:0;left:0;right:0;height:54px;z-index:4;pointer-events:none}
+.nav-fondo{position:absolute;left:0;right:0;top:0;height:72px;opacity:0;transition:opacity .25s ease;
+  background:linear-gradient(rgba(242,242,247,.94),rgba(242,242,247,.7) 62%,rgba(242,242,247,0));
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);
+  -webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+.pantalla.bajada .nav-fondo{opacity:1}
+.nav-fila{position:relative;height:54px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:0 12px}
+.nav-fila>*{pointer-events:auto}
+.nav-izq{justify-self:start;display:flex}
+.nav-der{justify-self:end;display:flex}
+.nav-titulo{text-align:center;max-width:210px;opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease;pointer-events:none}
+.nav-titulo b{display:block;font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-titulo small{display:block;font-size:12px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0}
+.pantalla.bajada .nav-titulo,.pantalla.fijo .nav-titulo{opacity:1;transform:none}
+
+.cristal{background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(18px) saturate(1.8);backdrop-filter:blur(18px) saturate(1.8);
+  border:.5px solid rgba(255,255,255,.85);box-shadow:0 2px 12px rgba(0,0,0,.08),inset 0 .5px 0 rgba(255,255,255,.95)}
+.boton-nav{display:inline-flex;align-items:center;justify-content:center;gap:2px;height:40px;min-width:40px;padding:0 14px;border-radius:999px;
+  color:var(--tinte);font-size:17px;cursor:pointer;transition:transform .25s var(--curva),opacity .15s}
+.boton-nav:active{transform:scale(.9);opacity:.65}
+.boton-nav.circulo{width:40px;padding:0}
+.boton-nav.fuerte{font-weight:600}
+.boton-nav[disabled]{color:var(--ter);cursor:default}
+.boton-nav[disabled]:active{transform:none;opacity:1}
+
+.grande{padding:2px 20px 12px}
+.grande h1{margin:0;font-size:34px;font-weight:700;letter-spacing:-.022em;line-height:1.12;text-wrap:balance}
+.grande p{margin-top:3px;font-size:15px;color:var(--sec)}
+
+/* ---------- secciones y listas agrupadas ---------- */
+.seccion{display:flex;align-items:center;gap:8px;padding:24px 20px 9px;margin:0;font-size:20px;font-weight:700;letter-spacing:-.022em}
+.cuenta{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--rojo);
+  color:#fff;font-size:13px;font-weight:600;letter-spacing:0}
+.pie{padding:9px 20px 0;font-size:13px;color:var(--sec);line-height:1.42;letter-spacing:-.005em;text-wrap:pretty}
+.pie.centro{text-align:center;padding-inline:32px}
+
+.grupo{margin:0 16px;background:var(--celda);border-radius:var(--r-grupo);overflow:hidden}
+.celda{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 16px;
+  background:var(--celda);border:0;text-align:left;cursor:pointer;transition:background .3s ease}
+.celda:active{background:var(--resalte);transition:none}
+.celda.quieta{cursor:default}
+.celda.quieta:active{background:var(--celda)}
+.celda+.celda::before{content:"";position:absolute;top:0;right:0;left:var(--sep-izq,16px);height:.5px;background:var(--sep)}
+.celda.con-av{--sep-izq:68px}
+.celda.con-icono{--sep-izq:58px}
+.celda.peligro{justify-content:center;color:var(--rojo);font-size:17px}
+.celda.peligro .medio{flex:none}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:600;
+  letter-spacing:0;background:linear-gradient(#a9aeb8,#858a95)}
+.icono{width:30px;height:30px;flex:0 0 30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700;letter-spacing:0}
+.medio{flex:1;min-width:0}
+.t-celda{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-celda.fuerte{font-weight:600}
+.s-celda{display:block;margin-top:1px;font-size:15px;color:var(--sec);letter-spacing:-.012em;text-wrap:pretty}
+.derecha{flex:0 0 auto;display:flex;align-items:center;gap:10px;color:var(--sec)}
+.chev{color:#c4c4c7;flex:0 0 auto}
+.res{font-size:17px;font-weight:600;color:var(--sec)}
+.res.gano{color:var(--tinte)}
+
+/* ---------- botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:50px;padding:0 22px;border:0;border-radius:999px;
+  background:var(--tinte);color:#fff;font-size:17px;font-weight:600;cursor:pointer;transition:opacity .15s ease,transform .3s var(--curva)}
+.btn:active{opacity:.72;transform:scale(.97)}
+.btn.gris{background:var(--relleno);color:var(--tinte)}
+.btn.texto{background:none;color:var(--tinte);font-weight:400}
+.btn.rojo{background:none;color:var(--rojo);font-weight:400}
+.btn.chico{min-height:32px;padding:0 14px;font-size:15px;background:var(--tinte-lavado);color:var(--tinte)}
+.btn.bloque{width:100%}
+.pila-botones{display:flex;flex-direction:column;gap:8px;padding:0 16px}
+
+/* ---------- control segmentado ---------- */
+.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:4px 16px 12px;padding:2px;
+  background:var(--relleno);border-radius:10px}
+.seg .pulgar{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px) / var(--n,2));border-radius:8px;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);transform:translateX(calc(var(--i,0) * 100%));
+  transition:transform .42s var(--curva)}
+.seg button{position:relative;z-index:1;height:30px;border:0;background:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
+.seg button[aria-pressed="true"]{font-weight:600}
+
+/* ---------- tabla de posiciones ---------- */
+.leyenda{display:flex;flex-wrap:wrap;gap:4px 16px;padding:0 20px 10px;font-size:13px;color:var(--sec)}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:8px;height:8px;border-radius:50%}
+.tabla{width:100%;border-collapse:collapse;table-layout:fixed}
+.tabla col.c-pos{width:50px}.tabla col.c-n{width:36px}.tabla col.c-pts{width:52px}
+.tabla th,.tabla td{padding:0 4px;text-align:right;font-weight:400}
+.tabla thead th{padding:12px 4px 7px;font-size:13px;font-weight:500;color:var(--sec)}
+.tabla thead th:first-child{padding-left:16px;text-align:left}
+.tabla th:last-child,.tabla td:last-child{padding-right:16px}
+.tabla tbody td,.tabla tbody th{height:46px;box-shadow:inset 0 .5px 0 var(--sep)}
+.tabla tbody tr>:first-child{box-shadow:none;padding-left:11px;text-align:left;
+  background:linear-gradient(var(--sep),var(--sep)) 16px 0/100% .5px no-repeat}
+.npos{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:50%;font-size:15px;color:var(--sec)}
+.z-bueno .npos{background:var(--tinte-vivo);color:#fff;font-weight:600}
+.z-malo .npos{background:var(--rojo-lavado);color:var(--rojo-texto);font-weight:600}
+.tabla .tnom{text-align:left;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabla .tnum{font-size:15px;color:var(--sec)}
+.tabla .tpts{font-size:17px;font-weight:600}
+.tabla tr.yo>*{font-weight:600;color:var(--texto);background-color:rgba(11,158,81,.07)}
+.tabla tr.yo>:first-child{background:linear-gradient(var(--sep),var(--sep)) 16px 0/100% .5px no-repeat,rgba(11,158,81,.07)}
+.anim-filas .tabla tbody tr{animation:subir .5s var(--curva) both;animation-delay:calc(var(--n) * 22ms)}
+@keyframes subir{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- lo que va arriba de la tabla ---------- */
+.franja{margin-bottom:12px}
+.franja .t-celda{font-weight:600}
+.vivo{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px 12px;padding:14px 16px;border:0;border-radius:24px;
+  background:#1c1c1e;color:#fff;text-align:left;cursor:pointer;transition:transform .35s var(--curva)}
+.vivo:active{transform:scale(.97)}
+.vivo .punto{width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:#30d158;animation:latido 2s ease-out infinite}
+@keyframes latido{0%{box-shadow:0 0 0 0 rgba(48,209,88,.55)}70%{box-shadow:0 0 0 9px rgba(48,209,88,0)}100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}}
+.vivo .txt{flex:1;min-width:0}
+.vivo .t1{display:block;font-size:17px;font-weight:600}
+.vivo .t2{display:block;font-size:15px;color:rgba(255,255,255,.6);margin-top:1px}
+.vivo .etiqueta{padding:4px 10px;border-radius:999px;background:rgba(48,209,88,.18);color:#30d158;font-size:13px;font-weight:600;letter-spacing:0}
+
+/* ---------- vacíos, cargando ---------- */
+.vacio{padding:72px 32px 10px;text-align:center}
+.vacio svg{margin:0 auto 16px;color:var(--ter)}
+.vacio .t{font-size:22px;font-weight:700;letter-spacing:-.022em;text-wrap:balance}
+.vacio .d{margin-top:6px;font-size:15px;color:var(--sec);text-wrap:pretty}
+.vacio .btn{margin-top:20px}
+.esq{padding:4px 16px}
+.esq div{height:46px;display:flex;align-items:center;gap:12px}
+.esq div+div{box-shadow:inset 0 .5px 0 var(--sep)}
+.esq b{width:27px;height:27px;flex:0 0 27px;border-radius:50%}
+.esq i{display:block;height:11px;border-radius:6px}
+.esq b,.esq i{background:linear-gradient(90deg,#ececf0 0%,#f7f7f9 45%,#ececf0 90%);background-size:220% 100%;animation:brillo 1.5s linear infinite}
+@keyframes brillo{from{background-position:120% 0}to{background-position:-100% 0}}
+
+/* ---------- detalle de un partido ---------- */
+.heroe{padding:8px 24px 0;text-align:center}
+.heroe .av{width:76px;height:76px;margin:0 auto 14px;font-size:27px}
+.heroe h2{margin:0;font-size:28px;font-weight:700;letter-spacing:-.024em;line-height:1.15;text-wrap:balance}
+.heroe p{margin-top:5px;font-size:15px;color:var(--sec);text-wrap:pretty}
+.marcador-grande{margin:22px 16px;padding:24px 16px 20px;background:var(--celda);border-radius:var(--r-grupo);text-align:center}
+.marcador-grande .n{font-size:64px;font-weight:700;letter-spacing:-.045em;line-height:1}
+.chips{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chips span{padding:4px 11px;border-radius:999px;background:var(--relleno);color:var(--sec);font-size:15px}
+.chips .mio{background:var(--tinte-lavado);color:var(--tinte)}
+.chips .suyo{background:var(--rojo-lavado);color:var(--rojo-texto)}
+
+/* ---------- perfil ---------- */
+.perfil-heroe{padding:6px 20px 20px;text-align:center}
+.perfil-heroe .av{width:92px;height:92px;margin:0 auto 12px;font-size:34px;background:linear-gradient(#17a95c,#07602f)}
+.perfil-heroe h2{margin:0;font-size:28px;font-weight:700;letter-spacing:-.024em}
+.perfil-heroe p{margin-top:3px;font-size:15px;color:var(--sec)}
+.puesto{display:flex;align-items:baseline;gap:12px;padding:16px 16px 14px}
+.puesto .n{font-size:48px;font-weight:700;letter-spacing:-.045em;line-height:.9;color:var(--tinte)}
+.puesto .de{font-size:15px;color:var(--sec);line-height:1.35}
+.cifras{display:grid;grid-template-columns:repeat(4,1fr);box-shadow:inset 0 .5px 0 var(--sep)}
+.cifras div{padding:12px 4px 14px;text-align:center}
+.cifras div+div{box-shadow:inset .5px 0 0 var(--sep)}
+.cifras b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.cifras span{display:block;margin-top:1px;font-size:13px;color:var(--sec)}
+
+/* La cabecera del perfil es la de la app: degradé verde que llega hasta
+   arriba, detrás de la barra, y las cifras flotando sobre su borde. */
+.perfil-cab{margin-top:-54px;padding:74px 22px 52px;border-radius:0 0 30px 30px;color:#fff;
+  background:radial-gradient(120% 90% at 100% 0%,#0d7a42 0%,#06381f 62%)}
+.perfil-cab .nom{font-size:28px;font-weight:700;letter-spacing:-.026em;line-height:1.15}
+.perfil-cab .car{margin-top:3px;font-size:15px;color:rgba(255,255,255,.66)}
+.perfil-cab .puesto{padding:0;margin-top:20px}
+.perfil-cab .puesto .n{font-size:58px;color:#fff}
+.perfil-cab .puesto .de{color:rgba(255,255,255,.78)}
+.cifras-flotan{position:relative;margin:-34px 16px 0;box-shadow:0 1px 2px rgba(6,56,31,.06),0 12px 28px -16px rgba(6,56,31,.32)}
+.cifras-flotan .cifras{box-shadow:none}
+
+/* ---------- panel ---------- */
+.estado-ranking{padding:16px}
+.er-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.er-n{font-size:34px;font-weight:700;letter-spacing:-.03em}
+.er-de{font-size:15px;color:var(--sec)}
+.capsula{padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:0;background:var(--tinte-lavado);color:var(--tinte)}
+.barra{height:8px;margin:12px 0 10px;border-radius:999px;background:var(--relleno);overflow:hidden}
+.barra i{display:block;height:100%;border-radius:inherit;background:var(--tinte-vivo);transform-origin:left;animation:llenar 1s var(--curva) .15s both}
+@keyframes llenar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.er-pie{font-size:15px;color:var(--sec)}
+
+/* ---------- cuadro del torneo ---------- */
+.cuadro{display:flex;gap:28px;padding:4px 16px 4px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.cuadro::-webkit-scrollbar{display:none}
+.ronda{display:flex;flex-direction:column;justify-content:space-around;gap:14px;min-width:160px;flex:1;scroll-snap-align:start}
+.ronda .rh{font-size:13px;font-weight:600;color:var(--sec);padding-left:4px}
+.llave{position:relative;background:var(--celda);border-radius:14px}
+.ronda:not(:last-child) .llave::after{content:"";position:absolute;right:-28px;top:50%;width:28px;height:1.5px;background:#d1d1d6}
+.llave .lado{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:11px 12px;font-size:15px}
+.llave .lado+.lado{box-shadow:inset 0 .5px 0 var(--sep)}
+.llave .lado:first-child{border-radius:14px 14px 0 0}
+.llave .lado:last-child{border-radius:0 0 14px 14px}
+.llave .lado.gana{font-weight:600}
+.llave .lado.gana b{color:var(--tinte)}
+.llave .lado.vacio{color:var(--ter)}
+
+/* ---------- ingreso ---------- */
+.ingreso{padding:70px 0 20px;text-align:center}
+.app-icono{width:84px;height:84px;margin:0 auto 18px;border-radius:20px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(#17a95c,#07602f);box-shadow:0 12px 26px -12px rgba(7,96,47,.7),inset 0 .5px 0 rgba(255,255,255,.4)}
+.ingreso h1{margin:0;font-size:34px;font-weight:700;letter-spacing:-.024em}
+.ingreso>p{margin:6px auto 26px;max-width:280px;font-size:15px;color:var(--sec);text-wrap:pretty}
+.campo{position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;text-align:left}
+.campo+.campo::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.campo span{width:70px;font-size:17px}
+.campo input{flex:1;min-width:0;height:50px;border:0;background:none;font-size:17px;outline:none}
+.campo input:focus-visible{outline:none}
+.campo:focus-within{background:#fafafc}
+
+/* ---------- barra de pestañas flotante ---------- */
+.tabbar{position:absolute;left:16px;right:16px;bottom:14px;z-index:5;height:62px;display:flex;padding:4px;border-radius:999px;
+  background:rgba(255,255,255,.84);-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);
+  border:.5px solid rgba(255,255,255,.9);box-shadow:0 12px 32px -10px rgba(0,0,0,.22),0 1px 3px rgba(0,0,0,.06),inset 0 .5px 0 #fff;
+  transition:transform .5s var(--curva),opacity .3s ease}
+.tabbar.oculta{transform:translateY(150%);opacity:0;pointer-events:none}
+.tabbar .lozenge{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n,3));border-radius:999px;
+  background:rgba(0,0,0,.065);transform:translateX(calc(var(--i,0) * 100%));transition:transform .45s var(--curva)}
+.tabbar button{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:0;border-radius:999px;background:none;color:#6e6e73;font-size:10.5px;font-weight:600;letter-spacing:0;cursor:pointer;
+  transition:color .25s ease}
+.tabbar button[aria-current="true"]{color:var(--tinte)}
+.tabbar .ic{position:relative;display:grid;place-items:center;height:26px;transition:transform .3s var(--curva)}
+.tabbar button:active .ic{transform:scale(.86)}
+.tabbar svg{width:25px;height:25px;fill:currentColor}
+.tabbar .bolita{position:absolute;top:-3px;left:calc(50% + 7px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+  background:var(--rojo);color:#fff;font-size:12px;font-weight:600;line-height:18px;text-align:center;box-shadow:0 0 0 1.5px #fff}
+
+/* ---------- hoja, hoja de acciones, aviso ---------- */
+.velo{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .45s var(--curva)}
+.velo.ver{opacity:1;pointer-events:auto}
+.hoja{position:absolute;left:0;right:0;bottom:0;top:52px;z-index:11;display:flex;flex-direction:column;background:var(--fondo);
+  border-radius:30px 30px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.16);transform:translateY(104%);visibility:hidden;
+  transition:transform .5s var(--curva),visibility 0s linear .5s}
+.hoja.ver{transform:none;visibility:visible;transition:transform .5s var(--curva),visibility 0s}
+.hoja.arrastrando{transition:none}
+.hoja .asa{width:36px;height:5px;margin:6px auto 0;border-radius:3px;background:rgba(60,60,67,.3)}
+.hoja-nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;min-height:52px;padding:2px 12px 6px;touch-action:none}
+.hoja-nav>div:last-child{justify-self:end}
+.hoja-nav .t{font-size:17px;font-weight:600}
+.hoja-cuerpo{flex:1;overflow-y:auto;padding-bottom:34px}
+.hoja-ctx{padding:6px 20px 12px;font-size:15px;color:var(--sec);text-align:center}
+.contador{position:relative;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px}
+.contador+.contador::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.contador .quien{flex:1;min-width:0;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contador .val{min-width:26px;text-align:center;font-size:22px;font-weight:600;display:inline-block}
+.stepper{display:inline-flex;align-items:stretch;height:32px;border-radius:9px;background:var(--relleno);overflow:hidden}
+.stepper button{width:47px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--texto)}
+.stepper button:active:not(:disabled){background:var(--relleno-2)}
+.stepper button:disabled{color:var(--ter);cursor:default}
+.stepper i{width:1px;margin:7px 0;background:rgba(60,60,67,.24)}
+.resumen{margin:14px 16px 0;padding:13px 16px;border-radius:14px;background:var(--tinte-lavado);color:var(--tinte);
+  font-size:15px;font-weight:600;text-align:center;transition:background .3s ease,color .3s ease}
+.resumen.neutro{background:var(--relleno);color:var(--sec);font-weight:500}
+.resumen.malo{background:var(--rojo-lavado);color:var(--rojo-texto)}
+.pop{animation:pop .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.28)}100%{transform:scale(1)}}
+
+.acciones{position:absolute;left:8px;right:8px;bottom:8px;z-index:12;display:flex;flex-direction:column;gap:8px;
+  transform:translateY(calc(100% + 24px));visibility:hidden;transition:transform .45s var(--curva),visibility 0s linear .45s}
+.acciones.ver{transform:none;visibility:visible;transition:transform .45s var(--curva),visibility 0s}
+.acc-grupo{overflow:hidden;border-radius:18px;background:rgba(249,249,251,.9);-webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8)}
+.acc-titulo{padding:14px 20px 13px;text-align:center;font-size:13px;color:var(--sec);line-height:1.4}
+.acc-titulo b{display:block;margin-bottom:2px;font-weight:600}
+.acc-boton{position:relative;display:block;width:100%;min-height:56px;border:0;background:none;font-size:19px;color:var(--tinte);cursor:pointer}
+.acc-boton::before{content:"";position:absolute;top:0;left:0;right:0;height:.5px;background:var(--sep)}
+.acc-grupo>.acc-boton:first-child::before{display:none}
+.acc-boton:active{background:rgba(0,0,0,.06)}
+.acc-boton.destructivo{color:var(--rojo)}
+.acc-boton.cancelar{font-weight:600}
+
+.aviso{position:absolute;top:12px;left:50%;z-index:13;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);
+  padding:10px 18px 10px 11px;border-radius:999px;background:rgba(28,28,30,.94);color:#fff;font-size:15px;font-weight:500;white-space:nowrap;
+  box-shadow:0 14px 30px -12px rgba(0,0,0,.5);opacity:0;transform:translate(-50%,-90px) scale(.85);pointer-events:none;
+  transition:transform .55s var(--curva),opacity .3s ease}
+.aviso.ver{opacity:1;transform:translate(-50%,0) scale(1)}
+.aviso .ok{width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:#30d158;color:#062a12;display:grid;place-items:center}
+.aviso span:last-child{overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- marcador ---------- */
+.marcador{position:absolute;inset:0;z-index:14;display:flex;flex-direction:column;color:#fff;
+  background:radial-gradient(130% 80% at 50% 50%,#0c2a16 0%,#040b06 100%);transform:translateY(100%);visibility:hidden;
+  transition:transform .5s var(--curva),visibility 0s linear .5s}
+.marcador.ver{transform:none;visibility:visible;transition:transform .5s var(--curva),visibility 0s}
+.mtop{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 6px;font-size:13px;color:rgba(255,255,255,.62)}
+.cristal-osc{background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:.5px solid rgba(255,255,255,.14)}
+.mtop button{height:38px;padding:0 16px;border-radius:999px;color:#fff;font-size:15px;cursor:pointer}
+.mitad{position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;
+  padding:8px;border:0;background:none;color:#fff;cursor:pointer;overflow:hidden}
+.mitad::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s ease;
+  background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(48,209,88,.24),transparent 60%)}
+.mitad.toque::after{opacity:1;transition:none}
+.mitad.girada{transform:rotate(180deg)}
+.mitad .quien{max-width:92%;font-size:15px;color:rgba(255,255,255,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mitad .pts{display:inline-block;font-size:108px;font-weight:700;line-height:.84;letter-spacing:-.06em}
+.pips{display:flex;gap:8px}
+.pips i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.2)}
+.pips i.on{background:#30d158}
+.pips i.nuevo{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+.centro{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 14px;padding:6px;border-radius:999px}
+.centro button{min-width:40px;height:40px;padding:0 14px;border:0;border-radius:999px;background:none;color:rgba(255,255,255,.88);font-size:15px;cursor:pointer}
+.centro button:active:not(:disabled){background:rgba(255,255,255,.12)}
+.centro button:disabled{opacity:.35}
+.centro .marca{font-size:17px;font-weight:700;text-align:center}
+.centro .marca small{display:block;font-size:12.5px;font-weight:400;color:rgba(255,255,255,.6)}
+.mbot{flex:0 0 auto;padding:12px 14px 18px}
+.mbot button{width:100%;min-height:54px;border:0;border-radius:999px;background:#30d158;color:#04230e;font-size:17px;font-weight:700;cursor:pointer;
+  transition:transform .3s var(--curva),opacity .15s}
+.mbot button:active{transform:scale(.97);opacity:.8}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important;transition-delay:0ms!important}
+}
+</style>
+
+<div class="escena">
+  <aside class="riel">
+    <h1>Club TM UVG · iOS</h1>
+    <p class="lead">La misma app hablando el idioma del iPhone. Probá deslizar desde el borde izquierdo para volver y bajar la hoja de anotar para cerrarla.</p>
+
+    <h2>Estado de los datos</h2>
+    <div class="lista" id="datos">
+      <button data-datos="normal" aria-current="true">Con datos<span class="tilde">✓</span></button>
+      <button data-datos="cargando">Cargando<span class="tilde">✓</span></button>
+      <button data-datos="sin-ranking">Sin ranking abierto<span class="tilde">✓</span></button>
+      <button data-datos="sin-red">Sin conexión<span class="tilde">✓</span></button>
+    </div>
+
+    <h2>Estado del club</h2>
+    <div class="lista" id="torneos">
+      <button data-torneo-activo="si" aria-current="true">Con un torneo en curso<span class="tilde">✓</span></button>
+      <button data-torneo-activo="no">Sin torneos<span class="tilde">✓</span></button>
+    </div>
+
+    <h2>Ver como</h2>
+    <div class="lista" id="roles">
+      <button data-rol="jugador" aria-current="true">Jugador · Iván Roble<span class="tilde">✓</span></button>
+      <button data-rol="coordinador">Coordinador<span class="tilde">✓</span></button>
+    </div>
+
+    <h2>Ir a</h2>
+    <div class="lista" id="atajos">
+      <button data-ir="tabla">Tabla</button>
+      <button data-ir="partidos">Mis partidos</button>
+      <button data-ir="confirmar">Confirmar un resultado</button>
+      <button data-ir="anotar">Anotar un resultado</button>
+      <button data-ir="marcador">Marcador en vivo</button>
+      <button data-ir="torneo">Cuadro del torneo</button>
+      <button data-ir="perfil">Perfil</button>
+      <button data-ir="ingresar">Pantalla de ingreso</button>
+    </div>
+
+    <p class="nota">En iPhone la letra es la del sistema, San Francisco. En Android y en la compu se ve Inter, que es la más parecida. En el marcador la mitad de arriba está girada para que se lea desde el otro lado de la mesa.</p>
+  </aside>
+
+  <div class="marco" id="marco">
+    <div class="app">
+      <div class="pila" id="pila"></div>
+      <nav class="tabbar" id="tabbar" aria-label="Secciones"></nav>
+    </div>
+    <div class="velo" id="velo"></div>
+    <section class="hoja" id="hoja" role="dialog" aria-modal="true" aria-label="Anotar resultado"></section>
+    <section class="acciones" id="acciones" role="dialog" aria-modal="true" aria-label="Disputar resultado"></section>
+    <div class="aviso" id="aviso" role="status" aria-live="polite"><span class="ok"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span id="aviso-txt"></span></div>
+
+    <section class="marcador" id="marcador" aria-label="Marcador en vivo">
+      <div class="mtop">
+        <button class="cristal-osc" id="m-cerrar">Cerrar</button>
+        <span id="m-contexto">Copa UVG · semifinal</span>
+        <span style="width:74px"></span>
+      </div>
+      <button class="mitad girada" id="m-b">
+        <span class="quien" id="m-nombre-b">Kevin Coj</span>
+        <span class="pts" id="m-pts-b">0</span>
+        <span class="pips" id="m-pips-b"></span>
+      </button>
+      <div class="centro cristal-osc">
+        <button id="m-deshacer" disabled>Deshacer</button>
+        <span class="marca" id="m-sets">0-0<small>saca Iván</small></span>
+        <button id="m-girar" aria-label="Girar la mitad de arriba">⇅</button>
+      </div>
+      <button class="mitad" id="m-a">
+        <span class="quien">Iván Roble</span>
+        <span class="pts" id="m-pts-a">0</span>
+        <span class="pips" id="m-pips-a"></span>
+      </button>
+      <div class="mbot"><button id="m-terminar">Terminar</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* Datos de ejemplo, internamente coherentes: la victoria vale 2 puntos. */
+const MAYOR = [
+  { pos:1, nom:"Kevin Coj",         pj:9, pg:8, pts:16, zona:"bueno" },
+  { pos:2, nom:"Andrés Sandoval",   pj:9, pg:7, pts:14, zona:"bueno" },
+  { pos:3, nom:"Diego Menchú",      pj:9, pg:6, pts:12, zona:"bueno" },
+  { pos:4, nom:"Iván Roble",        pj:8, pg:6, pts:12, yo:true },
+  { pos:5, nom:"Rodrigo Estrada",   pj:9, pg:4, pts:8 },
+  { pos:6, nom:"Fernanda Ixcot",    pj:8, pg:3, pts:6 },
+  { pos:7, nom:"José Luis Arriola", pj:9, pg:3, pts:6 },
+  { pos:8, nom:"Lucía Paz",         pj:8, pg:2, pts:4, zona:"malo" },
+  { pos:9, nom:"Sofía Marroquín",   pj:9, pg:1, pts:2, zona:"malo" },
+  { pos:10,nom:"Mateo Quiñónez",    pj:9, pg:0, pts:0, zona:"malo" },
+];
+const MENOR = [
+  { pos:1, nom:"Pablo Estrada",     pj:8, pg:7, pts:14, zona:"bueno" },
+  { pos:2, nom:"Valeria Cotí",      pj:8, pg:6, pts:12, zona:"bueno" },
+  { pos:3, nom:"Marco Villagrán",   pj:8, pg:5, pts:10, zona:"bueno" },
+  { pos:4, nom:"Ana Lucía Set",     pj:8, pg:4, pts:8 },
+  { pos:5, nom:"Héctor Ramírez",    pj:8, pg:3, pts:6 },
+  { pos:6, nom:"Gaby Chun",         pj:8, pg:2, pts:4 },
+  { pos:7, nom:"Luis Pedro Roldán", pj:8, pg:1, pts:2 },
+  { pos:8, nom:"Camila Ordóñez",    pj:8, pg:0, pts:0 },
+];
+const PARTIDOS = {
+  responder:[{ id:"p1", rival:"Diego Menchú", sub:"Dice que te ganó 3-1", ctx:"Ranking, División Mayor",
+    cuando:"ayer a las 4:40 p.m.", sets:[[11,7],[9,11],[8,11],[6,11]], marcador:"1-3", tipo:"confirmar" }],
+  jugar:[
+    { id:"p2", rival:"Kevin Coj", sub:"Semifinal de la Copa UVG", ctx:"Copa UVG, semifinal", cuando:"al mejor de 5", tipo:"registrar" },
+    { id:"p3", rival:"Fernanda Ixcot", sub:"Ranking, División Mayor", ctx:"Ranking, División Mayor", cuando:"al mejor de 5", tipo:"registrar" },
+  ],
+  jugados:[
+    { rival:"Andrés Sandoval",   sub:"14 de septiembre", res:"0-3", gano:false },
+    { rival:"Rodrigo Estrada",   sub:"12 de septiembre", res:"3-2", gano:true },
+    { rival:"José Luis Arriola", sub:"9 de septiembre",  res:"3-0", gano:true },
+    { rival:"Mateo Quiñónez",    sub:"6 de septiembre",  res:"3-1", gano:true },
+  ],
+};
+const ULTIMOS = [
+  { g:"Kevin Coj", p:"Iván Roble", res:"3-1", sub:"Hoy · Copa UVG" },
+  { g:"Andrés Sandoval", p:"Lucía Paz", res:"3-0", sub:"Ayer · División Mayor" },
+  { g:"Diego Menchú", p:"Rodrigo Estrada", res:"3-2", sub:"14 sept · División Mayor" },
+];
+
+const estado = {
+  rol:"jugador", tab:"tabla", fuera:false,
+  pilas:{ tabla:["tabla"], partidos:["partidos"], panel:["panel"], perfil:["perfil"] },
+  scrolls:{}, segPrev:{}, tabPrev:null,
+  division:"mayor", vistaTorneo:"cuadro", confirmado:false, hayTorneo:true, datos:"normal",
+  animFilas:true, hojaPartido:null, sets:{ a:0, b:0 }, m:null, girado:true, ignorarClick:false,
+};
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const primero = (n) => n.split(" ")[0];
+const iniciales = (n) => { const p = n.trim().split(/\s+/); return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : p[0][1] || "")).toUpperCase(); };
+const reducir = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CURVA = "cubic-bezier(.32,.72,0,1)";
+
+/* ---------- íconos ---------- */
+const CHEV = `<svg class="chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg>`;
+const ATRAS = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`;
+const MENOS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>`;
+const MAS = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>`;
+const G = (d, w = 18) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const GLIFO = {
+  alerta: G(`<path d="M12 5.5v8.5" stroke-width="3"/><path d="M12 18.6h.01" stroke-width="3.4"/>`),
+  trofeo: G(`<path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z" fill="#fff"/><path d="M7.5 6.5H5a2.5 2.5 0 0 0 3 3.2M16.5 6.5H19a2.5 2.5 0 0 1-3 3.2"/><path d="M12 14.5v3.5M8.5 20h7"/>`),
+  mas: G(`<path d="M12 5.5v13M5.5 12h13" stroke-width="2.6"/>`),
+  personas: G(`<circle cx="9" cy="8.5" r="3.2" fill="#fff"/><path d="M3.5 19c.8-3 2.9-4.6 5.5-4.6s4.7 1.6 5.5 4.6" fill="#fff"/><circle cx="16.5" cy="9" r="2.5" fill="#fff" stroke="none"/><path d="M16.2 14.3c2.2 0 3.8 1.4 4.4 4" />`),
+  bajar: G(`<path d="M12 4.5v11M7.5 11l4.5 4.5 4.5-4.5M5.5 19.5h13"/>`),
+  llave: G(`<circle cx="8" cy="12" r="3.6"/><path d="M11.6 12H20M17 12v3M20 12v2.4"/>`),
+  lista: G(`<path d="M9 7h10M9 12h10M9 17h10"/><circle cx="5" cy="7" r=".9" fill="#fff"/><circle cx="5" cy="12" r=".9" fill="#fff"/><circle cx="5" cy="17" r=".9" fill="#fff"/>`),
+  paleta: `<svg width="40" height="40" viewBox="0 0 24 24" fill="#fff"><circle cx="14.2" cy="9.3" r="6.3"/><path d="M9.3 14.7 5 19" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="19.4" cy="18.8" r="2.1"/></svg>`,
+};
+const VACIO = {
+  trofeo:`<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6.5H5a2.5 2.5 0 0 0 3 3.2M16.5 6.5H19a2.5 2.5 0 0 1-3 3.2M12 14.5v3.5M8.5 20h7"/></svg>`,
+  sinRed:`<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 16a4.8 4.8 0 0 1 6.4 0"/><circle cx="12" cy="19.3" r=".9" fill="currentColor"/><path d="M3.5 3.5l17 17"/></svg>`,
+  obra:`<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M3.5 9.5h17M8 14h5"/></svg>`,
+};
+const ICONOS_TAB = {
+  tabla:`<svg viewBox="0 0 24 24"><rect x="3" y="12.5" width="5.2" height="8.5" rx="1.7"/><rect x="9.4" y="3.5" width="5.2" height="17.5" rx="1.7"/><rect x="15.8" y="8.5" width="5.2" height="12.5" rx="1.7"/></svg>`,
+  partidos:`<svg viewBox="0 0 24 24"><circle cx="14.2" cy="9.3" r="6.3"/><path d="M9.3 14.7 5 19" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="19.4" cy="18.8" r="2.1"/></svg>`,
+  panel:`<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2.2"/></svg>`,
+  perfil:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9.6" r="3.4" fill="#fff"/><path d="M5.8 18.2c1.3-2.4 3.5-3.7 6.2-3.7s4.9 1.3 6.2 3.7A8 8 0 0 1 12 20.5a8 8 0 0 1-6.2-2.3z" fill="#fff"/></svg>`,
+};
+
+/* ---------- piezas ---------- */
+const celda = ({ av, icono, color, titulo, sub, derecha = "", accion = "", quieta = false, fuerte = false, clase = "" }) => `
+  <button class="celda${av ? " con-av" : ""}${icono ? " con-icono" : ""}${quieta ? " quieta" : ""}${clase ? " " + clase : ""}"${accion ? ` data-accion="${accion}"` : ""}${quieta ? ' tabindex="-1"' : ""}>
+    ${av ? `<span class="av" aria-hidden="true">${esc(av)}</span>` : ""}
+    ${icono ? `<span class="icono" aria-hidden="true" style="background:${color}">${icono}</span>` : ""}
+    <span class="medio"><span class="t-celda${fuerte ? " fuerte" : ""}">${esc(titulo)}</span>${sub ? `<span class="s-celda">${esc(sub)}</span>` : ""}</span>
+    ${derecha ? `<span class="derecha">${derecha}</span>` : ""}
+  </button>`;
+const grupo = (h, clase = "") => `<div class="grupo${clase ? " " + clase : ""}">${h}</div>`;
+const seccion = (t, extra = "") => `<h2 class="seccion">${esc(t)}${extra}</h2>`;
+const seg = (id, opciones, actual) => {
+  const i = Math.max(0, opciones.findIndex(([v]) => v === actual));
+  const prev = estado.segPrev[id] ?? i;
+  return `<div class="seg" role="group" data-seg="${id}" data-cur="${i}" style="--n:${opciones.length};--i:${prev}">
+    <span class="pulgar" aria-hidden="true"></span>
+    ${opciones.map(([v, t]) => `<button data-${id}="${v}" aria-pressed="${v === actual}">${t}</button>`).join("")}
+  </div>`;
+};
+const tabla = (filas, cap, ult = "Pts") => `<div class="grupo"><table class="tabla">
+  <caption class="solo-lector">${esc(cap)}</caption>
+  <colgroup><col class="c-pos"><col><col class="c-n"><col class="c-n"><col class="c-pts"></colgroup>
+  <thead><tr><th scope="col">#</th><th scope="col" class="tnom">Jugador</th><th scope="col">PJ</th><th scope="col">PG</th><th scope="col">${ult}</th></tr></thead>
+  <tbody>${filas.map((f, n) => `<tr style="--n:${n}" class="${f.zona ? "z-" + f.zona : ""}${f.yo ? " yo" : ""}">
+    <td><span class="npos">${f.pos}</span></td><th scope="row" class="tnom">${esc(f.nom)}</th>
+    <td class="tnum">${f.pj}</td><td class="tnum">${f.pg}</td><td class="tpts">${f.pts}</td></tr>`).join("")}</tbody></table></div>`;
+const vacio = (icono, t, d, boton = "") => `<div class="vacio">${icono}<p class="t">${esc(t)}</p><p class="d">${esc(d)}</p>${boton}</div>`;
+
+/* ---------- pantallas ---------- */
+const PANTALLAS = {
+  tabla(){
+    const grande = { t:"Ranking II", s:"En juego · cierra el 24 oct" };
+    if (estado.datos === "cargando") {
+      return { titulo:"Ranking II", grande, cuerpo: grupo(`<div class="esq" aria-busy="true" aria-label="Cargando la tabla">
+        ${[62,78,54,70,58,74,50,66].map((w, i) => `<div><b style="animation-delay:${i * 90}ms"></b><i style="width:${w}%;animation-delay:${i * 90}ms"></i></div>`).join("")}</div>`) };
+    }
+    if (estado.datos === "sin-ranking") {
+      return { titulo:"Club TM UVG", grande:{ t:"Club TM UVG", s:"Sin ranking en juego" }, cuerpo: vacio(VACIO.trofeo, "Todavía no arrancó el ranking",
+        "Cuando el coordinador arme las divisiones y haga el sorteo, la tabla aparece acá y te avisamos qué partidos te tocan.",
+        `<button class="btn gris" data-accion="pendiente:Cómo funciona el ranking">Cómo funciona</button>`) };
+    }
+    if (estado.datos === "sin-red") {
+      return { titulo:"Ranking II", grande, cuerpo: vacio(VACIO.sinRed, "Sin conexión",
+        "No pudimos traer la tabla. Los resultados que registraste no se perdieron; se mandan solos cuando vuelva la señal.",
+        `<button class="btn" data-accion="reintentar">Reintentar</button>`) };
+    }
+    let h = "";
+    // Lo tuyo primero: lo que vence solo, después lo que te queda por jugar.
+    if (!estado.confirmado) {
+      const p = PARTIDOS.responder[0];
+      h += grupo(celda({ icono:"1", color:"var(--rojo)", titulo:"Resultado por confirmar", sub:`${p.rival} registró que te ganó ${p.marcador}`,
+        derecha:CHEV, accion:`abrir:${p.id}`, fuerte:true }), "franja");
+    } else {
+      h += grupo(celda({ icono:String(PARTIDOS.jugar.length), color:"var(--tinte-vivo)", titulo:"Partidos por jugar",
+        sub:"Cierra el 24 oct · faltan 29 días", derecha:CHEV, accion:"pestana:partidos", fuerte:true }), "franja");
+    }
+    if (estado.hayTorneo) {
+      h += `<button class="vivo" data-accion="torneo"><span class="punto" aria-hidden="true"></span>
+        <span class="txt"><span class="t1">Copa UVG</span><span class="t2">Semifinales · quedan 2 partidos</span></span>
+        <span class="etiqueta">En vivo</span></button>`;
+    }
+    h += seg("div", [["mayor","Mayor"],["menor","Menor"]], estado.division);
+    h += estado.division === "mayor"
+      ? `<div class="leyenda"><span><i style="background:var(--tinte-vivo)"></i>Premian a los 3 primeros</span><span><i style="background:var(--rojo)"></i>Bajan los 3 últimos</span></div>`
+      : `<div class="leyenda"><span><i style="background:var(--tinte-vivo)"></i>Suben los 3 primeros a Mayor</span></div>`;
+    h += tabla(estado.division === "mayor" ? MAYOR : MENOR, `Posiciones de la División ${estado.division === "mayor" ? "Mayor" : "Menor"}`);
+    h += `<p class="pie">Cada pareja juega una vez. La victoria vale 2 puntos.</p>`;
+    h += seccion("Últimos resultados");
+    h += grupo(ULTIMOS.map((r) => celda({ titulo:`${r.g} le ganó a ${primero(r.p)}`, sub:r.sub, quieta:true,
+      derecha:`<span class="res">${r.res}</span>` })).join(""));
+    return { titulo:"Ranking II", grande, cuerpo:h };
+  },
+
+  partidos(){
+    const responder = estado.confirmado ? [] : PARTIDOS.responder;
+    const jugados = estado.confirmado ? [{ rival:"Diego Menchú", sub:"Hoy", res:"1-3", gano:false }, ...PARTIDOS.jugados] : PARTIDOS.jugados;
+    let h = "";
+    if (responder.length) {
+      h += seccion("Te toca responder", `<span class="cuenta">${responder.length}</span>`);
+      h += grupo(responder.map((p) => celda({ av:iniciales(p.rival), titulo:p.rival, sub:p.sub,
+        derecha:`<span class="btn chico">Revisar</span>`, accion:`abrir:${p.id}` })).join(""));
+    }
+    h += seccion("Por jugar");
+    h += grupo(PARTIDOS.jugar.map((p) => celda({ av:iniciales(p.rival), titulo:p.rival, sub:p.sub, derecha:CHEV, accion:`abrir:${p.id}` })).join(""));
+    h += seccion("Jugados");
+    h += grupo(jugados.map((p) => celda({ av:iniciales(p.rival), titulo:p.rival, sub:p.sub, quieta:true,
+      derecha:`<span class="res${p.gano ? " gano" : ""}">${p.res}</span>` })).join(""));
+    h += `<p class="pie">Vas 4.º con 12 puntos. Te quedan ${PARTIDOS.jugar.length} partidos del ranking.</p>`;
+    return { titulo:"Partidos", grande:{ t:"Partidos", s:"4.º en Mayor · 2 por jugar" }, cuerpo:h };
+  },
+
+  detalle(id){
+    const p = [...PARTIDOS.responder, ...PARTIDOS.jugar].find((x) => x.id === id) || PARTIDOS.jugar[0];
+    if (p.tipo === "confirmar") {
+      const chips = p.sets.map(([x, y]) => `<span class="${x > y ? "mio" : "suyo"}">${x}-${y}</span>`).join("");
+      return { titulo:p.rival, sub:p.ctx, cuerpo:`
+        <div class="heroe"><span class="av" aria-hidden="true">${iniciales(p.rival)}</span>
+          <h2>${esc(primero(p.rival))} dice que te ganó</h2><p>${esc(p.ctx)} · lo registró ${esc(p.cuando)}</p></div>
+        <div class="marcador-grande"><div class="n">${esc(p.marcador)}</div><div class="chips">${chips}</div></div>
+        <div class="pila-botones"><button class="btn bloque" data-accion="confirmar">Confirmar</button>
+          <button class="btn rojo bloque" data-accion="disputar">No fue así</button></div>
+        <p class="pie centro">Si no respondés, se confirma solo mañana a las 9:40 p.m.</p>` };
+    }
+    return { titulo:p.rival, sub:p.ctx, cuerpo:`
+      <div class="heroe"><span class="av" aria-hidden="true">${iniciales(p.rival)}</span>
+        <h2>vs. ${esc(p.rival)}</h2><p>${esc(p.ctx)} · ${esc(p.cuando)}</p></div>
+      <div class="pila-botones" style="margin-top:26px"><button class="btn bloque" data-accion="anotar:${p.id}">Anotar el resultado</button>
+        <button class="btn gris bloque" data-accion="marcador:${p.id}">Llevar el marcador en vivo</button></div>
+      <p class="pie centro">Cualquiera de los dos puede registrarlo. El otro lo confirma.</p>` };
+  },
+
+  perfil(){
+    return { titulo:"Iván Roble", alBajar:150, cuerpo:`
+      <div class="perfil-cab"><p class="nom">Iván Roble</p><p class="car">Carnet 24003 · División Mayor</p>
+        <div class="puesto"><span class="n">4.º</span><span class="de">de 10 en Mayor<br>12 puntos, 8 jugados</span></div></div>
+      <div class="grupo cifras-flotan"><div class="cifras"><div><b>8</b><span>Jugados</span></div><div><b>6</b><span>Ganados</span></div><div><b>2</b><span>Perdidos</span></div><div><b>+8</b><span>Sets</span></div></div></div>
+      ${seccion("Historial")}
+      ${grupo(celda({ titulo:"Ranking I · 2026", sub:"Cerrado · terminaste 6.º en Mayor", derecha:CHEV, accion:"pendiente:Ranking I · 2026" }) +
+        celda({ titulo:"Copa de Bienvenida", sub:"Marzo 2026 · perdiste en cuartos", derecha:CHEV, accion:"pendiente:Copa de Bienvenida" }))}
+      ${seccion("Cara a cara")}
+      ${grupo([["Kevin Coj","0-1",false],["Andrés Sandoval","0-1",false],["Diego Menchú","1-0",true]].map(([n, r, g]) =>
+        celda({ av:iniciales(n), titulo:n, sub:"1 jugado", quieta:true, derecha:`<span class="res${g ? " gano" : ""}">${r}</span>` })).join(""))}
+      ${seccion("Cuenta")}
+      ${grupo(celda({ icono:GLIFO.llave, color:"var(--gris)", titulo:"Cambiar mi PIN", derecha:CHEV, accion:"pendiente:Cambiar mi PIN" }))}
+      <div style="height:14px"></div>
+      ${grupo(celda({ titulo:"Cerrar sesión", clase:"peligro", accion:"salir" }))}` };
+  },
+
+  torneo(){
+    const cuadro = `
+      <div class="cuadro">
+        <div class="ronda"><p class="rh">Semifinales</p>
+          <div class="llave"><div class="lado gana"><span>Kevin Coj</span><b>3</b></div><div class="lado"><span>Iván Roble</span><b>1</b></div></div>
+          <div class="llave"><div class="lado"><span>Andrés Sandoval</span><b>–</b></div><div class="lado"><span>Diego Menchú</span><b>–</b></div></div>
+        </div>
+        <div class="ronda"><p class="rh">Final</p>
+          <div class="llave"><div class="lado"><span>Kevin Coj</span><b>–</b></div><div class="lado vacio"><span>Por definir</span><b></b></div></div>
+        </div>
+      </div>
+      <p class="pie">Se desliza a lo ancho. El ganador sube cuando el rival confirma, o solo a las 72 horas.</p>`;
+    const g = (nom, filas) => seccion(nom) + tabla(filas, nom, "Dif");
+    const grupos =
+      g("Grupo A", [
+        { pos:1, nom:"Kevin Coj", pj:3, pg:3, pts:"+6", zona:"bueno" }, { pos:2, nom:"Diego Menchú", pj:3, pg:2, pts:"+2", zona:"bueno" },
+        { pos:3, nom:"Fernanda Ixcot", pj:3, pg:1, pts:"−2" }, { pos:4, nom:"José Luis Arriola", pj:3, pg:0, pts:"−6" }]) +
+      g("Grupo B", [
+        { pos:1, nom:"Andrés Sandoval", pj:3, pg:3, pts:"+7", zona:"bueno" }, { pos:2, nom:"Iván Roble", pj:3, pg:2, pts:"+1", zona:"bueno", yo:true },
+        { pos:3, nom:"Rodrigo Estrada", pj:3, pg:1, pts:"−3" }, { pos:4, nom:"Lucía Paz", pj:3, pg:0, pts:"−5" }]) +
+      `<p class="pie">Los dos primeros de cada grupo pasan a la llave.</p>`;
+    return { titulo:"Copa UVG", sub:"Semifinales", cuerpo:`
+      <div style="height:6px"></div>
+      ${seg("torneo", [["grupos","Grupos"],["cuadro","Cuadro"]], estado.vistaTorneo)}
+      ${estado.vistaTorneo === "cuadro" ? cuadro : grupos}` };
+  },
+
+  panel(){
+    return { titulo:"Panel", grande:{ t:"Panel", s:"Ranking II · 2026" }, cuerpo:`
+      <div class="grupo estado-ranking">
+        <div class="er-top"><div><span class="er-n">75</span><span class="er-de"> de 81 partidos</span></div><span class="capsula">En juego</span></div>
+        <div class="barra"><i style="width:${Math.round(75 / 81 * 100)}%"></i></div>
+        <p class="er-pie">Faltan 6 · cierra el 24 oct · 18 inscritos</p>
+      </div>
+      ${seccion("Necesita que decidas", `<span class="cuenta">1</span>`)}
+      ${grupo(celda({ icono:GLIFO.alerta, color:"var(--rojo)", titulo:"Lucía Paz vs. Sofía Marroquín", sub:"En disputa desde ayer",
+        derecha:`<span class="btn chico">Resolver</span>`, accion:"pendiente:Resolver la disputa" }))}
+      ${seccion("Torneos")}
+      ${grupo(celda({ icono:GLIFO.trofeo, color:"var(--naranja)", titulo:"Copa UVG", sub:"En juego · semifinales", derecha:CHEV, accion:"torneo" }) +
+        celda({ icono:GLIFO.mas, color:"var(--tinte-vivo)", titulo:"Crear un torneo", sub:"Llave directa o grupos y llave", derecha:CHEV, accion:"pendiente:Crear un torneo" }))}
+      ${seccion("Club")}
+      ${grupo(celda({ icono:GLIFO.personas, color:"var(--azul)", titulo:"Jugadores", sub:"18 activos · 2 dados de baja", derecha:CHEV, accion:"pendiente:Jugadores" }) +
+        celda({ icono:GLIFO.lista, color:"var(--gris)", titulo:"Bitácora de bajas", sub:"Rankings y torneos borrados o cancelados", derecha:CHEV, accion:"pendiente:Bitácora de bajas" }) +
+        celda({ icono:GLIFO.bajar, color:"var(--gris)", titulo:"Exportar a CSV", sub:"Tabla, partidos y bitácora", derecha:CHEV, accion:"pendiente:Exportar a CSV" }))}` };
+  },
+
+  pendiente(texto){
+    return { titulo:texto, cuerpo: vacio(VACIO.obra, texto, "Esta pantalla existe en la app pero no está dibujada en el prototipo. Está para que ninguna flecha lleve a la nada.") };
+  },
+
+  ingresar(){
+    return { titulo:"", sinTabs:true, sinNav:true, cuerpo:`
+      <div class="ingreso"><div class="app-icono" aria-hidden="true">${GLIFO.paleta}</div>
+        <h1>Club TM UVG</h1><p>Entrá con tu carnet y el PIN que te dio el coordinador.</p>
+        <div class="grupo">
+          <label class="campo"><span>Carnet</span><input inputmode="numeric" value="24003" autocomplete="username"></label>
+          <label class="campo"><span>PIN</span><input type="password" inputmode="numeric" value="123456" autocomplete="current-password"></label>
+        </div>
+        <div class="pila-botones" style="margin-top:22px"><button class="btn bloque" data-accion="entrar">Ingresar</button>
+          <button class="btn texto bloque" data-accion="entrar">Ver la tabla sin ingresar</button></div>
+      </div>` };
+  },
+};
+
+/* ---------- armar una pantalla ---------- */
+const partir = (id) => { const i = id.indexOf(":"); return i < 0 ? [id, ""] : [id.slice(0, i), id.slice(i + 1)]; };
+const datosDe = (id) => { const [n, a] = partir(id); return (PANTALLAS[n] || PANTALLAS.tabla)(a); };
+
+function construir(id, previo){
+  const p = datosDe(id);
+  const s = document.createElement("section");
+  const umbral = p.alBajar ?? (p.grande ? 44 : 2);
+  s.className = "pantalla" + (p.grande || p.alBajar ? "" : " fijo") + (p.sinTabs ? " sin-tabs" : "");
+  s.dataset.id = id;
+  s.dataset.umbral = umbral;
+  const volver = previo ? `<button class="boton-nav circulo cristal" data-accion="atras" aria-label="Volver a ${esc(datosDe(previo).titulo)}">${ATRAS}</button>` : "";
+  s.innerHTML = `
+    ${p.sinNav ? "" : `<header class="nav"><div class="nav-fondo"></div><div class="nav-fila">
+      <div class="nav-izq">${volver}</div>
+      <div class="nav-titulo"><b>${esc(p.titulo)}</b>${p.sub ? `<small>${esc(p.sub)}</small>` : ""}</div>
+      <div class="nav-der"></div></div></header>`}
+    <div class="scroll">${p.grande ? `<header class="grande"><h1>${esc(p.grande.t)}</h1>${p.grande.s ? `<p>${esc(p.grande.s)}</p>` : ""}</header>` : ""}${p.cuerpo}</div>`;
+  const sc = s.querySelector(".scroll");
+  sc.addEventListener("scroll", () => s.classList.toggle("bajada", sc.scrollTop > umbral), { passive:true });
+  return s;
+}
+
+function despuesDeMontar(s, { scroll = null } = {}){
+  const sc = s.querySelector(".scroll");
+  if (scroll != null) sc.scrollTop = scroll;
+  s.classList.toggle("bajada", sc.scrollTop > Number(s.dataset.umbral));
+  // El pulgar del selector sale de donde estaba y se desliza a la opción nueva.
+  s.querySelectorAll(".seg[data-seg]").forEach((g) => {
+    g.offsetWidth;
+    requestAnimationFrame(() => g.style.setProperty("--i", g.dataset.cur));
+    estado.segPrev[g.dataset.seg] = Number(g.dataset.cur);
+  });
+  if (estado.animFilas) { sc.classList.add("anim-filas"); estado.animFilas = false; }
+}
+
+const pilaActual = () => estado.pilas[estado.tab];
+const cima = () => $("#pila").lastElementChild;
+const guardarScroll = (s) => { if (s) estado.scrolls[s.dataset.id] = s.querySelector(".scroll").scrollTop; };
+let animando = false;
+
+function pintarTodo(fundido = false){
+  let s;
+  if (estado.fuera) s = construir("ingresar", null);
+  else {
+    const pila = pilaActual();
+    s = construir(pila[pila.length - 1], pila[pila.length - 2] || null);
+  }
+  if (fundido) s.classList.add("entra-fade");
+  $("#pila").replaceChildren(s);
+  despuesDeMontar(s, { scroll: estado.fuera ? 0 : estado.scrolls[s.dataset.id] ?? 0 });
+  pintarTabs();
+}
+function refrescar(){
+  const vieja = cima();
+  const top = vieja ? vieja.querySelector(".scroll").scrollTop : 0;
+  const pila = pilaActual();
+  const s = construir(pila[pila.length - 1], pila[pila.length - 2] || null);
+  $("#pila").replaceChildren(s);
+  despuesDeMontar(s, { scroll: top });
+  pintarTabs();
+}
+
+function animar(el, frames){ return el.animate(frames, { duration:480, easing:CURVA, fill:"forwards" }); }
+function push(id){
+  if (animando) return;
+  const vieja = cima();
+  guardarScroll(vieja);
+  const pila = pilaActual();
+  pila.push(id);
+  estado.animFilas = id === "torneo";
+  const nueva = construir(id, pila[pila.length - 2]);
+  $("#pila").append(nueva);
+  despuesDeMontar(nueva, { scroll:0 });
+  pintarTabs();
+  if (!vieja || reducir()) { vieja?.remove(); return; }
+  animando = true;
+  const sombra = Object.assign(document.createElement("div"), { className:"sombra-push" });
+  vieja.append(sombra);
+  animar(sombra, [{ opacity:0 }, { opacity:1 }]);
+  animar(vieja, [{ transform:"translateX(0)" }, { transform:"translateX(-30%)" }]);
+  animar(nueva, [{ transform:"translateX(100%)" }, { transform:"translateX(0)" }]).finished.then(() => {
+    vieja.remove(); nueva.getAnimations().forEach((a) => a.cancel()); animando = false;
+  });
+}
+function pop(hastaRaiz = false){
+  const pila = pilaActual();
+  if (pila.length < 2 || animando) return;
+  const vieja = cima();
+  if (hastaRaiz) pila.splice(1); else pila.pop();
+  const id = pila[pila.length - 1];
+  const nueva = construir(id, pila[pila.length - 2] || null);
+  $("#pila").insertBefore(nueva, vieja);
+  despuesDeMontar(nueva, { scroll: estado.scrolls[id] ?? 0 });
+  pintarTabs();
+  if (reducir()) { vieja.remove(); return; }
+  animando = true;
+  const sombra = Object.assign(document.createElement("div"), { className:"sombra-push" });
+  nueva.append(sombra);
+  animar(sombra, [{ opacity:1 }, { opacity:0 }]);
+  animar(nueva, [{ transform:"translateX(-30%)" }, { transform:"translateX(0)" }]);
+  animar(vieja, [{ transform:"translateX(0)" }, { transform:"translateX(100%)" }]).finished.then(() => {
+    vieja.remove(); sombra.remove(); nueva.getAnimations().forEach((a) => a.cancel()); animando = false;
+  });
+}
+function cambiarTab(t){
+  if (animando) return;
+  if (t === estado.tab) {
+    // Tocar la pestaña en la que ya estás vuelve al principio, como en iOS.
+    if (pilaActual().length > 1) return pop(true);
+    return cima()?.querySelector(".scroll").scrollTo({ top:0, behavior: reducir() ? "auto" : "smooth" });
+  }
+  guardarScroll(cima());
+  estado.tab = t;
+  estado.animFilas = t === "tabla";
+  pintarTodo(true);
+}
+function irA(tab, pila){
+  guardarScroll(cima());
+  estado.fuera = false;
+  estado.tab = tab;
+  estado.pilas[tab] = pila;
+  pila.forEach((id) => delete estado.scrolls[id]);
+  estado.animFilas = pila[pila.length - 1] === "tabla" || pila[pila.length - 1] === "torneo";
+  pintarTodo(true);
+}
+
+/* ---------- deslizar desde el borde para volver ---------- */
+let arrastre = null;
+$("#pila").addEventListener("pointerdown", (e) => {
+  if (animando || estado.fuera || pilaActual().length < 2 || e.button > 0) return;
+  const r = $("#pila").getBoundingClientRect();
+  if (e.clientX - r.left > 26) return;
+  arrastre = { x0:e.clientX, t0:performance.now(), w:r.width, vieja:cima(), nueva:null, sombra:null, id:e.pointerId, activo:false };
+});
+addEventListener("pointermove", (e) => {
+  const a = arrastre;
+  if (!a || e.pointerId !== a.id) return;
+  const dx = Math.max(0, e.clientX - a.x0);
+  if (!a.activo) {
+    if (dx < 6) return;
+    a.activo = true;
+    const pila = pilaActual();
+    const idPrev = pila[pila.length - 2];
+    a.nueva = construir(idPrev, pila[pila.length - 3] || null);
+    $("#pila").insertBefore(a.nueva, a.vieja);
+    despuesDeMontar(a.nueva, { scroll: estado.scrolls[idPrev] ?? 0 });
+    a.sombra = Object.assign(document.createElement("div"), { className:"sombra-push" });
+    a.nueva.append(a.sombra);
+  }
+  const p = Math.min(1, dx / a.w);
+  a.vieja.style.transform = `translateX(${dx}px)`;
+  a.nueva.style.transform = `translateX(${-30 * (1 - p)}%)`;
+  a.sombra.style.opacity = String(1 - p);
+});
+function soltar(e){
+  const a = arrastre;
+  if (!a || e.pointerId !== a.id) return;
+  arrastre = null;
+  if (!a.activo) return;
+  estado.ignorarClick = true;
+  setTimeout(() => (estado.ignorarClick = false), 80);
+  const dx = Math.max(0, e.clientX - a.x0);
+  const v = dx / Math.max(1, performance.now() - a.t0);
+  const completa = e.type !== "pointercancel" && (dx > a.w * 0.4 || v > 0.55);
+  const t = "transform .32s cubic-bezier(.32,.72,0,1), opacity .32s ease";
+  [a.vieja, a.nueva, a.sombra].forEach((el) => (el.style.transition = t));
+  requestAnimationFrame(() => {
+    a.vieja.style.transform = completa ? "translateX(100%)" : "translateX(0)";
+    a.nueva.style.transform = completa ? "translateX(0)" : "translateX(-30%)";
+    a.sombra.style.opacity = completa ? "0" : "1";
+  });
+  animando = true;
+  setTimeout(() => {
+    if (completa) {
+      a.vieja.remove(); a.sombra.remove(); a.nueva.style.transition = ""; a.nueva.style.transform = "";
+      pilaActual().pop(); pintarTabs();
+    } else {
+      a.nueva.remove(); a.vieja.style.transition = ""; a.vieja.style.transform = "";
+    }
+    animando = false;
+  }, reducir() ? 0 : 340);
+}
+addEventListener("pointerup", soltar);
+addEventListener("pointercancel", soltar);
+
+/* ---------- barra de pestañas ---------- */
+function pintarTabs(){
+  const tb = $("#tabbar");
+  tb.classList.toggle("oculta", estado.fuera);
+  if (estado.fuera) return;
+  const tabs = estado.rol === "coordinador"
+    ? [["tabla","Tabla"],["partidos","Partidos"],["panel","Panel"],["perfil","Perfil"]]
+    : [["tabla","Tabla"],["partidos","Partidos"],["perfil","Perfil"]];
+  const i = Math.max(0, tabs.findIndex(([t]) => t === estado.tab));
+  const prev = estado.tabPrev != null && estado.tabPrev < tabs.length ? estado.tabPrev : i;
+  const pend = estado.confirmado ? 0 : 1;
+  tb.style.setProperty("--n", tabs.length);
+  tb.innerHTML = `<span class="lozenge" aria-hidden="true" style="--i:${prev}"></span>` + tabs.map(([t, txt]) => `
+    <button data-tab="${t}" aria-current="${t === estado.tab}">
+      <span class="ic">${ICONOS_TAB[t]}${t === "partidos" && pend ? `<span class="bolita">${pend}</span>` : ""}</span><span>${txt}</span>
+    </button>`).join("");
+  const lz = tb.querySelector(".lozenge");
+  lz.offsetWidth;
+  requestAnimationFrame(() => lz.style.setProperty("--i", i));
+  estado.tabPrev = i;
+}
+
+/* ---------- hoja para anotar ---------- */
+function abrirHoja(partido, sets = { a:0, b:0 }){
+  estado.hojaPartido = partido;
+  estado.sets = sets;
+  pintarHoja();
+  $("#velo").classList.add("ver");
+  $("#hoja").classList.add("ver");
+  $("#marco").classList.add("con-hoja");
+}
+function cerrarHoja(despues){
+  $("#hoja").classList.remove("ver");
+  $("#hoja").style.transform = "";
+  $("#velo").classList.remove("ver");
+  $("#marco").classList.remove("con-hoja");
+  if (despues) setTimeout(despues, reducir() ? 0 : 380);
+}
+function pintarHoja(cambio){
+  const p = estado.hojaPartido || PARTIDOS.jugar[0];
+  const { a, b } = estado.sets;
+  const gana = Math.max(a, b), pierde = Math.min(a, b);
+  let msg = "Poné cuántos sets ganó cada uno.", tono = "neutro";
+  const listo = gana === 3 && pierde <= 2;
+  if (a === b && a > 0) { msg = "Un partido no puede terminar empatado."; tono = "malo"; }
+  else if (listo) { msg = a > b ? `Ganaste ${a}-${b}.` : `Ganó ${primero(p.rival)} ${b}-${a}.`; tono = ""; }
+  else if (gana > 0) { msg = "Al mejor de 5, alguien tiene que llegar a 3."; }
+  const fila = (lado, nombre, v) => `
+    <div class="contador"><span class="quien">${esc(nombre)}</span>
+      <span class="val${cambio === lado ? " pop" : ""}">${v}</span>
+      <span class="stepper"><button data-set="${lado}:-" ${v === 0 ? "disabled" : ""} aria-label="Quitar un set a ${esc(nombre)}">${MENOS}</button><i></i><button data-set="${lado}:+" ${v === 3 ? "disabled" : ""} aria-label="Sumar un set a ${esc(nombre)}">${MAS}</button></span>
+    </div>`;
+  $("#hoja").innerHTML = `
+    <div class="asa" aria-hidden="true"></div>
+    <div class="hoja-nav" id="hoja-nav">
+      <div><button class="boton-nav cristal" data-accion="hoja-cancelar">Cancelar</button></div>
+      <div class="t">Anotar resultado</div>
+      <div><button class="boton-nav cristal fuerte" data-accion="guardar" ${listo ? "" : "disabled"}>Registrar</button></div>
+    </div>
+    <div class="hoja-cuerpo">
+      <p class="hoja-ctx">${esc(p.ctx)} · ${esc(p.cuando)}</p>
+      ${grupo(fila("a", "Iván Roble", a) + fila("b", p.rival, b))}
+      <p class="resumen ${tono}">${esc(msg)}</p>
+      <div style="height:18px"></div>
+      ${grupo(celda({ titulo:"Llevar el marcador en vivo", sub:"Los puntos de cada set se anotan solos", derecha:CHEV, accion:"hoja-marcador" }))}
+      <p class="pie">Los puntos de cada set son opcionales. ${esc(primero(p.rival))} recibe un aviso para confirmar.</p>
+    </div>`;
+}
+/* La hoja se cierra arrastrándola hacia abajo desde la barra de arriba. */
+let tirando = null;
+$("#hoja").addEventListener("pointerdown", (e) => {
+  if (!e.target.closest(".hoja-nav, .asa") || e.target.closest("button")) return;
+  tirando = { y0:e.clientY, t0:performance.now(), id:e.pointerId };
+  $("#hoja").classList.add("arrastrando");
+});
+addEventListener("pointermove", (e) => {
+  if (!tirando || e.pointerId !== tirando.id) return;
+  const dy = Math.max(0, e.clientY - tirando.y0);
+  $("#hoja").style.transform = `translateY(${dy}px)`;
+});
+addEventListener("pointerup", (e) => {
+  if (!tirando || e.pointerId !== tirando.id) return;
+  const dy = Math.max(0, e.clientY - tirando.y0);
+  const v = dy / Math.max(1, performance.now() - tirando.t0);
+  tirando = null;
+  const h = $("#hoja");
+  h.classList.remove("arrastrando");
+  if (dy > 130 || v > 0.6) cerrarHoja();
+  else h.style.transform = "";
+});
+
+/* ---------- hoja de acciones ---------- */
+function abrirAcciones(){
+  $("#acciones").innerHTML = `
+    <div class="acc-grupo"><p class="acc-titulo"><b>¿El resultado no fue así?</b>Le avisamos al coordinador y el partido no suma hasta que lo resuelva.</p>
+      <button class="acc-boton destructivo" data-accion="disputar-ok">Disputar el resultado</button></div>
+    <div class="acc-grupo"><button class="acc-boton cancelar" data-accion="acciones-cancelar">Cancelar</button></div>`;
+  $("#velo").classList.add("ver");
+  $("#acciones").classList.add("ver");
+}
+function cerrarAcciones(despues){
+  $("#acciones").classList.remove("ver");
+  $("#velo").classList.remove("ver");
+  if (despues) setTimeout(despues, reducir() ? 0 : 260);
+}
+
+/* ---------- aviso ---------- */
+let tiempoAviso;
+function aviso(txt){
+  $("#aviso-txt").textContent = txt;
+  $("#aviso").classList.add("ver");
+  clearTimeout(tiempoAviso);
+  tiempoAviso = setTimeout(() => $("#aviso").classList.remove("ver"), 2600);
+}
+
+/* ---------- marcador ---------- */
+function abrirMarcador(rival, contexto){
+  if (!estado.m || estado.m.rival !== rival) estado.m = { rival, a:0, b:0, sa:0, sb:0, puntos:0, pasos:[] };
+  $("#m-nombre-b").textContent = rival;
+  $("#m-contexto").textContent = contexto;
+  $("#marcador").classList.add("ver");
+  pintarMarcador();
+}
+const cerrarMarcador = (despues) => { $("#marcador").classList.remove("ver"); if (despues) setTimeout(despues, reducir() ? 0 : 420); };
+const pips = (n, nuevo) => [0,1,2].map((i) => `<i class="${i < n ? "on" : ""}${nuevo && i === n - 1 ? " nuevo" : ""}"></i>`).join("");
+function pintarMarcador(ultimo, setNuevo){
+  const m = estado.m;
+  $("#m-pts-a").textContent = m.a;
+  $("#m-pts-b").textContent = m.b;
+  $("#m-pips-a").innerHTML = pips(m.sa, setNuevo === "a");
+  $("#m-pips-b").innerHTML = pips(m.sb, setNuevo === "b");
+  const fin = m.sa === 3 || m.sb === 3;
+  $("#m-sets").innerHTML = `${m.sa}-${m.sb}<small>${fin ? "partido terminado" : Math.floor(m.puntos / 2) % 2 === 0 ? "saca Iván" : "saca " + esc(primero(m.rival))}</small>`;
+  $("#m-deshacer").disabled = m.pasos.length === 0;
+  $("#m-terminar").textContent = fin ? "Registrar el resultado" : "Terminar";
+  $("#m-b").classList.toggle("girada", estado.girado);
+  if (ultimo) { const el = $("#m-pts-" + ultimo); el.classList.remove("pop"); el.offsetWidth; el.classList.add("pop"); }
+}
+function sumar(lado, ev){
+  const m = estado.m;
+  if (m.sa === 3 || m.sb === 3) return;
+  const mitad = $("#m-" + lado), r = mitad.getBoundingClientRect();
+  if (ev && ev.clientX) {
+    let x = ev.clientX - r.left, y = ev.clientY - r.top;
+    if (lado === "b" && estado.girado) { x = r.width - x; y = r.height - y; }
+    mitad.style.setProperty("--x", x + "px"); mitad.style.setProperty("--y", y + "px");
+  }
+  mitad.classList.add("toque");
+  requestAnimationFrame(() => requestAnimationFrame(() => mitad.classList.remove("toque")));
+  m.pasos.push(JSON.stringify({ a:m.a, b:m.b, sa:m.sa, sb:m.sb, puntos:m.puntos }));
+  if (lado === "a") m.a++; else m.b++;
+  m.puntos++;
+  let setNuevo = null;
+  if (Math.max(m.a, m.b) >= 11 && Math.abs(m.a - m.b) >= 2) {
+    if (m.a > m.b) { m.sa++; setNuevo = "a"; } else { m.sb++; setNuevo = "b"; }
+    m.a = 0; m.b = 0; m.puntos = 0;
+  }
+  pintarMarcador(lado, setNuevo);
+}
+$("#m-a").addEventListener("click", (e) => sumar("a", e));
+$("#m-b").addEventListener("click", (e) => sumar("b", e));
+$("#m-deshacer").addEventListener("click", () => { const m = estado.m, prev = m.pasos.pop(); if (prev) { Object.assign(m, JSON.parse(prev)); pintarMarcador(); } });
+$("#m-girar").addEventListener("click", () => { estado.girado = !estado.girado; pintarMarcador(); });
+$("#m-cerrar").addEventListener("click", () => cerrarMarcador());
+$("#m-terminar").addEventListener("click", () => {
+  const m = estado.m;
+  cerrarMarcador(() => {
+    if (m && m.sa + m.sb > 0) abrirHoja(PARTIDOS.jugar.find((p) => p.rival === m.rival) || PARTIDOS.jugar[0], { a:m.sa, b:m.sb });
+  });
+});
+
+/* ---------- toques ---------- */
+const marcarRiel = (sel, el) => document.querySelectorAll(sel + " button").forEach((b) => b.setAttribute("aria-current", String(b === el)));
+document.addEventListener("click", (e) => {
+  if (estado.ignorarClick) { e.preventDefault(); e.stopPropagation(); }
+}, true);
+document.addEventListener("click", (e) => {
+  const dd = e.target.closest("#datos button");
+  if (dd) { estado.datos = dd.dataset.datos; marcarRiel("#datos", dd); return irA("tabla", ["tabla"]); }
+  const tg = e.target.closest("#torneos button");
+  if (tg) {
+    estado.hayTorneo = tg.dataset.torneoActivo === "si"; marcarRiel("#torneos", tg);
+    if (!estado.hayTorneo && pilaActual().includes("torneo")) return irA("tabla", ["tabla"]);
+    return refrescar();
+  }
+  const rl = e.target.closest("#roles button");
+  if (rl) {
+    estado.rol = rl.dataset.rol; marcarRiel("#roles", rl);
+    if (estado.rol === "coordinador") return irA("panel", ["panel"]);
+    if (estado.tab === "panel") return irA("tabla", ["tabla"]);
+    return pintarTabs();
+  }
+  const at = e.target.closest("#atajos button");
+  if (at) {
+    const v = at.dataset.ir;
+    if (v === "tabla") return irA("tabla", ["tabla"]);
+    if (v === "partidos") return irA("partidos", ["partidos"]);
+    if (v === "perfil") return irA("perfil", ["perfil"]);
+    if (v === "torneo") { estado.hayTorneo = true; marcarRiel("#torneos", $('#torneos [data-torneo-activo="si"]')); return irA("tabla", ["tabla", "torneo"]); }
+    if (v === "confirmar") { estado.confirmado = false; return irA("partidos", ["partidos", "detalle:p1"]); }
+    if (v === "anotar") return abrirHoja(PARTIDOS.jugar[0]);
+    if (v === "marcador") return abrirMarcador("Kevin Coj", "Copa UVG · semifinal");
+    if (v === "ingresar") { estado.fuera = true; return pintarTodo(true); }
+  }
+  const tb = e.target.closest("#tabbar button");
+  if (tb) return cambiarTab(tb.dataset.tab);
+  if (e.target.closest("#velo")) {
+    if ($("#acciones").classList.contains("ver")) return cerrarAcciones();
+    return cerrarHoja();
+  }
+
+  const dv = e.target.closest("[data-div]");
+  if (dv) { if (dv.dataset.div !== estado.division) { estado.division = dv.dataset.div; estado.animFilas = true; refrescar(); } return; }
+  const vt = e.target.closest("[data-torneo]");
+  if (vt) { if (vt.dataset.torneo !== estado.vistaTorneo) { estado.vistaTorneo = vt.dataset.torneo; estado.animFilas = true; refrescar(); } return; }
+  const st = e.target.closest("[data-set]");
+  if (st) {
+    if (st.disabled) return;
+    const [lado, signo] = st.dataset.set.split(":");
+    estado.sets[lado] = Math.max(0, Math.min(3, estado.sets[lado] + (signo === "+" ? 1 : -1)));
+    return pintarHoja(lado);
+  }
+
+  const acc = e.target.closest("[data-accion]");
+  if (!acc || acc.disabled) return;
+  const [verbo, arg] = partir(acc.dataset.accion);
+  if (verbo === "atras") return pop();
+  if (verbo === "abrir") return push("detalle:" + arg);
+  if (verbo === "torneo") return push("torneo");
+  if (verbo === "pestana") return cambiarTab(arg);
+  if (verbo === "pendiente") return push("pendiente:" + arg);
+  if (verbo === "confirmar") { estado.confirmado = true; pop(); return aviso("Confirmado. La tabla ya lo cuenta."); }
+  if (verbo === "disputar") return abrirAcciones();
+  if (verbo === "acciones-cancelar") return cerrarAcciones();
+  if (verbo === "disputar-ok") return cerrarAcciones(() => { estado.confirmado = true; pop(); aviso("Le avisamos al coordinador."); });
+  if (verbo === "anotar") return abrirHoja(PARTIDOS.jugar.find((p) => p.id === arg) || PARTIDOS.jugar[0]);
+  if (verbo === "marcador") { const p = PARTIDOS.jugar.find((x) => x.id === arg) || PARTIDOS.jugar[0]; return abrirMarcador(p.rival, p.ctx); }
+  if (verbo === "hoja-cancelar") return cerrarHoja();
+  if (verbo === "hoja-marcador") { const p = estado.hojaPartido || PARTIDOS.jugar[0]; return cerrarHoja(() => abrirMarcador(p.rival, p.ctx)); }
+  if (verbo === "guardar") {
+    const rival = primero((estado.hojaPartido || PARTIDOS.jugar[0]).rival);
+    return cerrarHoja(() => {
+      if (!estado.fuera && cima()?.dataset.id.startsWith("detalle:")) pop();
+      aviso(`Registrado. ${rival} lo tiene que confirmar.`);
+    });
+  }
+  if (verbo === "reintentar") { estado.datos = "normal"; marcarRiel("#datos", $('#datos [data-datos="normal"]')); estado.animFilas = true; return refrescar(); }
+  if (verbo === "entrar") { estado.fuera = false; estado.tab = "tabla"; estado.animFilas = true; return pintarTodo(true); }
+  if (verbo === "salir") { estado.fuera = true; return pintarTodo(true); }
+});
+addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if ($("#acciones").classList.contains("ver")) return cerrarAcciones();
+  if ($("#hoja").classList.contains("ver")) return cerrarHoja();
+  if ($("#marcador").classList.contains("ver")) return cerrarMarcador();
+});
+
+pintarTodo();
+</script>

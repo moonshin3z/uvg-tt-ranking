@@ -11,19 +11,13 @@ import {
 import { rankingPorId } from "@/lib/ranking/consultas";
 import { createClient } from "@/lib/supabase/server";
 import { textoAutoconfirmacion } from "@/lib/fechas";
-import { Aviso, Pila, TarjetaMarcador } from "@/components/fila";
+import { Aviso, Heroe, Nota, Pila, TarjetaMarcador, primerNombre } from "@/components/fila";
 import { Tope } from "@/components/tope";
-import { BotonesConfirmar, FormularioResultado } from "../formularios";
+import { AnotarResultado, BotonDisputar, BotonesConfirmar } from "../formularios";
 import { abrirMarcador } from "../acciones";
-import { Button } from "@/components/ui/button";
 import { datos } from "@/lib/supabase/errores";
 
 export const metadata: Metadata = { title: "Partido" };
-
-/** `11-7 · 9-11 · 8-11` */
-function textoSets(puntos: { puntos_a: number; puntos_b: number }[], soyA: boolean): string {
-  return puntos.map((s) => (soyA ? `${s.puntos_a}-${s.puntos_b}` : `${s.puntos_b}-${s.puntos_a}`)).join(" · ");
-}
 
 const ETIQUETA_EVENTO: Record<string, string> = {
   registro: "Registró el resultado",
@@ -60,26 +54,51 @@ function detalleEvento(evento: EventoPartido): string | null {
   return partes.length > 0 ? partes.join(" · ") : null;
 }
 
+const hora = (iso: string) =>
+  new Intl.DateTimeFormat("es-GT", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Guatemala",
+  }).format(new Date(iso));
+
+/** "ayer a las 4:40 p.m.": cuándo lo registró el rival. */
+function cuandoRegistro(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const dia = (x: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guatemala" }).format(x);
+  const a = new Intl.DateTimeFormat("es-GT", { timeStyle: "short", timeZone: "America/Guatemala" }).format(d);
+  const ahora = new Date();
+  if (dia(d) === dia(ahora)) return `hoy a las ${a}`;
+  if (dia(d) === dia(new Date(ahora.getTime() - 86_400_000))) return `ayer a las ${a}`;
+  return hora(iso);
+}
+
+/**
+ * La bitácora del partido: un bloque que se despliega con todo lo que le
+ * pasó, quién y cuándo.
+ */
 function BitacoraPartido({ eventos }: { eventos: EventoPartido[] }) {
+  if (eventos.length === 0) return null;
   return (
-    <details className="border-t border-linea-suave px-4 py-4">
-      <summary className="cursor-pointer text-sm font-medium">Bitácora del partido ({eventos.length})</summary>
-      <ol className="mt-4 grid gap-3 border-l border-linea-suave pl-4">
+    <details className="grupo mt-[22px]">
+      <summary className="celda cursor-pointer list-none">
+        <span className="medio">
+          <span className="t-celda">Bitácora del partido</span>
+        </span>
+        <span className="derecha">{eventos.length}</span>
+      </summary>
+      <ol className="grid gap-3 px-4 pt-1 pb-4">
         {eventos.map((evento) => {
           const detalle = detalleEvento(evento);
           return (
-            <li key={evento.id} className="grid gap-0.5 text-sm">
-              <p className="font-medium">{ETIQUETA_EVENTO[evento.accion] ?? evento.accion}</p>
+            <li key={evento.id} className="grid gap-0.5 border-l-2 border-linea-suave pl-3 text-[15px]">
+              <p className="font-semibold">{ETIQUETA_EVENTO[evento.accion] ?? evento.accion}</p>
               <p className="text-muted-foreground">
                 {evento.actor ? `${evento.actor.nombre} (${evento.actor.carnet})` : "Sistema"}
               </p>
               {detalle ? <p className="text-muted-foreground">{detalle}</p> : null}
-              <time dateTime={evento.creadoEn} className="text-xs text-faint">
-                {new Intl.DateTimeFormat("es-GT", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                  timeZone: "America/Guatemala",
-                }).format(new Date(evento.creadoEn))}
+              <time dateTime={evento.creadoEn} className="text-[13px] text-muted-foreground">
+                {hora(evento.creadoEn)}
               </time>
             </li>
           );
@@ -124,13 +143,21 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
   const misSets = soyA ? p.sets_a : p.sets_b;
   const susSets = soyA ? p.sets_b : p.sets_a;
   const contexto = p.division
-    ? `División ${p.division.tipo}${p.tipo === "desempate" ? " · desempate" : ""}`
+    ? `División ${p.division.tipo === "mayor" ? "Mayor" : "Menor"}${p.tipo === "desempate" ? " · desempate" : ""}`
     : `${p.torneo?.nombre ?? "Torneo"} · ${p.tipo === "grupo" ? "fase de grupos" : "llave"}`;
+  const sets = puntos.map((s) => ({
+    mios: soyA ? s.puntos_a : s.puntos_b,
+    suyos: soyA ? s.puntos_b : s.puntos_a,
+  }));
+  const tarjeta =
+    misSets != null && susSets != null ? <TarjetaMarcador marcador={`${misSets}-${susSets}`} sets={sets} /> : null;
 
   // Me toca responder: lo registró el otro y todavía no está cerrado.
   const meTocaResponder = juego && p.estado === "jugado" && p.registrado_por !== yo;
   const puedeRegistrar =
     p.estado === "pendiente" || (p.estado === "jugado" && (p.registrado_por === yo || esCoordinador));
+  const vence = textoAutoconfirmacion(p.registrado_en, horasAutoconfirmacion ?? null);
+  const nombreRival = primerNombre(rival.nombre);
 
   return (
     <>
@@ -139,105 +166,102 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
         sub={contexto}
         atras={volver as Route}
       />
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col bg-background pb-8">
-        <div className="px-5 pt-[22px] pb-7">
-          {cancelado ? (
-            <>
-              <Aviso>{p.torneo ? "Este torneo está cancelado." : "Este ranking está cancelado."}</Aviso>
-              <p className="mt-3 text-sm text-muted-foreground">Este partido ya no admite cambios.</p>
-              {misSets != null && susSets != null ? (
-                <TarjetaMarcador
-                  marcador={`${misSets} - ${susSets}`}
-                  sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
-                />
-              ) : null}
-            </>
-          ) : meTocaResponder ? (
-            <>
-              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
-                {rival.nombre.split(" ")[0]} dice que te{" "}
-                {misSets != null && susSets != null && misSets > susSets ? "perdió" : "ganó"}
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-8">
+        {cancelado ? (
+          <>
+            <Heroe
+              nombre={rival.nombre}
+              titulo={`vs. ${rival.nombre}`}
+              sub={p.torneo ? "Este torneo está cancelado." : "Este ranking está cancelado."}
+            />
+            {tarjeta ?? <div className="h-[22px]" />}
+            <Aviso>Este partido ya no admite cambios.</Aviso>
+          </>
+        ) : meTocaResponder ? (
+          <>
+            <Heroe
+              nombre={rival.nombre}
+              titulo={`${nombreRival} dice que te ${misSets != null && susSets != null && misSets > susSets ? "perdió" : "ganó"}`}
+              sub={`${contexto}${cuandoRegistro(p.registrado_en) ? ` · lo registró ${cuandoRegistro(p.registrado_en)}` : ""}`}
+            />
+            <TarjetaMarcador marcador={`${misSets ?? 0}-${susSets ?? 0}`} sets={sets} />
+            <Pila>
+              <BotonesConfirmar partidoId={p.id} />
+            </Pila>
+            {vence ? <Aviso>Si no respondés, {vence}.</Aviso> : null}
+          </>
+        ) : puedeRegistrar ? (
+          <>
+            <Heroe
+              nombre={rival.nombre}
+              titulo={juego ? `vs. ${rival.nombre}` : `${p.a.nombre} vs. ${p.b.nombre}`}
+              sub={`${contexto} · ${p.estado === "jugado" ? "esperando que lo confirme" : `al mejor de ${setsParaGanar * 2 - 1}`}`}
+            />
+            {p.estado === "jugado" ? tarjeta : null}
+            {marcador === "no" ? (
+              <p role="alert" className="alerta">
+                No se pudo abrir el marcador. Anotá el resultado a mano.
               </p>
-              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
-                {contexto} · lo registró {rival.nombre.split(" ")[0]}
-              </p>
-
-              <TarjetaMarcador
-                marcador={`${misSets ?? 0} - ${susSets ?? 0}`}
-                sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
+            ) : null}
+            <Pila className="mt-[26px]">
+              <AnotarResultado
+                partidoId={p.id}
+                yo={juego ? { id: propio.id, nombre: propio.nombre } : { id: p.a.id, nombre: p.a.nombre }}
+                rival={{ id: rival.id, nombre: rival.nombre }}
+                soyA={soyA}
+                setsA={p.sets_a}
+                setsB={p.sets_b}
+                puntos={puntos}
+                setsParaGanar={setsParaGanar}
+                contexto={contexto}
+                marcador={abrirMarcador}
+                corregir={p.estado === "jugado"}
               />
-
-              <Pila>
-                <BotonesConfirmar partidoId={p.id} />
-              </Pila>
-
-              {textoAutoconfirmacion(p.registrado_en, horasAutoconfirmacion ?? null) ? (
-                <Aviso>
-                  Si no respondés, {textoAutoconfirmacion(p.registrado_en, horasAutoconfirmacion ?? null)}.
-                </Aviso>
-              ) : null}
-            </>
-          ) : puedeRegistrar ? (
-            <>
-              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">
-                {juego ? `vs. ${rival.nombre}` : `${p.a.nombre} vs. ${p.b.nombre}`}
-              </p>
-              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
-                {contexto} · {p.estado === "jugado" ? "corregir el resultado" : "todavía sin jugar"}
-              </p>
-              {marcador === "no" ? (
-                <p role="alert" className="mt-4 rounded-md bg-malo-suave px-3.5 py-3 text-[14px] text-malo-hondo">
-                  No se pudo abrir el marcador. Anotá el resultado a mano acá abajo.
-                </p>
-              ) : null}
-
-              {/* El camino largo del prototipo: llevar el marcador en vivo y que
-                el resultado se registre solo al terminar. */}
-              <form action={abrirMarcador} className="mt-5">
+              {/* El camino largo del prototipo: llevar el marcador en vivo y
+                  que el resultado se registre solo al terminar. */}
+              <form action={abrirMarcador}>
                 <input type="hidden" name="partido_id" value={p.id} />
-                <Button type="submit" variant="outline" size="lg" className="w-full">
+                <button type="submit" className="btn gris bloque">
                   Llevar el marcador en vivo
-                </Button>
+                </button>
               </form>
-
-              <div className="mt-3">
-                <FormularioResultado
-                  partidoId={p.id}
-                  yo={juego ? { id: propio.id, nombre: propio.nombre } : { id: p.a.id, nombre: p.a.nombre }}
-                  rival={{ id: rival.id, nombre: rival.nombre }}
-                  soyA={soyA}
-                  setsA={p.sets_a}
-                  setsB={p.sets_b}
-                  puntos={puntos}
-                  setsParaGanar={setsParaGanar}
-                />
-              </div>
-              <Aviso>Cualquiera de los dos puede registrarlo. El otro lo confirma.</Aviso>
-            </>
-          ) : (
-            /* Cerrado, en disputa o anulado: antes esta pantalla te devolvía a la
-             lista sin decir nada. Ahora muestra lo que pasó. */
-            <>
-              <p className="text-[21px] font-semibold tracking-[-0.025em] text-balance">vs. {rival.nombre}</p>
-              <p className="mt-1 text-[13.5px] text-pretty text-muted-foreground">
-                {contexto} ·{" "}
-                {p.estado === "disputado"
-                  ? "en disputa, lo va a resolver el coordinador"
+            </Pila>
+            <Aviso>
+              {p.estado === "jugado" && vence
+                ? `${nombreRival} todavía no lo confirmó; ${vence}.`
+                : "Cualquiera de los dos puede registrarlo. El otro lo confirma."}
+            </Aviso>
+          </>
+        ) : (
+          /* Cerrado, en disputa o anulado: muestra lo que pasó. */
+          <>
+            <Heroe
+              nombre={rival.nombre}
+              titulo={`vs. ${rival.nombre}`}
+              sub={`${contexto} · ${
+                p.estado === "disputado"
+                  ? "en disputa"
                   : p.estado === "anulado"
                     ? "anulado"
-                    : "resultado confirmado"}
-              </p>
-              {p.estado !== "anulado" && misSets != null && susSets != null ? (
-                <TarjetaMarcador
-                  marcador={`${misSets} - ${susSets}`}
-                  sets={puntos.length > 0 ? textoSets(puntos, soyA) : undefined}
-                />
-              ) : null}
-              {p.disputa_motivo ? <Aviso>Motivo de la disputa: {p.disputa_motivo}</Aviso> : null}
-              {p.resolucion ? <Aviso>Resolución del coordinador: {p.resolucion}</Aviso> : null}
-            </>
-          )}
-        </div>
+                    : p.estado === "resuelto"
+                      ? "resuelto por el coordinador"
+                      : "resultado confirmado"
+              }`}
+            />
+            {p.estado !== "anulado" ? (tarjeta ?? <div className="h-[22px]" />) : <div className="h-[22px]" />}
+            {p.disputa_motivo ? <Nota>Motivo de la disputa: {p.disputa_motivo}</Nota> : null}
+            {p.resolucion ? <Nota>Resolución del coordinador: {p.resolucion}</Nota> : null}
+            {p.estado === "disputado" ? <Aviso>El coordinador lo va a resolver.</Aviso> : null}
+            {p.estado === "confirmado" && juego ? (
+              <>
+                <Pila className="mt-2">
+                  <BotonDisputar partidoId={p.id} />
+                </Pila>
+                <Aviso>Si el resultado quedó mal, avisale al coordinador.</Aviso>
+              </>
+            ) : null}
+          </>
+        )}
         <BitacoraPartido eventos={eventos} />
       </main>
     </>

@@ -5,17 +5,18 @@ import { datos } from "@/lib/supabase/errores";
 import { calendarioDeRanking, rankingVigente } from "@/lib/ranking/consultas";
 import { torneoEnCurso } from "@/lib/torneos/consultas";
 import { Tope } from "@/components/tope";
-import { Dato, Fila, Flecha, Lista, Nota, PastillaChica, Rotulo } from "@/components/fila";
+import { Fila, Flecha, Lista, Pastilla, Rotulo } from "@/components/fila";
+import { GLIFO } from "@/components/iconos";
+import { formatearFecha } from "@/lib/fechas";
 
 export const metadata: Metadata = { title: "Panel" };
 
-function fechaLarga(iso: string) {
-  return new Intl.DateTimeFormat("es-GT", {
-    day: "numeric",
-    month: "long",
-    timeZone: "America/Guatemala",
-  }).format(new Date(`${iso}T12:00:00`));
-}
+const ESTADO: Record<string, string> = {
+  abierto: "En juego",
+  fase_regular_cerrada: "Fase regular cerrada",
+  en_desempates: "En desempates",
+  cerrado: "Cerrado",
+};
 
 /** "hace 2 días", para que se vea cuánto lleva esperando una disputa. */
 function desdeCuando(iso: string | null) {
@@ -42,136 +43,137 @@ export default async function Panel() {
   const disputados = partidos.filter((p) => p.estado === "disputado");
   const sinConfirmar = partidos.filter((p) => p.estado === "jugado");
   const cerrados = partidos.filter((p) => p.estado === "confirmado" || p.estado === "resuelto").length;
-  const porJugar = partidos.filter((p) => p.estado === "pendiente").length;
 
   const inscritos = new Set(partidos.flatMap((p) => [p.a.carnet, p.b.carnet])).size;
   const activos = usuarios.filter((u) => u.activo).length;
   const bajas = usuarios.length - activos;
 
+  // Los anulados no se juegan: no cuentan ni como hechos ni como faltantes.
+  const total = partidos.filter((p) => p.estado !== "anulado").length;
+  const faltan = total - cerrados;
+
   return (
-    <>
-      <Tope titulo="Panel" sub="Coordinación del club" />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col bg-background pb-8">
-        <Nota>
-          {ranking
-            ? `${ranking.nombre} en juego. ${
-                porJugar === 0 ? "No falta ningún partido" : `Faltan ${porJugar} partidos`
-              }${
-                disputados.length > 0
-                  ? ` y hay ${disputados.length} ${disputados.length === 1 ? "resultado" : "resultados"} en disputa`
-                  : sinConfirmar.length > 0
-                    ? ` y hay ${sinConfirmar.length} sin confirmar`
-                    : ""
-              }.`
-            : "No hay ningún ranking en juego. Armá uno para que el club empiece."}
-        </Nota>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
+      <Tope
+        titulo="Panel"
+        sub={ranking ? `${ranking.nombre} · ${new Date(ranking.creado_en).getFullYear()}` : "Coordinación del club"}
+      />
 
-        {disputados.length > 0 ? (
-          <>
-            <Rotulo urgente>Necesita que decidas</Rotulo>
-            <Lista>
-              {disputados.map((p) => (
-                <Fila
-                  key={p.id}
-                  ini="!"
-                  nombre={`${p.a.nombre} vs. ${p.b.nombre}`}
-                  sub={`En disputa ${desdeCuando(p.fecha)}`}
-                  href={"/admin/partidos" as Route}
-                  derecha={<PastillaChica>Resolver</PastillaChica>}
-                />
-              ))}
-            </Lista>
-          </>
-        ) : null}
+      {ranking ? (
+        <div className="grupo estado-ranking">
+          <div className="er-top">
+            <div>
+              <span className="er-n">{cerrados}</span>
+              <span className="er-de"> de {total} partidos</span>
+            </div>
+            <span className="capsula">{ESTADO[ranking.estado] ?? ranking.estado}</span>
+          </div>
+          <div className="barra" aria-hidden>
+            <i style={{ width: `${total ? Math.round((cerrados / total) * 100) : 0}%` }} />
+          </div>
+          <p className="er-pie">
+            {faltan === 0 ? "No falta ninguno" : `Faltan ${faltan}`} · cierra el{" "}
+            {formatearFecha(ranking.fecha_limite)} · {inscritos} inscritos
+          </p>
+        </div>
+      ) : null}
 
+      {disputados.length > 0 ? (
+        <>
+          <Rotulo cuenta={disputados.length}>Necesita que decidas</Rotulo>
+          <Lista>
+            {disputados.map((p) => (
+              <Fila
+                key={p.id}
+                icono={{ glifo: GLIFO.alerta, color: "var(--rojo)" }}
+                nombre={`${p.a.nombre} vs. ${p.b.nombre}`}
+                sub={`En disputa ${desdeCuando(p.fecha)}`}
+                href={"/admin/partidos" as Route}
+                derecha={<Pastilla>Resolver</Pastilla>}
+              />
+            ))}
+          </Lista>
+        </>
+      ) : null}
+
+      <Rotulo>Ranking</Rotulo>
+      <Lista>
         {ranking ? (
           <>
-            <Rotulo>{ranking.nombre}</Rotulo>
-            <div className="tarjeta">
-              <Dato valor={inscritos}>Inscritos</Dato>
-              <Dato valor={`${cerrados} de ${partidos.length}`}>Partidos jugados</Dato>
-              <Dato valor={fechaLarga(ranking.fecha_limite)}>Cierra</Dato>
-            </div>
-            <Lista>
-              <Fila
-                nombre="Llevar el ranking"
-                sub="Divisiones, calendario, apertura y cierre"
-                href={"/admin/ranking" as Route}
-                derecha={<Flecha />}
-                sinInicial
-              />
-              <Fila
-                nombre="Partidos"
-                sub={
-                  sinConfirmar.length > 0
-                    ? `${sinConfirmar.length} sin confirmar · anular o corregir`
-                    : "Anular, corregir o resolver"
-                }
-                href={"/admin/partidos" as Route}
-                derecha={<Flecha />}
-                sinInicial
-              />
-            </Lista>
-          </>
-        ) : (
-          <>
-            <Rotulo>Ranking</Rotulo>
-            <Lista>
-              <Fila
-                nombre="Armar un ranking"
-                sub="Semestre, divisiones y calendario"
-                href={"/admin/ranking" as Route}
-                derecha={<Flecha />}
-                ini="+"
-              />
-            </Lista>
-          </>
-        )}
-
-        <Rotulo>Torneos</Rotulo>
-        <Lista>
-          {torneo ? (
             <Fila
-              nombre={torneo.torneo.nombre}
-              sub={`En juego · ${torneo.porJugar === 0 ? "sin partidos por jugar" : `${torneo.porJugar} por jugar`}`}
-              href={`/torneos/${torneo.torneo.id}` as Route}
+              icono={{ glifo: GLIFO.calendario, color: "var(--uvg)" }}
+              nombre="Llevar el ranking"
+              sub="Divisiones, calendario, apertura y cierre"
+              href={"/admin/ranking" as Route}
               derecha={<Flecha />}
             />
-          ) : null}
+            <Fila
+              icono={{ glifo: GLIFO.paleta, color: "var(--azul)" }}
+              nombre="Partidos"
+              sub={
+                sinConfirmar.length > 0
+                  ? `${sinConfirmar.length} sin confirmar · anular o corregir`
+                  : "Anular, corregir o resolver"
+              }
+              href={"/admin/partidos" as Route}
+              derecha={<Flecha />}
+            />
+          </>
+        ) : (
           <Fila
-            ini="+"
-            nombre="Crear un torneo"
-            sub="Llave directa o grupos y llave"
-            href={"/admin/torneos" as Route}
+            icono={{ glifo: GLIFO.mas, color: "var(--uvg)" }}
+            nombre="Armar un ranking"
+            sub="Semestre, divisiones y calendario"
+            href={"/admin/ranking" as Route}
             derecha={<Flecha />}
           />
-        </Lista>
+        )}
+      </Lista>
 
-        <Rotulo>Club</Rotulo>
-        <Lista>
+      <Rotulo>Torneos</Rotulo>
+      <Lista>
+        {torneo ? (
           <Fila
-            ini={String(activos)}
-            nombre="Jugadores"
-            sub={`${activos} activos${bajas > 0 ? ` · ${bajas} dados de baja` : ""}`}
-            href={"/admin/jugadores" as Route}
+            icono={{ glifo: GLIFO.trofeo, color: "var(--naranja)" }}
+            nombre={torneo.torneo.nombre}
+            sub={`En juego · ${torneo.porJugar === 0 ? "sin partidos por jugar" : `${torneo.porJugar} por jugar`}`}
+            href={`/torneos/${torneo.torneo.id}` as Route}
             derecha={<Flecha />}
           />
-          <Fila
-            ini="↓"
-            nombre="Exportar a CSV"
-            sub="Tabla y partidos"
-            href={"/admin/exportar" as Route}
-            derecha={<Flecha />}
-          />
-          <Fila
-            ini="◷"
-            nombre="Bitácora de bajas"
-            sub="Rankings y torneos borrados o cancelados"
-            href={"/admin/bajas" as Route}
-            derecha={<Flecha />}
-          />
-        </Lista>
-      </main>
-    </>
+        ) : null}
+        <Fila
+          icono={{ glifo: GLIFO.mas, color: "var(--uvg)" }}
+          nombre="Crear un torneo"
+          sub="Llave directa o grupos y llave"
+          href={"/admin/torneos" as Route}
+          derecha={<Flecha />}
+        />
+      </Lista>
+
+      <Rotulo>Club</Rotulo>
+      <Lista>
+        <Fila
+          icono={{ glifo: GLIFO.personas, color: "var(--azul)" }}
+          nombre="Jugadores"
+          sub={`${activos} activos${bajas > 0 ? ` · ${bajas} dados de baja` : ""}`}
+          href={"/admin/jugadores" as Route}
+          derecha={<Flecha />}
+        />
+        <Fila
+          icono={{ glifo: GLIFO.lista, color: "var(--gris)" }}
+          nombre="Bitácora de bajas"
+          sub="Rankings y torneos borrados o cancelados"
+          href={"/admin/bajas" as Route}
+          derecha={<Flecha />}
+        />
+        <Fila
+          icono={{ glifo: GLIFO.bajar, color: "var(--gris)" }}
+          nombre="Exportar a CSV"
+          sub="Tabla y partidos"
+          href={"/admin/exportar" as Route}
+          derecha={<Flecha />}
+        />
+      </Lista>
+    </main>
   );
 }

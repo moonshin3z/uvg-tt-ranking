@@ -101,7 +101,7 @@ export function FormularioAlta() {
           id="rol"
           name="rol"
           defaultValue="jugador"
-          className="min-h-11 rounded-md border border-input bg-background px-3 text-base"
+          className="min-h-11 rounded-[10px] border-0 bg-relleno px-3 text-base"
         >
           <option value="jugador">Jugador</option>
           <option value="coordinador">Coordinador</option>
@@ -242,7 +242,7 @@ export function BotonRetirar({ id, nombre, rankingId }: { id: string; nombre: st
       <input
         name="motivo"
         placeholder="Motivo (queda registrado)"
-        className="mt-3 min-h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+        className="mt-3 min-h-10 w-full rounded-[10px] border-0 bg-relleno px-3 text-sm"
       />
 
       {resultado.error ? (

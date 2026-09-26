@@ -1,17 +1,24 @@
 import { cn } from "@/lib/utils";
 
-/** Bloque gris animado para los estados de carga. */
+/** Bloque gris con el brillo que corre, para los estados de carga. */
 export function Esqueleto({ className }: { className?: string }) {
-  return <div aria-hidden className={cn("animate-pulse rounded-md bg-muted", className)} />;
+  return <div aria-hidden className={cn("brillo rounded-md", className)} />;
 }
 
+/**
+ * Filas que cargan dentro de un bloque blanco, como en el prototipo: un
+ * círculo y una raya por fila, cada una con el brillo un poco corrido.
+ */
 export function EsqueletoTarjeta({ filas = 3 }: { filas?: number }) {
+  const anchos = [62, 78, 54, 70, 58, 74, 50, 66];
   return (
-    <div className="rounded-xl border p-4 sm:p-6">
-      <Esqueleto className="mb-4 h-5 w-40" />
-      <div className="flex flex-col gap-3">
+    <div className="grupo">
+      <div className="esq" aria-hidden>
         {Array.from({ length: filas }, (_, i) => (
-          <Esqueleto key={i} className="h-4 w-full" />
+          <div key={i}>
+            <b style={{ animationDelay: `${i * 90}ms` }} />
+            <i style={{ width: `${anchos[i % anchos.length]}%`, animationDelay: `${i * 90}ms` }} />
+          </div>
         ))}
       </div>
     </div>
@@ -25,9 +32,19 @@ export function PantallaCargando({ children }: { children: React.ReactNode }) {
       role="status"
       aria-live="polite"
       aria-label="Cargando"
-      className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8"
+      className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 pt-[54px] pb-8"
     >
       {children}
     </main>
+  );
+}
+
+/** El título grande mientras carga. */
+export function EsqueletoTitulo() {
+  return (
+    <div className="grande flex flex-col gap-2.5 pt-1">
+      <Esqueleto className="h-8 w-52 rounded-lg" />
+      <Esqueleto className="h-4 w-40" />
+    </div>
   );
 }

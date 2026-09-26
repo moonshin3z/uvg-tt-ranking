@@ -1,25 +1,18 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * La fila, copiada de `docs/diseno/v4-prototipo.html`.
+ * Las piezas de las pantallas, copiadas del prototipo de iOS
+ * (`docs/diseno/prototipo-ios.html`). Las clases viven en `globals.css` con
+ * los mismos nombres que en el prototipo, para poder compararlos línea por
+ * línea.
  *
- * Es la única forma que tiene un partido en toda la aplicación, venga del
- * ranking o de un torneo. Tres zonas: las iniciales del rival, el nombre con
- * una línea de contexto debajo, y a la derecha el resultado o la acción.
- *
- * Las medidas son las del prototipo: 60px de alto, 11px arriba y abajo,
- * 16px a los lados, 12px entre zonas, círculo de 38px.
- *
- * Dos cosas se apartan del prototipo a propósito, y las dos por decisiones ya
- * cerradas:
- *   · el prototipo usa monoespaciada para el marcador y las iniciales; acá va
- *     Figtree con cifras tabulares, porque el diseño quedó con una sola
- *     familia;
- *   · el verde de un partido ganado es `#0a7d40` y no el institucional
- *     `#0b9e51`, que como texto da 3.11:1 y no llega a AA.
+ * La fila es la de una lista agrupada de Ajustes: a la izquierda las
+ * iniciales en un círculo gris (una persona) o un cuadrito de color con un
+ * glifo (una acción), el título con una línea debajo, y a la derecha el
+ * resultado, una pastilla o la flecha. Las rayas entre filas no llegan al
+ * borde izquierdo: arrancan donde empieza el texto.
  */
 
 /** "Diego Menchú" → "DM". Una sola palabra da sus dos primeras letras. */
@@ -30,65 +23,76 @@ export function iniciales(nombre: string): string {
   return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 }
 
+/** "Diego Menchú" → "Diego". */
+export function primerNombre(nombre: string): string {
+  return nombre.trim().split(/\s+/)[0] ?? nombre;
+}
+
+export type IconoFila = {
+  /** El glifo blanco, o una cifra. */
+  glifo: React.ReactNode;
+  /** El color del cuadrito: `var(--rojo)`, `var(--uvg)`, etc. */
+  color: string;
+};
+
 type Props = {
   nombre: string;
-  /** La línea chica de abajo: la división, cuándo se jugó, de qué torneo es. */
+  /** La línea de abajo: la división, cuándo se jugó, de qué torneo es. */
   sub?: string;
   /** Lo de la derecha: el marcador, una pastilla, la flecha. */
   derecha?: React.ReactNode;
   /** Si la fila entera lleva a algún lado. Sin esto, la fila queda quieta. */
   href?: Route;
-  /**
-   * Qué va dentro del círculo, si no son las iniciales del nombre. El prototipo
-   * lo usa para símbolos y cifras: «!» en lo urgente, «+» en crear, «↓» en
-   * exportar, el número de jugadores en la fila del club.
-   */
-  ini?: string;
-  /**
-   * Sin el círculo de iniciales. En el prototipo el círculo sale solo cuando
-   * la fila es una persona: las de «Cuenta», que son acciones, no lo llevan.
-   */
+  /** Un cuadrito de color en vez de las iniciales: la fila es una acción. */
+  icono?: IconoFila;
+  /** Ni iniciales ni cuadrito: solo el texto. */
   sinInicial?: boolean;
+  /** El título en negrita. */
+  fuerte?: boolean;
   /** Debajo de la fila, dentro del mismo bloque. */
   children?: React.ReactNode;
 };
 
-const FILA =
-  "flex w-full items-center gap-3 px-4 py-[11px] min-h-[62px] text-left bg-card transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] active:bg-uvg-suave";
-
-function Contenido({ nombre, sub, derecha, ini, sinInicial }: Omit<Props, "href" | "children">) {
+function Contenido({ nombre, sub, derecha, icono, sinInicial, fuerte }: Omit<Props, "href" | "children">) {
   return (
     <>
-      {sinInicial ? null : (
-        <span
-          aria-hidden
-          className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-uvg-suave text-[13px] font-semibold text-uvg-profundo"
-        >
-          {ini ?? iniciales(nombre)}
+      {icono ? (
+        <span aria-hidden className="icono" style={{ background: icono.color }}>
+          {icono.glifo}
+        </span>
+      ) : sinInicial ? null : (
+        <span aria-hidden className="av">
+          {iniciales(nombre)}
         </span>
       )}
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15.5px] font-medium tracking-[-0.01em]">{nombre}</span>
-        {sub ? <span className="mt-px block truncate text-[13px] text-muted-foreground">{sub}</span> : null}
+      <span className="medio">
+        <span className={cn("t-celda", fuerte && "fuerte")}>{nombre}</span>
+        {sub ? <span className="s-celda">{sub}</span> : null}
       </span>
-      {derecha ? <span className="flex shrink-0 items-center gap-2">{derecha}</span> : null}
+      {derecha ? <span className="derecha">{derecha}</span> : null}
     </>
   );
 }
 
-export function Fila({ nombre, sub, derecha, href, ini, sinInicial, children }: Props) {
-  const contenido = <Contenido nombre={nombre} sub={sub} derecha={derecha} ini={ini} sinInicial={sinInicial} />;
+function claseFila({ icono, sinInicial }: Pick<Props, "icono" | "sinInicial">) {
+  return icono ? "con-icono" : sinInicial ? undefined : "con-av";
+}
+
+export function Fila({ nombre, sub, derecha, href, icono, sinInicial, fuerte, children }: Props) {
+  const contenido = (
+    <Contenido nombre={nombre} sub={sub} derecha={derecha} icono={icono} sinInicial={sinInicial} fuerte={fuerte} />
+  );
 
   return (
-    <li className={sinInicial ? undefined : "con-ini"}>
+    <li className={claseFila({ icono, sinInicial })}>
       {href ? (
-        <Link href={href} className={FILA}>
+        <Link href={href} className="celda">
           {contenido}
         </Link>
       ) : (
-        <div className={FILA}>{contenido}</div>
+        <div className="celda">{contenido}</div>
       )}
-      {children ? <div className="flex flex-col gap-2 bg-card px-4 pb-3">{children}</div> : null}
+      {children ? <div className="celda-extra">{children}</div> : null}
     </li>
   );
 }
@@ -105,107 +109,145 @@ export function FilaAccion({
   nombre,
   sub,
   derecha,
-  ini,
+  icono,
   sinInicial,
   accion,
-}: Omit<Props, "href" | "children"> & { accion: () => Promise<void> }) {
+  peligro = false,
+}: Omit<Props, "href" | "children" | "fuerte"> & { accion: () => Promise<void>; peligro?: boolean }) {
   return (
-    <li className={sinInicial ? undefined : "con-ini"}>
+    <li className={peligro ? undefined : claseFila({ icono, sinInicial })}>
       <form action={accion}>
-        <button type="submit" className={FILA}>
-          <Contenido nombre={nombre} sub={sub} derecha={derecha} ini={ini} sinInicial={sinInicial} />
+        <button type="submit" className={cn("celda", peligro && "peligro")}>
+          {peligro ? (
+            nombre
+          ) : (
+            <Contenido nombre={nombre} sub={sub} derecha={derecha} icono={icono} sinInicial={sinInicial} />
+          )}
         </button>
       </form>
     </li>
   );
 }
 
-/** El marcador de un partido jugado: `3-1`, en verde si lo ganó quien mira. */
+/** El resultado de un partido jugado: `3-1`, en verde si lo ganó quien mira. */
 export function Marcador({ texto, gano }: { texto: string; gano: boolean }) {
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2.5 py-0.5 text-[15px] font-semibold",
-        gano ? "bg-uvg-suave text-primary" : "bg-linea-suave text-muted-foreground",
-      )}
-    >
-      {texto}
-    </span>
-  );
+  return <span className={cn("res", gano && "gano")}>{texto}</span>;
 }
 
 /** La flecha de una fila que lleva a otra pantalla. */
 export function Flecha() {
-  return <ChevronRight aria-hidden className="size-[18px] text-faint" strokeWidth={2} />;
-}
-
-/** La pastilla de acción a la derecha de una fila. */
-export function Pastilla({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-primary px-3.5 text-[14px] font-semibold text-primary-foreground">
-      {children}
-    </span>
+    <svg
+      className="chev"
+      width="9"
+      height="15"
+      viewBox="0 0 9 15"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M1.5 1.5l6 6-6 6" />
+    </svg>
   );
 }
 
-/** El rótulo de una sección: 11px, mayúsculas, espaciado, gris claro. */
-export function Rotulo({ children, urgente = false }: { children: React.ReactNode; urgente?: boolean }) {
+/** La pastilla de acción a la derecha de una fila: «Revisar», «Resolver». */
+export function Pastilla({ children }: { children: React.ReactNode }) {
+  return <span className="btn chico">{children}</span>;
+}
+
+/** El título de una sección, con la cuenta roja de lo que espera por vos. */
+export function Rotulo({ children, cuenta }: { children: React.ReactNode; cuenta?: number }) {
   return (
-    <h2
-      /* "Rótulos en caja y tono, no en mayúsculas espaciadas", dice el
-         prototipo. 13px, peso 600, gris; en rojo lo que te toca a vos. */
-      className={cn(
-        "px-5 pt-[22px] pb-2 text-[13px] font-semibold",
-        urgente ? "flex items-center gap-2 text-destructive" : "text-muted-foreground",
-      )}
-    >
-      {urgente ? (
-        <span
-          aria-hidden
-          className="size-[7px] animate-[latido_1.8s_ease-in-out_infinite] rounded-full bg-destructive"
-        />
-      ) : null}
+    <h2 className="seccion">
       {children}
+      {cuenta ? <span className="cuenta">{cuenta}</span> : null}
     </h2>
   );
 }
 
-/** Las notas al pie de una pantalla. */
-export function Pie({ children }: { children: React.ReactNode }) {
-  return <p className="px-5 pt-3.5 pb-5 text-[13px] leading-[1.65] text-pretty text-muted-foreground">{children}</p>;
+/** La nota chica debajo de un bloque. */
+export function Pie({ children, centro = false }: { children: React.ReactNode; centro?: boolean }) {
+  return <p className={cn("pie", centro && "centro")}>{children}</p>;
 }
 
-/** El bloque de filas que va debajo de un rótulo. */
+/** El bloque blanco de esquinas redondas que agrupa filas. */
 export function Lista({ children }: { children: React.ReactNode }) {
-  return <ul className="lista tarjeta">{children}</ul>;
+  return <ul className="grupo">{children}</ul>;
 }
 
 /**
- * El bloque grande con el marcador de un partido, en el detalle.
- * `.tarjeta-num` del prototipo.
+ * El marcador grande del detalle de un partido, con los sets en pastillas
+ * debajo: verdes los que ganaste, rojas los que perdiste.
  */
-export function TarjetaMarcador({ marcador, sets }: { marcador: string; sets?: string }) {
+export function TarjetaMarcador({ marcador, sets }: { marcador: string; sets?: { mios: number; suyos: number }[] }) {
   return (
-    <div className="my-5 rounded-[20px] bg-card px-4 py-6 text-center shadow-tarjeta">
-      <div className="text-[52px] leading-none font-bold tracking-[-0.05em]">{marcador}</div>
-      {sets ? <div className="mt-[9px] text-[14px] text-muted-foreground">{sets}</div> : null}
+    <div className="marcador-grande">
+      <div className="n">{marcador}</div>
+      {sets && sets.length > 0 ? (
+        <div className="chips">
+          {sets.map((s, i) => (
+            <span key={i} className={s.mios > s.suyos ? "mio" : "suyo"}>
+              {s.mios}-{s.suyos}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-/** La pila de acciones del detalle: una debajo de otra, a todo el ancho. */
-export function Pila({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col gap-[9px]">{children}</div>;
+/** La pila de botones del detalle: uno debajo del otro, a todo el ancho. */
+export function Pila({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("pila-botones", className)}>{children}</div>;
 }
 
-/** La línea de contexto centrada debajo de la pila de acciones. */
+/** La línea de contexto centrada debajo de la pila de botones. */
 export function Aviso({ children }: { children: React.ReactNode }) {
-  return <p className="mt-4 text-center text-[13.5px] text-pretty text-muted-foreground">{children}</p>;
+  return <p className="pie centro">{children}</p>;
+}
+
+/** La cabecera del detalle de un partido: el rival grande y el contexto. */
+export function Heroe({ nombre, titulo, sub }: { nombre: string; titulo: string; sub?: string }) {
+  return (
+    <div className="heroe">
+      <span aria-hidden className="av">
+        {iniciales(nombre)}
+      </span>
+      <h2>{titulo}</h2>
+      {sub ? <p>{sub}</p> : null}
+    </div>
+  );
+}
+
+/** Una pantalla o una sección vacía: el dibujo, qué pasa y qué hacer. */
+export function Vacio({
+  dibujo,
+  titulo,
+  detalle,
+  children,
+}: {
+  dibujo: React.ReactNode;
+  titulo: string;
+  detalle?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="vacio">
+      {dibujo}
+      <p className="t">{titulo}</p>
+      {detalle ? <p className="d">{detalle}</p> : null}
+      {children ? <div className="acciones-vacio">{children}</div> : null}
+    </div>
+  );
 }
 
 /**
- * La cabecera del perfil: verde profundo, el nombre grande y el puesto en
- * cifra enorme. `.perfil-cab` del prototipo.
+ * La cabecera del perfil: el degradé verde, el nombre y el puesto en cifra
+ * grande. Sube detrás de la barra de arriba, que empieza transparente.
  */
 export function CabeceraPerfil({
   nombre,
@@ -221,30 +263,27 @@ export function CabeceraPerfil({
   detalle?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-b-[30px] bg-[radial-gradient(120%_90%_at_100%_0%,#0d7a42_0%,#06381f_62%)] px-5 pt-6 pb-12 text-white">
-      <p className="text-[26px] font-bold tracking-[-0.035em]">{nombre}</p>
-      <p className="mt-0.5 text-[13.5px] text-white/[0.66]">{bajo}</p>
+    <div className="perfil-cab">
+      <p className="nom">{nombre}</p>
+      <p className="car">{bajo}</p>
       {puesto ? (
-        <div className="mt-[18px] flex items-baseline gap-2.5">
-          <span className="text-[56px] leading-[0.9] font-bold tracking-[-0.05em]">{puesto}</span>
-          {detalle ? <span className="text-[14.5px] text-pretty text-white/[0.78]">{detalle}</span> : null}
+        <div className="puesto">
+          <span className="n">{puesto}</span>
+          {detalle ? <span className="de">{detalle}</span> : null}
         </div>
       ) : null}
     </div>
   );
 }
 
-/** La tira de cuatro cifras debajo de la cabecera del perfil. */
+/** Las cuatro cifras que flotan sobre el borde de la cabecera del perfil. */
 export function Cifras({ datos }: { datos: [string, React.ReactNode][] }) {
   return (
-    <div className="relative mx-3.5 -mt-8 grid grid-cols-4 overflow-hidden rounded-[20px] bg-card shadow-tarjeta">
-      {datos.map(([etiqueta, valor], i) => (
-        <div
-          key={etiqueta}
-          className={cn("px-1 py-[15px] text-center", i < datos.length - 1 && "border-r border-linea-suave")}
-        >
-          <b className="block text-[22px] font-bold tracking-[-0.02em]">{valor}</b>
-          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">{etiqueta}</span>
+    <div className="cifras">
+      {datos.map(([etiqueta, valor]) => (
+        <div key={etiqueta}>
+          <b>{valor}</b>
+          <span>{etiqueta}</span>
         </div>
       ))}
     </div>
@@ -252,37 +291,41 @@ export function Cifras({ datos }: { datos: [string, React.ReactNode][] }) {
 }
 
 /**
- * La franja del torneo en curso, arriba de la tabla. `.franja` del prototipo.
+ * El torneo en curso, arriba de la tabla: la tarjeta oscura con el punto
+ * verde que late.
  *
  * Solo existe mientras hay un torneo. El resto del año no ocupa un pixel: sin
  * torneo no deja hueco ni un mensaje que diga que no hay.
  */
-export function Franja({ nombre, sub, href }: { nombre: string; sub: string; href: Route }) {
+export function Franja({
+  nombre,
+  sub,
+  href,
+  etiqueta = "En vivo",
+}: {
+  nombre: string;
+  sub: string;
+  href: Route;
+  etiqueta?: string;
+}) {
   return (
-    <Link
-      href={href}
-      className="mx-3.5 mt-3 flex min-h-[60px] items-center gap-3 rounded-[20px] bg-[linear-gradient(135deg,#0a6b38,#06381f)] px-3.5 py-3 text-white shadow-[0_12px_26px_-16px_rgba(6,56,31,0.7)] transition-transform duration-200 ease-out active:scale-[0.985]"
-    >
-      <span
-        aria-hidden
-        className="ml-1 size-2.5 shrink-0 animate-[vivo_2s_ease-out_infinite] rounded-full bg-[#7ad14f]"
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold tracking-[-0.01em]">{nombre}</span>
-        <span className="mt-px block text-[12.5px] text-white/70">{sub}</span>
+    <Link href={href} className="vivo">
+      <span aria-hidden className="punto" />
+      <span className="txt">
+        <span className="t1">{nombre}</span>
+        <span className="t2">{sub}</span>
       </span>
-      <ChevronRight aria-hidden className="size-[18px] text-white/60" strokeWidth={2} />
+      <span className="etiqueta">{etiqueta}</span>
     </Link>
   );
 }
 
 /**
- * La franja de tus partidos, arriba de la tabla y de la franja del torneo.
+ * Tus partidos, arriba de la tabla y de la franja del torneo.
  *
  * Es lo que la portada le reclama a quien tiene sesión: un resultado por
- * confirmar, un desempate o los partidos que le quedan. Blanca y no verde
- * oscura para no competir con la del torneo; la cifra en el círculo es lo
- * primero que se lee. Sin nada pendiente no se dibuja.
+ * confirmar, un desempate o los partidos que le quedan. La cifra va en un
+ * cuadrito rojo si vence sola, verde si no. Sin nada pendiente no se dibuja.
  */
 export function FranjaPartidos({
   cifra,
@@ -295,75 +338,48 @@ export function FranjaPartidos({
   titulo: string;
   sub: string;
   href: Route;
-  /** Rojo en vez de verde: un resultado que se confirma solo si no respondés. */
   urgente?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className="mx-3.5 mt-3 flex min-h-[64px] items-center gap-3 rounded-[20px] bg-card px-3.5 py-3 shadow-tarjeta transition-transform duration-200 ease-out active:scale-[0.985]"
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-full text-[16px] font-bold",
-          urgente ? "bg-malo-suave text-destructive" : "bg-uvg-suave text-primary",
-        )}
-      >
-        {cifra}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold tracking-[-0.01em]">{titulo}</span>
-        <span className="mt-px block text-[12.5px] text-pretty text-muted-foreground">{sub}</span>
-      </span>
-      <Flecha />
-    </Link>
+    <div className="grupo franja">
+      <Link href={href} className="celda">
+        <Contenido
+          nombre={titulo}
+          sub={sub}
+          fuerte
+          icono={{ glifo: cifra, color: urgente ? "var(--rojo)" : "var(--uvg)" }}
+          derecha={<Flecha />}
+        />
+      </Link>
+    </div>
   );
 }
 
 /**
- * Las piezas del selector segmentado. La opción elegida la marca una píldora
- * blanca que se desliza de una opción a la otra en vez de saltar: la
- * navegación conserva el mismo elemento, así que la transición corre sola.
+ * El selector de dos opciones de iOS: División Mayor/Menor, Grupos/Cuadro.
+ * La opción elegida la marca un pulgar blanco que se desliza de una opción a
+ * la otra: la navegación conserva el mismo elemento, así que la transición
+ * corre sola.
  */
-export const SEG_PISTA = "relative mx-4 mt-3 mb-3 grid auto-cols-fr grid-flow-col rounded-full bg-[#e3e9e2] p-[3px]";
-export const SEG_PILDORA =
-  "absolute inset-y-[3px] left-[3px] rounded-full bg-card shadow-[0_1px_3px_rgba(6,56,31,0.12),0_4px_10px_-6px_rgba(6,56,31,0.2)] transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
-export const SEG_OPCION =
-  "relative z-10 flex min-h-10 items-center justify-center rounded-full text-[14.5px] transition-[color,transform] duration-300 ease-out active:scale-[0.97]";
-export function pildora(i: number, n: number): React.CSSProperties {
-  return { width: `calc((100% - 6px) / ${n})`, transform: `translateX(${i * 100}%)` };
+export function pulgar(i: number, n: number): React.CSSProperties {
+  return { width: `calc((100% - 4px) / ${n})`, transform: `translateX(${Math.max(0, i) * 100}%)` };
 }
 
-/**
- * El selector de dos opciones: División Mayor/Menor, Grupos/Cuadro.
- * `.seg` del prototipo.
- */
 export function Segmentado({
   opciones,
   actual,
+  etiqueta,
 }: {
   opciones: { href: Route; etiqueta: string; valor: string }[];
   actual: string;
+  etiqueta?: string;
 }) {
-  const i = Math.max(
-    0,
-    opciones.findIndex((o) => o.valor === actual),
-  );
+  const i = opciones.findIndex((o) => o.valor === actual);
   return (
-    <nav className={SEG_PISTA}>
-      <span aria-hidden className={SEG_PILDORA} style={pildora(i, opciones.length)} />
+    <nav aria-label={etiqueta} className="seg">
+      <span aria-hidden className="pulgar" style={pulgar(i, opciones.length)} />
       {opciones.map((o) => (
-        <Link
-          key={o.valor}
-          href={o.href}
-          scroll={false}
-          aria-current={o.valor === actual ? "page" : undefined}
-          className={cn(
-            SEG_OPCION,
-            o.valor === actual ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
-          )}
-        >
+        <Link key={o.valor} href={o.href} scroll={false} aria-current={o.valor === actual ? "page" : undefined}>
           {o.etiqueta}
         </Link>
       ))}
@@ -371,30 +387,25 @@ export function Segmentado({
   );
 }
 
-/** Un dato suelto: el rótulo a la izquierda y la cifra a la derecha. `.dato`. */
+/** Un dato suelto dentro de un bloque: el nombre a la izquierda, la cifra a la derecha. */
 export function Dato({ children, valor }: { children: React.ReactNode; valor: React.ReactNode }) {
   return (
-    <div className="dato flex items-center justify-between gap-3 px-4 py-[14px] text-[15px]">
-      <span className="text-muted-foreground">{children}</span>
-      <b className="font-semibold tabular-nums">{valor}</b>
-    </div>
+    <li className="celda">
+      <span className="medio">
+        <span className="t-celda">{children}</span>
+      </span>
+      <span className="derecha">
+        <span className="tabular">{valor}</span>
+      </span>
+    </li>
   );
 }
 
-/** La franja verde clara de arriba del panel, con el estado en una línea. */
-export function Nota({ children }: { children: React.ReactNode }) {
+/** Un bloque de texto suelto, del ancho de una lista. */
+export function Nota({ children, tono }: { children: React.ReactNode; tono?: "bueno" | "malo" }) {
   return (
-    <p className="mx-3.5 mt-3 rounded-[20px] bg-uvg-suave px-4 py-[15px] text-[14px] text-pretty text-uvg-profundo">
+    <p role={tono ? "status" : undefined} className={cn("alerta", tono === "bueno" && "buena", !tono && "neutra")}>
       {children}
     </p>
-  );
-}
-
-/** La pastilla chica de acción a la derecha de una fila. `.btn.chico`. */
-export function PastillaChica({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-primary px-3.5 text-[14px] font-semibold text-primary-foreground">
-      {children}
-    </span>
   );
 }

@@ -13,7 +13,7 @@ export function Gestion({ titulo, sub, children }: { titulo: string; sub?: strin
   return (
     <>
       <Tope titulo={titulo} sub={sub} atras={"/admin" as Route} />
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">{children}</div>
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 pt-3 pb-8">{children}</main>
     </>
   );
 }

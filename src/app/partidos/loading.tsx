@@ -1,11 +1,11 @@
-import { Esqueleto, EsqueletoTarjeta, PantallaCargando } from "@/components/esqueleto";
+import { EsqueletoTarjeta, EsqueletoTitulo, PantallaCargando } from "@/components/esqueleto";
 
 export default function Cargando() {
   return (
     <PantallaCargando>
-      <Esqueleto className="h-8 w-48" />
+      <EsqueletoTitulo />
       <EsqueletoTarjeta filas={2} />
-      <EsqueletoTarjeta filas={3} />
+      <EsqueletoTarjeta filas={4} />
     </PantallaCargando>
   );
 }

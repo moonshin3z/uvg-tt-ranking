@@ -15,7 +15,7 @@ import {
 } from "./acciones";
 
 const vacio: EstadoTorneo = {};
-const claseSelect = "min-h-11 rounded-md border border-input bg-background px-3 text-base";
+const claseSelect = "min-h-11 rounded-[10px] border-0 bg-relleno px-3 text-base";
 
 function Mensaje({ estado }: { estado: EstadoTorneo }) {
   if (estado.error)

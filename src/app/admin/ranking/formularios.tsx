@@ -37,7 +37,7 @@ function Mensaje({ estado }: { estado: EstadoAccion }) {
   return null;
 }
 
-const claseSelect = "min-h-11 rounded-md border border-input bg-background px-3 text-base";
+const claseSelect = "min-h-11 rounded-[10px] border-0 bg-relleno px-3 text-base";
 
 export function FormularioSemestre() {
   const [estado, accion, pendiente] = useActionState(crearSemestre, vacio);
@@ -224,7 +224,7 @@ export function FormularioDivisiones({
               name={`division:${j.id}`}
               defaultValue={j.division ?? ""}
               aria-label={`División de ${j.nombre}`}
-              className="min-h-9 rounded-md border border-input bg-background px-2 text-sm"
+              className="min-h-9 rounded-[10px] border-0 bg-relleno px-2 text-sm"
             >
               <option value="">{hereda ? "Sin asignar" : "Sortear"}</option>
               <option value="mayor">Mayor</option>

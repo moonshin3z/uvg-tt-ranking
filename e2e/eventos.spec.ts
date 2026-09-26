@@ -70,8 +70,9 @@ test.describe("bitácora de partidos", () => {
   test("muestra el evento, el actor, el cambio y la fecha", async ({ page }) => {
     await page.goto(`/partidos/${partido}`);
     await exigirQueCargue(page, `/partidos/${partido}`);
-    await expect(page.getByText("Bitácora del partido (1)", { exact: true })).toBeVisible();
-    await page.getByText("Bitácora del partido (1)", { exact: true }).click();
+    const bitacora = page.locator("summary").filter({ hasText: "Bitácora del partido" });
+    await expect(bitacora).toHaveText(/Bitácora del partido\s*1$/);
+    await bitacora.click();
     await expect(page.getByText("Registró el resultado", { exact: true })).toBeVisible();
     await expect(page.getByText("Ana López (20002)", { exact: true })).toBeVisible();
     await expect(page.getByText("pendiente → jugado · sets 2-1", { exact: true })).toBeVisible();

@@ -3,26 +3,28 @@ import { Root as SlotRoot } from "radix-ui/slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/**
+ * Los botones de iOS: píldoras. El lleno en verde es la acción principal; el
+ * gris con letra verde, la secundaria; el rojo lavado, la que borra algo.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-semibold transition-[opacity,transform,background-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-[0_6px_16px_-8px_rgba(9,134,69,0.6)] hover:bg-primary/90 active:shadow-[0_2px_6px_-3px_rgba(9,134,69,0.6)]",
-        accent: "bg-accent text-accent-foreground hover:bg-accent/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-secondary hover:text-secondary-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-secondary hover:text-secondary-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground",
+        accent: "bg-primary text-primary-foreground",
+        destructive: "bg-malo-suave text-destructive",
+        outline: "bg-relleno text-primary",
+        secondary: "bg-relleno text-primary",
+        ghost: "font-normal text-primary hover:bg-relleno",
+        link: "font-normal text-primary underline-offset-4 hover:underline",
       },
       size: {
-        // min-h-11 = 44px, el mínimo táctil recomendado
-        default: "min-h-11 px-4 py-2",
-        // min-h-10 = 40px: el mínimo que la auditoría de responsive exige
-        sm: "min-h-10 rounded-md px-3 text-sm",
-        lg: "min-h-14 rounded-lg px-8 text-base",
+        default: "min-h-11 px-5 text-[17px]",
+        // 40px: el mínimo que la auditoría de responsive exige
+        sm: "min-h-10 px-3.5 text-[15px]",
+        lg: "min-h-[50px] px-[22px] text-[17px]",
         icon: "size-11",
       },
     },
