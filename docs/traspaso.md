@@ -1,5 +1,15 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: nombre e ícono
+
+La app se llama **Ranking UVG**. Iván lo eligió entre doce opciones (artefacto "Nombre de la App del Club").
+
+- Nombre corto (debajo del ícono, `short_name`, `applicationName`, título de iOS): `Ranking UVG`. Nombre largo (manifiesto, portada, Open Graph): `Ranking UVG · Club de Tenis de Mesa`. Las demás páginas: `%s · Ranking UVG`.
+- El ícono son tres barras de la tabla con la pelota naranja sobre la más alta, en el degradado verde (#1dbb68 → #0b8a45 → #055a2b). Fuente: `public/icons/icon.svg` (esquinas redondeadas, para pestañas y el manifiesto `any`) e `icon-maskable.svg` (a sangre, dibujo al 80 % para el círculo seguro de Android).
+- `apple-touch-icon.png` (180) es el dibujo de `icon.svg` a sangre y sin redondear: iOS pone su propia máscara. `icon-maskable-512.png` y `apple-touch-icon.png` van sin canal alfa.
+- `src/app/favicon.ico` (16, 32, 48) reemplaza el de `create-next-app` que seguía en el repo.
+- Los PNG se generaron renderizando los SVG con Chromium (Playwright) al tamaño exacto. Si cambiás el dibujo, regenerá todos.
+
 ## Actualización: elegir o sortear el primer saque
 
 - Al abrir un marcador nuevo aparece **¿Quién saca primero?**, con los dos

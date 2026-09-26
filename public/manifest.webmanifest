@@ -1,6 +1,6 @@
 {
-  "name": "Club de Tenis de Mesa UVG",
-  "short_name": "Club TM UVG",
+  "name": "Ranking UVG · Club de Tenis de Mesa",
+  "short_name": "Ranking UVG",
   "description": "Ranking, resultados y torneos del club de tenis de mesa de la UVG.",
   "start_url": "/",
   "scope": "/",

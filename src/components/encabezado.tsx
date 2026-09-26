@@ -11,7 +11,7 @@ export async function Encabezado() {
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="-mx-2 flex min-h-11 items-center gap-2 px-2 font-semibold tracking-tight">
           <span aria-hidden className="inline-block size-3 rounded-full bg-uvg" />
-          Club TM UVG
+          Ranking UVG
         </Link>
 
         {sesion ? (

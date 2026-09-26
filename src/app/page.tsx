@@ -86,7 +86,7 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
   if (!ranking) {
     return (
       <>
-        <Tope titulo="Club TM UVG" sub="Sin ranking en juego" />
+        <Tope titulo="Ranking UVG" sub="Sin ranking en juego" />
         <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
           <p className="text-muted-foreground">
             Todavía no hay un ranking abierto. Volvé cuando el coordinador lo publique.

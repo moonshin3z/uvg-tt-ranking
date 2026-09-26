@@ -6,14 +6,14 @@ import { SinRed } from "@/components/sin-red";
 
 export const metadata: Metadata = {
   title: {
-    default: "Ranking · Club de Tenis de Mesa UVG",
-    template: "%s · Club de Tenis de Mesa UVG",
+    default: "Ranking UVG · Club de Tenis de Mesa",
+    template: "%s · Ranking UVG",
   },
   description:
     "Tabla de posiciones, resultados y torneos del club de tenis de mesa de la Universidad del Valle de Guatemala.",
-  applicationName: "Club TM UVG",
+  applicationName: "Ranking UVG",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "Club TM UVG", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Ranking UVG", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   icons: {
     icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_GT",
-    siteName: "Club de Tenis de Mesa UVG",
-    title: "Ranking · Club de Tenis de Mesa UVG",
+    siteName: "Ranking UVG",
+    title: "Ranking UVG · Club de Tenis de Mesa",
     description: "Tabla de posiciones, resultados y torneos del club.",
   },
 };
