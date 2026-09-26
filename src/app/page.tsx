@@ -164,7 +164,10 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
 
       <Pie>
         Cada pareja juega una vez. La victoria vale {ranking.pts_victoria}{" "}
-        {ranking.pts_victoria === 1 ? "punto" : "puntos"}.
+        {ranking.pts_victoria === 1 ? "punto" : "puntos"}.{" "}
+        <Link href="/reglas" className="font-medium text-primary">
+          Cómo funciona el ranking
+        </Link>
       </Pie>
 
       <Rotulo>Últimos resultados</Rotulo>

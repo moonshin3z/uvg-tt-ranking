@@ -56,6 +56,11 @@ export function FormularioIngreso() {
         <Link href="/" className="btn texto bloque">
           Ver la tabla sin ingresar
         </Link>
+        {/* Para el que recién llega: antes de ingresar ya puede leer cómo se
+            juega el ranking. */}
+        <Link href="/reglas" className="btn texto bloque">
+          Cómo funciona el ranking
+        </Link>
       </div>
     </form>
   );
