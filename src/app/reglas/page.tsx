@@ -29,6 +29,7 @@ export default async function PaginaReglas() {
   const suben = r?.n_ascienden ?? 3;
   const bajan = r?.n_descienden ?? 3;
   const horas = r?.horas_autoconfirmacion ?? null;
+  const sets = r?.sets_para_ganar ?? 2;
 
   return (
     <>
@@ -54,13 +55,17 @@ export default async function PaginaReglas() {
             El calendario sale completo desde el primer día, así que podés ver de entrada contra quién te toca. No hay
             fechas asignadas para cada partido: se coordinan entre ustedes y se juegan antes de la fecha límite.
           </p>
+          <p>
+            Las divisiones se arman antes de empezar y después no entra nadie nuevo. Si te sumás al club con el
+            ranking ya en marcha, jugás el siguiente.
+          </p>
         </Seccion>
 
         <Seccion titulo="Puntos y posiciones">
           <p>
             Ganar un partido da {victoria} punto{victoria === 1 ? "" : "s"} y perder da {derrota}. No importa por
-            cuánto ganaste: un 3-0 y un 3-2 valen lo mismo. Los sets se registran para tener el historial, no para la
-            tabla.
+            cuánto ganaste: un {sets}-0 y un {sets}-{sets - 1} valen lo mismo. Los sets se registran para tener el
+            historial, no para la tabla.
           </p>
           <p>
             La tabla se ordena por puntos. Un resultado suma recién cuando está confirmado, así que si registrás un

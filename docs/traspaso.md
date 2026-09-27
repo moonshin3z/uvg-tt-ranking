@@ -1,5 +1,15 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: íconos que no se actualizaban
+
+Después de renombrar la app, la pantalla de ingreso y la pestaña del navegador seguían mostrando el ícono viejo aunque los archivos del repo ya eran los nuevos. La causa: `next.config.ts` sirve `/icons/*` con `Cache-Control: public, max-age=31536000, immutable`, y el cambio de ícono dejó los mismos nombres de archivo. Un navegador que ya tenía `/icons/icon.svg` lo guarda un año sin volver a preguntar.
+
+- Los íconos pasaron a `public/icons/v2/`, y `layout.tsx`, `manifest.webmanifest` y `/ingresar` apuntan ahí. El encabezado `immutable` se quedó, con un comentario: **un ícono nuevo va en una carpeta nueva** (`v3`, `v4`...), nunca con el mismo nombre.
+- `src/app/favicon.ico` no tenía el problema: Next le agrega un hash del contenido (`/favicon.ico?favicon.<hash>.ico`).
+- En iOS, el ícono de una app ya agregada a la pantalla de inicio se guarda al agregarla. Para verlo nuevo hay que quitarla y volver a agregarla.
+
+Reglamento confirmado por el club el mismo día: se juega al mejor de 3, y nadie entra a un ranking empezado (juega el siguiente). `/reglas` ahora lo dice, y el ejemplo de marcadores sale del formato del ranking en curso (antes decía "un 3-0 y un 3-2", que no existen al mejor de 3).
+
 ## Actualización: el lenguaje de iOS
 
 La app quedó igual al prototipo de iOS (`docs/diseno/prototipo-ios.html`, artefacto "Club TM UVG iOS"), salvo el perfil, que conserva la cabecera con el degradé verde.
@@ -21,10 +31,10 @@ La app quedó igual al prototipo de iOS (`docs/diseno/prototipo-ios.html`, artef
 La app se llama **Ranking UVG**. Iván lo eligió entre doce opciones (artefacto "Nombre de la App del Club").
 
 - Nombre corto (debajo del ícono, `short_name`, `applicationName`, título de iOS): `Ranking UVG`. Nombre largo (manifiesto, portada, Open Graph): `Ranking UVG · Club de Tenis de Mesa`. Las demás páginas: `%s · Ranking UVG`.
-- El ícono son tres barras de la tabla con la pelota naranja sobre la más alta, en el degradado verde (#1dbb68 → #0b8a45 → #055a2b). Fuente: `public/icons/icon.svg` (esquinas redondeadas, para pestañas y el manifiesto `any`) e `icon-maskable.svg` (a sangre, dibujo al 80 % para el círculo seguro de Android).
+- El ícono son tres barras de la tabla con la pelota naranja sobre la más alta, en el degradado verde (#1dbb68 → #0b8a45 → #055a2b). Fuente: `public/icons/v2/icon.svg` (esquinas redondeadas, para pestañas y el manifiesto `any`) e `icon-maskable.svg` (a sangre, dibujo al 80 % para el círculo seguro de Android).
 - `apple-touch-icon.png` (180) es el dibujo de `icon.svg` a sangre y sin redondear: iOS pone su propia máscara. `icon-maskable-512.png` y `apple-touch-icon.png` van sin canal alfa.
 - `src/app/favicon.ico` (16, 32, 48) reemplaza el de `create-next-app` que seguía en el repo.
-- Los PNG se generaron renderizando los SVG con Chromium (Playwright) al tamaño exacto. Si cambiás el dibujo, regenerá todos.
+- Los PNG se generaron renderizando los SVG con Chromium (Playwright) al tamaño exacto. Si cambiás el dibujo, regenerá todos y ponelos en una carpeta nueva (`public/icons/v3/`), cambiando las rutas en `layout.tsx`, `manifest.webmanifest` y `/ingresar`. Ver la actualización de los íconos que no se actualizaban.
 
 ## Actualización: elegir o sortear el primer saque
 
@@ -693,9 +703,9 @@ Lo revisa él. Pendientes: paleta y tipografía definitivas, estados vacíos con
 
 Estas no son decisiones técnicas: **son preguntas que Iván tiene que hacerle al club.** No las inventes.
 
-- Cuántos sets se juegan (2 de 3, o 3 de 5). El sistema lo soporta configurable por ranking, pero nadie confirmó el número real.
+- ~~Cuántos sets se juegan~~. **Resuelto (27 sep):** al mejor de 3. Se elige al crear el ranking ("Formato del partido", ya viene en 2 de 3) y no se puede cambiar después.
 - Puntos para el fondo de la tabla.
-- Qué pasa con un jugador que se suma a mitad de ranking (el retiro ya está resuelto, el alta no).
+- ~~Qué pasa con un jugador que se suma a mitad de ranking~~. **Resuelto (27 sep):** no entra; juega el siguiente ranking. La base ya lo cumple: `armar_divisiones` y `generar_calendario` solo corren en `borrador`. `/reglas` lo dice.
 - Qué pasa si una división queda con menos de 6 jugadores o desbalanceada.
 
 ---

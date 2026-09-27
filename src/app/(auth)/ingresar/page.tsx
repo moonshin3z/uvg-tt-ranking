@@ -19,7 +19,7 @@ export default async function PaginaIngresar({ searchParams }: PageProps<"/ingre
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-8">
       <div className="ingreso">
-        <Image src="/icons/icon.svg" alt="" width={84} height={84} className="app-icono" priority unoptimized />
+        <Image src="/icons/v2/icon.svg" alt="" width={84} height={84} className="app-icono" priority unoptimized />
         <h1>Ranking UVG</h1>
         <p>Entrá con tu carnet y el PIN que te dio el coordinador.</p>
         {aviso ? (

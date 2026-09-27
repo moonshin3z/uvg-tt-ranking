@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Ranking UVG", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   icons: {
-    icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    icon: [{ url: "/icons/v2/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/v2/apple-touch-icon.png", sizes: "180x180" }],
   },
   openGraph: {
     type: "website",
