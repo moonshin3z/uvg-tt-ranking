@@ -125,7 +125,7 @@ export function BotonReiniciarPin({ id, carnet }: { id: string; carnet: string }
   const [estado, accion, pendiente] = useActionState(reiniciarPin, {} as EstadoReset);
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex flex-col items-start gap-2 sm:items-end">
       <form action={accion}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="carnet" value={carnet} />
@@ -154,7 +154,7 @@ export function BotonHacerCoordinador({ id }: { id: string }) {
   const [estado, accion, pendiente] = useActionState(hacerCoordinador, {} as EstadoRol);
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
       <form action={accion}>
         <input type="hidden" name="id" value={id} />
         <Button type="submit" variant="outline" size="sm" disabled={pendiente}>
@@ -192,7 +192,7 @@ export function BotonRetirar({ id, nombre, rankingId }: { id: string; nombre: st
 
   if (!impacto)
     return (
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col items-start gap-1 sm:items-end">
         <form action={pedirImpacto}>
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="nombre" value={nombre} />
@@ -278,7 +278,7 @@ export function BotonDeshacerRetiro({ id, rankingId }: { id: string; rankingId: 
     );
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
       <form action={ejecutar}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="ranking_id" value={rankingId} />

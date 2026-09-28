@@ -43,7 +43,13 @@ export function FormularioSemestre() {
   const [estado, accion, pendiente] = useActionState(crearSemestre, vacio);
   const anio = new Date().getFullYear();
   return (
-    <form action={accion} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end" noValidate>
+    // Las cuatro columnas esperan a md: a 640 px las dos fechas y el botón no
+    // caben y el formulario se salía de la tarjeta.
+    <form
+      action={accion}
+      className="grid gap-3 sm:grid-cols-3 sm:items-end md:grid-cols-[1fr_1fr_1fr_auto]"
+      noValidate
+    >
       <div className="flex flex-col gap-2">
         <Label htmlFor="s-nombre">Nombre</Label>
         <Input id="s-nombre" name="nombre" placeholder={`${anio}-2`} required />
@@ -56,10 +62,15 @@ export function FormularioSemestre() {
         <Label htmlFor="s-fin">Fin</Label>
         <Input id="s-fin" name="fin" type="date" required />
       </div>
-      <Button type="submit" variant="outline" disabled={pendiente}>
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={pendiente}
+        className="sm:justify-self-start md:justify-self-auto"
+      >
         Crear semestre
       </Button>
-      <div className="sm:col-span-4">
+      <div className="sm:col-span-3 md:col-span-4">
         <Mensaje estado={estado} />
       </div>
     </form>

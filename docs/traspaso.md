@@ -1,5 +1,13 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: la lista de jugadores en teléfonos angostos
+
+En `/admin/jugadores`, cada fila ponía el nombre y hasta cuatro botones en la misma línea con `flex-wrap`, y el nombre tenía `flex-1 min-w-0`. En pantallas de unos 360 px los botones le quitaban todo el ancho: quedaban nombres como "K." o "I..", las etiquetas (coordinador, PIN sin cambiar) se montaban encima de "Nuevo PIN" y "EXT-01" se partía en dos. Ahora el nombre ocupa su propia línea en el teléfono (`basis-full`) y desde `sm` comparte la fila con un mínimo de `12rem`; los mensajes de cada botón se alinean a la izquierda en el teléfono.
+
+La auditoría no lo veía por dos razones. La muestra de la nube no tenía jugadores en esa lista, y aunque los tuviera, las reglas miden que nada se salga de la pantalla, no que dos elementos se pisen entre sí ni que un nombre quede reducido a una inicial. Con esa pantalla hay que mirar la captura con datos de verdad.
+
+Midiendo en 23 anchos (280 a 1280) salieron dos más, ya arreglados: el formulario de semestre en `/admin/ranking` se salía 12 px a 640 px (las cuatro columnas ahora esperan a `md`), y el botón "Borrar ... para siempre" de `bajas.tsx` no se podía partir en dos líneas y empujaba la tarjeta afuera a 280 px.
+
 ## Actualización: íconos que no se actualizaban
 
 Después de renombrar la app, la pantalla de ingreso y la pestaña del navegador seguían mostrando el ícono viejo aunque los archivos del repo ya eran los nuevos. La causa: `next.config.ts` sirve `/icons/*` con `Cache-Control: public, max-age=31536000, immutable`, y el cambio de ícono dejó los mismos nombres de archivo. Un navegador que ya tenía `/icons/icon.svg` lo guarda un año sin volver a preguntar.

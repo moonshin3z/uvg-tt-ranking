@@ -147,7 +147,9 @@ export function ZonaDePeligro({
               type="submit"
               variant="destructive"
               disabled={borrando || !coincide}
-              className="justify-self-start"
+              // Puede partirse en dos líneas: sin eso, en una pantalla de 280 px
+              // el botón era más ancho que la tarjeta y la empujaba afuera.
+              className="justify-self-start py-2 text-center whitespace-normal"
             >
               {borrando ? "Borrando..." : `Borrar ${tipo} para siempre`}
             </Button>

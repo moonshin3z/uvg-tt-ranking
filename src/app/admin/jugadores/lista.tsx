@@ -117,13 +117,16 @@ export function ListaJugadores({
       ) : (
         <ul className="divide-y border-t">
           {visibles.map((u) => (
-            <li key={u.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-              <div className="min-w-0 flex-1">
+            // En el teléfono el nombre ocupa su propia línea y los botones van
+            // abajo; si compartieran la fila, los botones lo aplastaban hasta
+            // dejar "K." y las etiquetas se montaban encima de "Nuevo PIN".
+            <li key={u.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
+              <div className="min-w-0 basis-full sm:min-w-48 sm:flex-1 sm:basis-0">
                 <p className={u.activo ? "truncate font-medium" : "truncate text-muted-foreground line-through"}>
                   {u.nombre}
                 </p>
                 <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="font-mono">{u.carnet}</span>
+                  <span className="font-mono whitespace-nowrap">{u.carnet}</span>
                   {u.rol === "coordinador" ? <Badge variant="secondary">coordinador</Badge> : null}
                   {u.debe_cambiar_pin ? <Badge variant="outline">PIN sin cambiar</Badge> : null}
                   {enRanking.has(u.id) ? <Badge variant="outline">en el ranking</Badge> : null}
