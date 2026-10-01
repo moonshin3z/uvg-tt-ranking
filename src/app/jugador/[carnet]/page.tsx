@@ -13,6 +13,7 @@ import { CabeceraPerfil, Cifras, Fila, FilaAccion, Flecha, Lista, Marcador, Pie,
 import { GLIFO } from "@/components/iconos";
 import { Tope } from "@/components/tope";
 import { salir } from "@/app/(auth)/ingresar/acciones";
+import { divisionLarga, nivelDivision, nombreDivision } from "@/lib/ranking/divisiones";
 
 export async function generateMetadata({ params }: PageProps<"/jugador/[carnet]">): Promise<Metadata> {
   const { carnet } = await params;
@@ -28,21 +29,20 @@ function formatearFecha(iso: string) {
   }).format(new Date(iso));
 }
 
-const DIVISION: Record<string, string> = { mayor: "Mayor", menor: "Menor" };
-
 /** Premio, ascenso o descenso que le tocó en un ranking ya cerrado. */
 function distincion(f: FilaHistorial) {
   if (f.ranking_estado !== "cerrado") return null;
+  const nivel = nivelDivision(f.division);
+  if (nivel > 1 && f.posicion <= f.n_ascienden) return { texto: "subió", bueno: true };
   if (f.posicion <= f.n_premiados) return { texto: "premio", bueno: true };
-  if (f.division === "menor" && f.posicion <= f.n_ascienden) return { texto: "subió", bueno: true };
-  if (f.division === "mayor" && f.posicion > f.jugadores_division - f.n_descienden)
+  if (nivel < f.divisiones && f.posicion > f.jugadores_division - f.n_descienden)
     return { texto: "bajó", bueno: false };
   return null;
 }
 
-/** "Cerrado · terminó 6.º en Mayor" o "En juego · va 4.º de 10 en Mayor". */
+/** "Cerrado · terminó 6.º en Primera" o "En juego · va 4.º de 10 en Primera". */
 function lineaHistorial(f: FilaHistorial, soyYo: boolean) {
-  const division = DIVISION[f.division] ?? f.division;
+  const division = nombreDivision(f.division);
   if (f.ranking_estado === "cerrado") {
     return `Cerrado · ${soyYo ? "terminaste" : "terminó"} ${f.posicion}.º en ${division}`;
   }
@@ -71,7 +71,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
   const puesto = actual && actual.ranking_estado !== "cerrado" ? `${actual.posicion}.º` : undefined;
   const difSets = historial.reduce((n, h) => n + (h.pg - h.pp), 0);
 
-  const division = actual ? (DIVISION[actual.division] ?? actual.division) : null;
+  const division = actual ? nombreDivision(actual.division) : null;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
@@ -80,7 +80,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
       <Tope titulo={jugador.nombre} grande={false} alBajar={150} atras={soyYo ? undefined : "/"} />
       <CabeceraPerfil
         nombre={jugador.nombre}
-        bajo={`Carnet ${jugador.carnet} · ${division ? `División ${division}` : "sin división"}${
+        bajo={`Carnet ${jugador.carnet} · ${actual ? divisionLarga(actual.division) : "sin división"}${
           jugador.activo ? "" : " · dado de baja"
         }`}
         puesto={puesto}

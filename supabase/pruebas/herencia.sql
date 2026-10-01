@@ -22,7 +22,7 @@ begin
 end; $$;
 
 -- -----------------------------------------------------------------------------
--- 1. Un ranking nuevo nace con sus dos divisiones.
+-- 1. Un ranking nuevo nace con sus tres divisiones.
 --
 -- Sin esto el ranking se crea sin error y la falla aparece recién al armar las
 -- divisiones, como «null value in column division_id», que no explica nada.
@@ -43,8 +43,8 @@ begin
   reset role;
 
   select count(*) into v_divs from public.division where ranking_id = v_rk;
-  if v_divs <> 2 then
-    raise exception 'AGUJERO: el ranking nuevo quedó con % divisiones y necesita 2 (mayor y menor)', v_divs;
+  if v_divs <> 3 then
+    raise exception 'AGUJERO: el ranking nuevo quedó con % divisiones y necesita 3 (primera, segunda y tercera)', v_divs;
   end if;
 
   select sets_para_ganar into v_sets from public.ranking where id = v_rk;
@@ -52,7 +52,7 @@ begin
     raise exception 'AGUJERO: no guardó los sets que se le pidieron: quedó en %', v_sets;
   end if;
 
-  raise notice 'ok · un ranking nuevo nace con mayor y menor, y con las reglas que se le pidieron';
+  raise notice 'ok · un ranking nuevo nace con primera, segunda y tercera, y con las reglas que se le pidieron';
 end $$;
 
 -- -----------------------------------------------------------------------------

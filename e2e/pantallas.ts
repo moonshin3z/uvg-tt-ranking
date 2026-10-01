@@ -33,7 +33,8 @@ const TORNEO_SEMILLA = "11111111-2222-3333-4444-555555555555";
 
 export const RUTAS_PUBLICAS = [
   "/",
-  "/?division=menor",
+  "/?division=segunda",
+  "/semana",
   "/reglas",
   "/rankings",
   "/ingresar",

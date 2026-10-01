@@ -54,7 +54,7 @@ test.describe("partidos independientes del ranking", () => {
       insert into public.semestre(id,nombre,inicio,fin) values ('${semestre}','E2E ${semestre}',current_date,current_date+90);
       insert into public.ranking(id,semestre_id,numero,nombre,fecha_limite,estado)
         values ('${ranking}','${semestre}',1,'Ranking de otra inscripción',current_date+30,'cerrado');
-      insert into public.division(ranking_id,tipo) values ('${ranking}','mayor'),('${ranking}','menor');
+      insert into public.division(ranking_id,tipo) values ('${ranking}','primera'),('${ranking}','segunda');
       insert into public.torneo(id,semestre_id,nombre,formato,estado,sets_para_ganar,horas_autoconfirmacion,tam_llave)
         values ('${torneo}','${semestre}','Copa independiente E2E','llave','en_juego',2,null,2);
       insert into public.torneo_inscripcion(torneo_id,usuario_id)
@@ -130,7 +130,7 @@ test.describe("partidos independientes del ranking", () => {
       insert into public.partido(division_id,tipo,jugador_a,jugador_b)
         select d.id,'regular',least(a.id,b.id),greatest(a.id,b.id)
         from public.division d,public.usuario a,public.usuario b
-        where d.ranking_id='${ranking}' and d.tipo='mayor' and a.carnet='20002' and b.carnet='20003';
+        where d.ranking_id='${ranking}' and d.tipo='primera' and a.carnet='20002' and b.carnet='20003';
       begin;
       select set_config('request.jwt.claim.sub',(select id::text from public.usuario where carnet='20001'),true);
       set local role authenticated;

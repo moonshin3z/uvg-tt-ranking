@@ -4,8 +4,11 @@ import { useActionState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { DivisionTipo } from "@/lib/supabase/tipos";
+import { nombreDivision } from "@/lib/ranking/divisiones";
 import {
   abrirRanking,
+  ajustarPartidosPorSemana,
   asignarManual,
   cerrarFaseRegular,
   cerrarRanking,
@@ -133,15 +136,41 @@ export function FormularioRanking({ semestres }: { semestres: { id: string; nomb
         </p>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="divisiones">Divisiones</Label>
+          <select id="divisiones" name="divisiones" className={claseSelect} defaultValue="3">
+            <option value="3">3: Primera, Segunda y Tercera</option>
+            <option value="2">2: Primera y Segunda</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="partidos_por_semana">Partidos por semana</Label>
+          <Input
+            id="partidos_por_semana"
+            name="partidos_por_semana"
+            type="number"
+            inputMode="numeric"
+            defaultValue={5}
+            min={1}
+            max={30}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground sm:col-span-2">
+          Contando todas las divisiones. Al abrir el ranking, la app reparte los partidos en semanas de hasta esa
+          cantidad, sin que nadie juegue dos veces en la misma semana.
+        </p>
+      </div>
+
       <details className="rounded-lg border p-3">
         <summary className="cursor-pointer text-sm font-medium">Parámetros del reglamento</summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           {[
             ["pts_victoria", "Pts por victoria", 1],
             ["pts_derrota", "Pts por derrota", 0],
-            ["n_premiados", "Premiados por división", 3],
-            ["n_ascienden", "Suben de Menor", 3],
-            ["n_descienden", "Bajan de Mayor", 3],
+            ["n_premiados", "Premiados por división", 2],
+            ["n_ascienden", "Suben a la división de arriba", 2],
+            ["n_descienden", "Bajan a la división de abajo", 2],
             ["horas_autoconfirmacion", "Horas para autoconfirmar (0 = nunca)", 72],
           ].map(([name, label, def]) => (
             <div key={String(name)} className="flex flex-col gap-2">
@@ -171,7 +200,7 @@ export type JugadorAsignable = {
   id: string;
   carnet: string;
   nombre: string;
-  division: "mayor" | "menor" | null;
+  division: DivisionTipo | null;
 };
 
 /**
@@ -186,10 +215,13 @@ export type JugadorAsignable = {
 export function FormularioDivisiones({
   rankingId,
   jugadores,
+  divisiones,
   hereda = false,
 }: {
   rankingId: string;
   jugadores: JugadorAsignable[];
+  /** Las del ranking, de Primera para abajo. */
+  divisiones: readonly DivisionTipo[];
   hereda?: boolean;
 }) {
   const [estadoSorteo, accionSorteo, pendienteSorteo] = useActionState(sortear, vacio);
@@ -238,8 +270,11 @@ export function FormularioDivisiones({
               className="min-h-9 rounded-[10px] border-0 bg-relleno px-2 text-sm"
             >
               <option value="">{hereda ? "Sin asignar" : "Sortear"}</option>
-              <option value="mayor">Mayor</option>
-              <option value="menor">Menor</option>
+              {divisiones.map((d) => (
+                <option key={d} value={d}>
+                  {nombreDivision(d)}
+                </option>
+              ))}
             </select>
           </li>
         ))}
@@ -260,7 +295,7 @@ export function FormularioDivisiones({
       <p className="text-xs text-muted-foreground">
         {hereda
           ? "Este ranking hereda sus divisiones del anterior, así que no se sortea: los lugares ya salieron de la tabla. Acá solo se corrige a mano, por ejemplo para subir a alguien que entró nuevo. Guardar reemplaza la asignación completa."
-          : "Sortear reparte a los marcados al azar (mitad a Mayor, mitad a Menor) e ignora la columna de división. Guardar usa la división elegida por jugador. Ambos reemplazan la asignación anterior."}
+          : `Si las divisiones ya están definidas, elegí la de cada uno y tocá Guardar asignación. Sortear reparte a los marcados al azar en ${divisiones.length} partes iguales e ignora la columna de división. Los dos reemplazan la asignación anterior.`}
       </p>
     </form>
   );
@@ -273,7 +308,7 @@ export function BotonAccion({
   etiquetaPendiente,
   variant = "default",
 }: {
-  accion: typeof generarCalendario | typeof abrirRanking;
+  accion: typeof generarCalendario;
   rankingId: string;
   etiqueta: string;
   etiquetaPendiente: string;
@@ -286,6 +321,57 @@ export function BotonAccion({
       <Button type="submit" variant={variant} disabled={pendiente} className="sm:self-start">
         {pendiente ? etiquetaPendiente : etiqueta}
       </Button>
+      <Mensaje estado={estado} />
+    </form>
+  );
+}
+
+/**
+ * Abrir el ranking eligiendo cuándo empieza la semana 1. La fecha que se elija
+ * se lleva al lunes de su semana: las semanas van de lunes a domingo y se
+ * juega martes, miércoles y jueves.
+ */
+export function FormularioAbrir({ rankingId, lunes }: { rankingId: string; lunes: string }) {
+  const [estado, ejecutar, pendiente] = useActionState(abrirRanking, vacio);
+  return (
+    <form action={ejecutar} className="flex flex-col gap-3">
+      <input type="hidden" name="ranking_id" value={rankingId} />
+      <div className="flex flex-col gap-2 sm:max-w-xs">
+        <Label htmlFor="inicio_semanas">La semana 1 empieza el lunes</Label>
+        <Input id="inicio_semanas" name="inicio_semanas" type="date" defaultValue={lunes} required />
+      </div>
+      <Button type="submit" variant="accent" disabled={pendiente} className="sm:self-start">
+        {pendiente ? "Abriendo..." : "Abrir ranking"}
+      </Button>
+      <Mensaje estado={estado} />
+    </form>
+  );
+}
+
+/** Cambiar cuántos partidos van por semana. Las semanas que ya empezaron no cambian. */
+export function FormularioPartidosPorSemana({ rankingId, actual }: { rankingId: string; actual: number }) {
+  const [estado, ejecutar, pendiente] = useActionState(ajustarPartidosPorSemana, vacio);
+  return (
+    <form action={ejecutar} className="flex flex-col gap-3">
+      <input type="hidden" name="ranking_id" value={rankingId} />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="partidos_por_semana">Partidos por semana</Label>
+          <Input
+            id="partidos_por_semana"
+            name="partidos_por_semana"
+            type="number"
+            inputMode="numeric"
+            defaultValue={actual}
+            min={1}
+            max={30}
+            className="w-28"
+          />
+        </div>
+        <Button type="submit" variant="outline" disabled={pendiente}>
+          {pendiente ? "Guardando..." : "Cambiar"}
+        </Button>
+      </div>
       <Mensaje estado={estado} />
     </form>
   );

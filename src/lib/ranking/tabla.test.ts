@@ -47,15 +47,30 @@ describe("ordenarTabla", () => {
 describe("asignarZonas", () => {
   const seis = ["a", "b", "c", "d", "e", "f"].map((id, i) => fila(id, id, 5 - i, i));
 
-  it("mayor: 3 premios arriba y 3 descensos abajo", () => {
-    const z = asignarZonas(seis, { division: "mayor", n_premiados: 3, n_ascienden: 3, n_descienden: 3 });
-    expect(z.map((f) => f.zona)).toEqual(["premio", "premio", "premio", "descenso", "descenso", "descenso"]);
+  const cinco = ["a", "b", "c", "d", "e"].map((id, i) => fila(id, id, 4 - i, i));
+  const club = { divisiones: 3, n_premiados: 2, n_ascienden: 2, n_descienden: 2 };
+
+  it("Primera: premian a los 2 primeros y bajan los 2 últimos", () => {
+    const z = asignarZonas(cinco, { ...club, nivel: 1 });
+    expect(z.map((f) => f.zona)).toEqual(["premio", "premio", null, "descenso", "descenso"]);
     expect(z[3].posicion).toBe(4);
   });
 
-  it("menor: 3 ascensos arriba, sin descensos", () => {
-    const z = asignarZonas(seis, { division: "menor", n_premiados: 3, n_ascienden: 3, n_descienden: 3 });
-    expect(z.map((f) => f.zona)).toEqual(["ascenso", "ascenso", "ascenso", null, null, null]);
+  it("Segunda: suben los 2 primeros y bajan los 2 últimos", () => {
+    const z = asignarZonas(cinco, { ...club, nivel: 2 });
+    expect(z.map((f) => f.zona)).toEqual(["ascenso", "ascenso", null, "descenso", "descenso"]);
+  });
+
+  it("Tercera: suben los 2 primeros y nadie baja", () => {
+    const z = asignarZonas(cinco, { ...club, nivel: 3 });
+    expect(z.map((f) => f.zona)).toEqual(["ascenso", "ascenso", null, null, null]);
+  });
+
+  it("con dos divisiones, la de abajo no baja y la de arriba no sube", () => {
+    const arriba = asignarZonas(seis, { nivel: 1, divisiones: 2, n_premiados: 3, n_ascienden: 3, n_descienden: 3 });
+    expect(arriba.map((f) => f.zona)).toEqual(["premio", "premio", "premio", "descenso", "descenso", "descenso"]);
+    const abajo = asignarZonas(seis, { nivel: 2, divisiones: 2, n_premiados: 3, n_ascienden: 3, n_descienden: 3 });
+    expect(abajo.map((f) => f.zona)).toEqual(["ascenso", "ascenso", "ascenso", null, null, null]);
   });
 });
 

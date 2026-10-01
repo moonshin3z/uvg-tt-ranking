@@ -2,7 +2,9 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requerirSesion } from "@/lib/auth/sesion";
-import { rankingVigente, tablaDeDivision } from "@/lib/ranking/consultas";
+import { divisionesDelRanking, rankingVigente, tablaDeDivision } from "@/lib/ranking/consultas";
+import { divisionLarga, nombreDivision } from "@/lib/ranking/divisiones";
+import { semanaActual } from "@/lib/ranking/semanas";
 import {
   autoconfirmarVencidos,
   misMarcadoresAbiertos,
@@ -18,12 +20,19 @@ import { formatearDia, textoAutoconfirmacion } from "@/lib/fechas";
 
 export const metadata: Metadata = { title: "Mis partidos" };
 
-const DIVISION = { mayor: "Mayor", menor: "Menor" } as const;
-
 /** La línea de abajo de la fila: de dónde sale el partido. */
-function contexto(p: PartidoMio): string {
+function contexto(p: PartidoMio, semanaHoy: number | null = null): string {
   if (!p.division) return `${p.torneo?.nombre ?? "Torneo"} · ${p.tipo === "grupo" ? "fase de grupos" : "llave"}`;
-  return `División ${DIVISION[p.division]}${p.tipo === "desempate" ? " · desempate" : ""}`;
+  const base = `${divisionLarga(p.division)}${p.tipo === "desempate" ? " · desempate" : ""}`;
+  if (p.estado !== "pendiente" || p.semana === null || semanaHoy === null) return base;
+  // De qué semana es: el de esta semana se ve primero, el atrasado se nota.
+  const semana =
+    p.semana === semanaHoy
+      ? "Esta semana"
+      : p.semana < semanaHoy
+        ? `Atrasado, de la semana ${p.semana}`
+        : `Semana ${p.semana}`;
+  return `${semana} · ${base}`;
 }
 
 const enlace = (p: PartidoMio) => `/partidos/${p.id}` as Route;
@@ -67,7 +76,9 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
     : undefined;
   const mia =
     ranking && division
-      ? (await tablaDeDivision(ranking, division)).find((f) => f.usuario_id === sesion.authId)
+      ? (await tablaDeDivision(ranking, division, (await divisionesDelRanking(ranking.id)).length)).find(
+          (f) => f.usuario_id === sesion.authId,
+        )
       : undefined;
 
   // Los de torneo van mezclados con los del ranking, cada uno donde le toca,
@@ -84,8 +95,9 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
   const enDisputa = [...deTorneo.filter((p) => p.estado === "disputado"), ...(mp?.enDisputa ?? [])];
 
   const quedan = mp?.pendientes.length ?? 0;
+  const semanaHoy = ranking?.inicio_semanas ? Math.max(semanaActual(ranking.inicio_semanas), 1) : null;
   const sub = mia
-    ? `${mia.posicion}.º en ${division ? DIVISION[division] : ""} · ${porJugar.length} por jugar`
+    ? `${mia.posicion}.º en ${division ? nombreDivision(division) : ""} · ${porJugar.length} por jugar`
     : (ranking?.nombre ?? "Tus torneos y marcadores");
 
   return (
@@ -136,7 +148,13 @@ export default async function PaginaMisPartidos({ searchParams }: PageProps<"/pa
           {porJugar.length > 0 ? (
             <Lista>
               {porJugar.map((p) => (
-                <Fila key={p.id} nombre={p.rival.nombre} sub={contexto(p)} href={enlace(p)} derecha={<Flecha />} />
+                <Fila
+                  key={p.id}
+                  nombre={p.rival.nombre}
+                  sub={contexto(p, semanaHoy)}
+                  href={enlace(p)}
+                  derecha={<Flecha />}
+                />
               ))}
             </Lista>
           ) : (

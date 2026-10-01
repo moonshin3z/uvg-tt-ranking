@@ -21,6 +21,8 @@ export type FilaHistorial = {
   n_premiados: number;
   n_ascienden: number;
   n_descienden: number;
+  /** Cuántas divisiones tenía ese ranking: dice si había una arriba o abajo. */
+  divisiones: number;
 };
 
 export type PartidoDePerfil = {

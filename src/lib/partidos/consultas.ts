@@ -21,10 +21,12 @@ export type PartidoMio = {
   confirmadoEn: string | null;
   disputaMotivo: string | null;
   resolucion: string | null;
+  /** La semana en que le toca, si el ranking se reparte en semanas. */
+  semana: number | null;
 };
 
 const SELECT_PARTIDO = `
-  id, tipo, estado, jugador_a, jugador_b, ganador, sets_a, sets_b,
+  id, tipo, estado, jugador_a, jugador_b, ganador, sets_a, sets_b, semana,
   registrado_por, registrado_en, confirmado_en, disputa_motivo, resolucion,
   torneo_id,
   division(tipo, ranking_id, ranking(estado)),
@@ -47,6 +49,7 @@ type FilaPartido = {
   confirmado_en: string | null;
   disputa_motivo: string | null;
   resolucion: string | null;
+  semana: number | null;
   torneo_id: string | null;
   division: { tipo: DivisionTipo; ranking_id: string; ranking: { estado: string } | null } | null;
   torneo: { id: string; nombre: string; estado: string; horas_autoconfirmacion: number | null } | null;
@@ -82,6 +85,7 @@ export function desdeMiPerspectiva(p: FilaPartido, yo: string): PartidoMio {
     confirmadoEn: p.confirmado_en,
     disputaMotivo: p.disputa_motivo,
     resolucion: p.resolucion,
+    semana: p.semana,
   };
 }
 
@@ -110,12 +114,14 @@ export async function misPartidos(yo: string, rankingId: string): Promise<MisPar
   const todos = ((data ?? []) as unknown as FilaPartido[]).map((p) => desdeMiPerspectiva(p, yo));
   return {
     porConfirmar: todos.filter((p) => p.estado === "jugado" && !p.loRegistreYo),
-    // Los desempates tienen plazo corto y definen premios: van primero.
+    // Los desempates tienen plazo corto y definen premios: van primero. Después
+    // por semana, así el de esta semana (o uno atrasado) queda arriba.
     pendientes: todos
       .filter((p) => p.estado === "pendiente")
       .sort(
         (x, y) =>
           Number(y.tipo === "desempate") - Number(x.tipo === "desempate") ||
+          (x.semana ?? Infinity) - (y.semana ?? Infinity) ||
           x.rival.nombre.localeCompare(y.rival.nombre),
       ),
     esperandoRival: todos.filter((p) => p.estado === "jugado" && p.loRegistreYo),

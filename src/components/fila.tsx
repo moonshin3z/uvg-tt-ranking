@@ -49,11 +49,13 @@ type Props = {
   sinInicial?: boolean;
   /** El título en negrita. */
   fuerte?: boolean;
+  /** El título puede ocupar más de una línea en vez de cortarse con «…». */
+  envolver?: boolean;
   /** Debajo de la fila, dentro del mismo bloque. */
   children?: React.ReactNode;
 };
 
-function Contenido({ nombre, sub, derecha, icono, sinInicial, fuerte }: Omit<Props, "href" | "children">) {
+function Contenido({ nombre, sub, derecha, icono, sinInicial, fuerte, envolver }: Omit<Props, "href" | "children">) {
   return (
     <>
       {icono ? (
@@ -66,7 +68,7 @@ function Contenido({ nombre, sub, derecha, icono, sinInicial, fuerte }: Omit<Pro
         </span>
       )}
       <span className="medio">
-        <span className={cn("t-celda", fuerte && "fuerte")}>{nombre}</span>
+        <span className={cn("t-celda", fuerte && "fuerte", envolver && "envuelve")}>{nombre}</span>
         {sub ? <span className="s-celda">{sub}</span> : null}
       </span>
       {derecha ? <span className="derecha">{derecha}</span> : null}
@@ -78,9 +80,17 @@ function claseFila({ icono, sinInicial }: Pick<Props, "icono" | "sinInicial">) {
   return icono ? "con-icono" : sinInicial ? undefined : "con-av";
 }
 
-export function Fila({ nombre, sub, derecha, href, icono, sinInicial, fuerte, children }: Props) {
+export function Fila({ nombre, sub, derecha, href, icono, sinInicial, fuerte, envolver, children }: Props) {
   const contenido = (
-    <Contenido nombre={nombre} sub={sub} derecha={derecha} icono={icono} sinInicial={sinInicial} fuerte={fuerte} />
+    <Contenido
+      nombre={nombre}
+      sub={sub}
+      derecha={derecha}
+      icono={icono}
+      sinInicial={sinInicial}
+      fuerte={fuerte}
+      envolver={envolver}
+    />
   );
 
   return (

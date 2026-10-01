@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { rankingVigente } from "@/lib/ranking/consultas";
+import { divisionesDelRanking, rankingVigente } from "@/lib/ranking/consultas";
 import { formatearFecha, textoFechaLimite } from "@/lib/fechas";
 import { Pie, Rotulo } from "@/components/fila";
 import { Tope } from "@/components/tope";
@@ -25,11 +25,13 @@ export default async function PaginaReglas() {
   const r = await rankingVigente();
   const victoria = r?.pts_victoria ?? 1;
   const derrota = r?.pts_derrota ?? 0;
-  const premiados = r?.n_premiados ?? 3;
-  const suben = r?.n_ascienden ?? 3;
-  const bajan = r?.n_descienden ?? 3;
+  const premiados = r?.n_premiados ?? 2;
+  const suben = r?.n_ascienden ?? 2;
+  const bajan = r?.n_descienden ?? 2;
   const horas = r?.horas_autoconfirmacion ?? null;
   const sets = r?.sets_para_ganar ?? 2;
+  const porSemana = r?.partidos_por_semana ?? 5;
+  const divisiones = r ? (await divisionesDelRanking(r.id)).length || 3 : 3;
 
   return (
     <>
@@ -48,12 +50,20 @@ export default async function PaginaReglas() {
 
         <Seccion titulo="Divisiones y calendario">
           <p>
-            El club juega en dos divisiones, Mayor y Menor. Cada una es una liga aparte: jugás contra todos los de tu
-            división, una sola vez, y nunca contra alguien de la otra.
+            El club juega en{" "}
+            {divisiones === 3 ? "tres divisiones: Primera, Segunda y Tercera" : "dos divisiones: Primera y Segunda"}.
+            Cada una es una liga aparte: jugás contra todos los de tu división, una sola vez, y nunca contra alguien
+            de otra.
           </p>
           <p>
-            El calendario sale completo desde el primer día, así que podés ver de entrada contra quién te toca. No hay
-            fechas asignadas para cada partido: se coordinan entre ustedes y se juegan antes de la fecha límite.
+            El calendario sale completo desde el primer día y se reparte en semanas: cada semana se juegan {porSemana}{" "}
+            partidos en todo el club, y nadie juega dos veces en la misma semana. Los partidos no tienen día fijo: se
+            juegan martes, miércoles o jueves, cuando les quede a los dos.
+          </p>
+          <p>
+            Si un partido no se juega en su semana, queda pendiente y no suma para ninguno hasta que se juegue; el
+            coordinador decide cuándo. Si los dos están de acuerdo, se puede adelantar un partido de una semana que
+            todavía no llegó, y las semanas que vienen se rearman solas.
           </p>
           <p>
             Las divisiones se arman antes de empezar y después no entra nadie nuevo. Si te sumás al club con el
@@ -75,11 +85,11 @@ export default async function PaginaReglas() {
 
         <Seccion titulo="Registrar un resultado">
           <p>
-            Cualquiera de los dos registra el partido desde Mis partidos. Se anota cuántos sets ganó cada uno y el
-            sistema deduce quién ganó; los puntos de cada set son opcionales.
+            Cualquiera de los dos registra el partido desde Partidos. Se anota cuántos sets ganó cada uno y el sistema
+            deduce quién ganó; los puntos de cada set son opcionales.
           </p>
           <p>
-            Después le aparece al otro para confirmar. Si está de acuerdo, toca Confirmar y listo. Si no, toca No es
+            Después le aparece al otro para confirmar. Si está de acuerdo, toca Confirmar y listo. Si no, toca No fue
             así y escribe qué pasó: el partido queda en disputa y lo resuelve el coordinador hablando con los dos.
           </p>
           {horas ? (
@@ -98,9 +108,10 @@ export default async function PaginaReglas() {
 
         <Seccion titulo="Premios, ascensos y descensos">
           <p>
-            Al terminar el ranking se premia a los primeros {premiados} de cada división. Los {suben} primeros de
-            Menor suben a Mayor y los {bajan} últimos de Mayor bajan a Menor, y así se arman las divisiones del
-            ranking siguiente.
+            Al terminar el ranking se premia a los primeros {premiados} de cada división. Entre una división y la de
+            abajo, los {suben} primeros de la de abajo suben y los {bajan} últimos de la de arriba bajan, y así se
+            arman las divisiones del ranking siguiente.
+            {premiados === suben ? " Fuera de Primera, los que ganan premio son los mismos que suben." : ""}
           </p>
           <p>
             Si dos o más quedan empatados en puntos en un puesto que define premio, ascenso o descenso, juegan un

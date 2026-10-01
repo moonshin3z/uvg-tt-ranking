@@ -27,3 +27,34 @@ export async function resolverPartido(_prev: EstadoResolver, formData: FormData)
   revalidatePath("/admin/partidos");
   return { ok: decision === "anular" ? "Partido anulado" : "Resuelto" };
 }
+
+export type EstadoSemana = { error?: string; ok?: string };
+
+/**
+ * Pasa un partido pendiente a otra semana, o lo suelta para que lo acomode la
+ * app («auto»). La base no deja elegir una semana que ya pasó.
+ */
+export async function moverASemana(_prev: EstadoSemana, formData: FormData): Promise<EstadoSemana> {
+  await requerirCoordinador();
+  const partidoId = String(formData.get("partido_id") ?? "");
+  const valor = String(formData.get("semana") ?? "");
+  const semana = valor === "auto" ? null : Number(valor);
+  if (!partidoId || (semana !== null && (!Number.isInteger(semana) || semana < 1))) {
+    return { error: "Elegí una semana" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("mover_partido_a_semana", {
+    p_partido_id: partidoId,
+    p_semana: semana ?? undefined,
+  });
+  if (error) return { error: error.message.replace(/^.*?:\s*/, "") };
+
+  revalidatePath(`/partidos/${partidoId}`);
+  revalidatePath("/semana");
+  revalidatePath("/partidos");
+  return {
+    ok:
+      semana === null ? "Listo: la app lo acomoda en la próxima semana con lugar." : `Pasado a la semana ${semana}.`,
+  };
+}

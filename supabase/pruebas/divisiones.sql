@@ -43,8 +43,8 @@ begin
     raise exception 'AGUJERO: la propuesta trajo % jugadores nuevos y debía traer 1', v_nuevos;
   end if;
   if not exists (select 1 from public.proponer_siguiente(v_ant)
-                  where origen='nuevo' and division_propuesta='menor') then
-    raise exception 'AGUJERO: el jugador nuevo no quedó propuesto en Menor';
+                  where origen='nuevo' and division_propuesta='segunda') then
+    raise exception 'AGUJERO: el jugador nuevo no quedó propuesto en la última división';
   end if;
 
   perform pg_temp.como('20001');
@@ -59,9 +59,9 @@ begin
     select 1 from public.inscripcion i
       join public.division d on d.id = i.division_id
       join public.usuario u on u.id = i.usuario_id
-     where d.ranking_id = v_nuevo and u.carnet = '29999' and d.tipo = 'menor'
+     where d.ranking_id = v_nuevo and u.carnet = '29999' and d.tipo = 'segunda'
   ) then
-    raise exception 'AGUJERO: el jugador nuevo no quedó inscrito en Menor del ranking heredado';
+    raise exception 'AGUJERO: el jugador nuevo no quedó inscrito en la última división del ranking heredado';
   end if;
 
   -- Sortear el heredado tiene que fallar, y fallar POR ESO.
@@ -73,7 +73,7 @@ begin
   -- exige que el mensaje hable de la herencia y no de cualquier otra cosa.
   select jsonb_agg(jsonb_build_object(
            'usuario_id', i.usuario_id,
-           'division', case when i.n % 2 = 0 then 'mayor' else 'menor' end))
+           'division', case when i.n % 2 = 0 then 'primera' else 'segunda' end))
     into v_asig
     from (select i.usuario_id, row_number() over (order by i.usuario_id) as n
             from public.inscripcion i join public.division d on d.id = i.division_id
@@ -125,7 +125,7 @@ begin
   end if;
 
   select jsonb_agg(jsonb_build_object('usuario_id', u.id,
-           'division', case when u.n % 2 = 0 then 'mayor' else 'menor' end))
+           'division', case when u.n % 2 = 0 then 'primera' else 'segunda' end))
     into v_asig
     from (select id, row_number() over (order by carnet) n from public.usuario
            where activo limit 6) u;

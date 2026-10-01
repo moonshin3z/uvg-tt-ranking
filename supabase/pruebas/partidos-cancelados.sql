@@ -37,7 +37,7 @@ begin
     if clase = 'ranking' then
       insert into public.ranking(semestre_id, numero, nombre, fecha_limite, estado)
         values (sem, 1, 'Ranking cancelable', current_date + 30, 'abierto') returning id into r;
-      insert into public.division(ranking_id, tipo) values (r, 'mayor') returning id into d;
+      insert into public.division(ranking_id, tipo) values (r, 'primera') returning id into d;
     else
       insert into public.torneo(semestre_id, nombre, formato, estado, sets_para_ganar)
         values (sem, 'Torneo cancelable', 'llave', 'en_juego', 2) returning id into t;

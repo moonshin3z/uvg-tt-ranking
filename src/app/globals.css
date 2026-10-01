@@ -507,6 +507,12 @@
     font-weight: 600;
   }
 
+  /* Un partido con dos nombres largos: mejor dos líneas que perder al rival. */
+  .t-celda.envuelve {
+    white-space: normal;
+    text-wrap: pretty;
+  }
+
   .s-celda {
     display: block;
     margin-top: 1px;
@@ -618,6 +624,48 @@
     flex-direction: column;
     gap: 8px;
     padding: 0 16px;
+  }
+
+  /* ---------- semanas: anterior, cuál, siguiente ---------- */
+
+  .paso-semana {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    margin: 0 16px 6px;
+  }
+
+  .paso-semana a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--relleno);
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: transform 0.3s var(--curva);
+  }
+
+  .paso-semana a:active {
+    transform: scale(0.96);
+  }
+
+  .paso-semana > :first-child {
+    justify-self: start;
+  }
+
+  .paso-semana > :last-child {
+    justify-self: end;
+  }
+
+  .paso-semana .cual {
+    color: var(--muted-foreground);
+    font-size: 13px;
+    text-align: center;
   }
 
   /* ---------- control segmentado ---------- */

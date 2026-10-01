@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import type { FilaOrdenada } from "@/lib/ranking/tabla";
 import { Segmentado } from "@/components/fila";
+import { divisionLarga, nombreDivision } from "@/lib/ranking/divisiones";
 
 /**
  * La tabla de posiciones, copiada del prototipo de iOS.
@@ -22,36 +23,65 @@ import { Segmentado } from "@/components/fila";
  * angosto esa columna le come ancho al nombre.
  */
 
-export function SelectorDivision({ actual }: { actual: DivisionTipo }) {
+export function SelectorDivision({
+  actual,
+  divisiones,
+  href = (d) => `/?division=${d}` as Route,
+}: {
+  actual: DivisionTipo;
+  divisiones: readonly DivisionTipo[];
+  href?: (division: DivisionTipo) => Route;
+}) {
   return (
     <Segmentado
       etiqueta="División"
       actual={actual}
-      opciones={[
-        { valor: "mayor", etiqueta: "Mayor", href: "/?division=mayor" as Route },
-        { valor: "menor", etiqueta: "Menor", href: "/?division=menor" as Route },
-      ]}
+      opciones={divisiones.map((d) => ({ valor: d, etiqueta: nombreDivision(d), href: href(d) }))}
     />
   );
 }
 
-export function LeyendaZonas({ division }: { division: DivisionTipo }) {
+const losPrimeros = (n: number) => (n === 1 ? "el primero" : `los ${n} primeros`);
+const losUltimos = (n: number) => (n === 1 ? "el último" : `los ${n} últimos`);
+
+/** Qué pasa en esta división: con los números del ranking, no escritos a mano. */
+export function LeyendaZonas({
+  division,
+  divisiones,
+  n_premiados,
+  n_ascienden,
+  n_descienden,
+}: {
+  division: DivisionTipo;
+  divisiones: readonly DivisionTipo[];
+  n_premiados: number;
+  n_ascienden: number;
+  n_descienden: number;
+}) {
+  const nivel = divisiones.indexOf(division);
+  const arriba = nivel > 0 ? divisiones[nivel - 1] : null;
+  const abajo = nivel >= 0 && nivel < divisiones.length - 1 ? divisiones[nivel + 1] : null;
   const marca = (color: string, texto: string) => (
     <span>
       <i aria-hidden style={{ background: color }} />
       {texto}
     </span>
   );
+  const suben = (n: number) => (n === 1 ? "Sube" : "Suben");
+  const bajan = (n: number) => (n === 1 ? "Baja" : "Bajan");
   return (
     <p className="leyenda">
-      {division === "mayor" ? (
-        <>
-          {marca("var(--uvg)", "Premian a los 3 primeros")}
-          {marca("var(--rojo)", "Bajan los 3 últimos")}
-        </>
-      ) : (
-        marca("var(--uvg)", "Suben los 3 primeros a Mayor")
-      )}
+      {arriba
+        ? marca(
+            "var(--uvg)",
+            `${suben(n_ascienden)} ${losPrimeros(n_ascienden)} a ${nombreDivision(arriba)}${n_premiados >= n_ascienden && n_premiados > 0 ? " y ganan premio" : ""}`,
+          )
+        : n_premiados > 0
+          ? marca("var(--uvg)", `Premian a ${losPrimeros(n_premiados)}`)
+          : null}
+      {abajo
+        ? marca("var(--rojo)", `${bajan(n_descienden)} ${losUltimos(n_descienden)} a ${nombreDivision(abajo)}`)
+        : null}
     </p>
   );
 }
@@ -156,7 +186,7 @@ export function TablaPosiciones({
 
   return (
     <Tabla
-      titulo={`Posiciones de la División ${division === "mayor" ? "Mayor" : "Menor"}`}
+      titulo={`Posiciones de ${divisionLarga(division)}`}
       filas={filas.map((f) => ({
         id: f.usuario_id,
         posicion: f.posicion,

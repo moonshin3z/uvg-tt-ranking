@@ -1,5 +1,49 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: tres divisiones y partidos por semana
+
+El 1 de octubre el club cambió el formato, antes de crear el ranking real (en producción solo había datos de prueba). Decisiones de Iván, con el coordinador:
+
+- **Tres divisiones:** Primera, Segunda y Tercera, de 5 jugadores cada una (la lista está por confirmar). Ya vienen definidas: no hay sorteo, se asignan a mano.
+- **Suben y bajan 2** entre cada par de divisiones vecinas. **Premian a los 2 primeros** de cada división; en Segunda y Tercera son los mismos que suben.
+- **Partidos por semana:** 4 o 5 para todo el club, nunca más. Se juegan martes, miércoles o jueves, pero los partidos **no llevan día**: se acomodan según la disponibilidad de cada pareja.
+- **Lo que no se juega en su semana** queda pendiente y no suma para ninguno; lo resuelve el coordinador, que puede pasarlo a otra semana.
+- **Se puede adelantar** un partido de una semana que no llegó (excepciones de gente que no puede una semana).
+- **La app arma las semanas sola**, sin repetir lo que ya se jugó.
+- Una pantalla con los partidos de la semana, una imagen para mandar al grupo, y los resultados al final de la semana.
+
+### Base (migraciones `20261012` y `20261013`)
+
+- `division_tipo`: `mayor` → `primera`, `menor` → `segunda`, más `tercera`. Se renombraron los valores en vez de crear otros: lo que ya existía quedó como Primera y Segunda sin tocar filas. La 12 va sola porque Postgres no deja usar un valor de enum recién agregado en la misma transacción.
+- Todo lo que suponía Mayor/Menor ahora usa `nivel_division(tipo)` (1 = Primera) y la cantidad de divisiones del ranking: `crear_ranking` (nuevo `p_divisiones`, 2 o 3, por defecto 3, y `p_partidos_por_semana`; defaults de premios/ascensos/descensos en 2), `armar_divisiones`, `abrir_ranking`, `empates_relevantes`, `proponer_siguiente` (el nuevo entra en la última), `crear_ranking_siguiente` (hereda cantidad de divisiones y partidos por semana) e `historial_jugador` (devuelve `divisiones`, para saber si había una arriba o abajo).
+- `abrir_ranking` valida que en una división del medio alcancen los jugadores para que suban y bajen a la vez.
+- Columnas: `ranking.partidos_por_semana`, `ranking.inicio_semanas` (lunes de la semana 1, se fija al abrir), `partido.semana`, `partido.semana_fija` (la puso el coordinador) y `partido.jornada` (todos contra todos por el método del círculo; la calcula `generar_calendario`).
+- `planificar_semanas(ranking)`: reparte los pendientes no fijos en semanas de hasta `partidos_por_semana`, sin repetir jugador en una semana, priorizando jornadas tempranas y la división que menos lleva esa semana. **Las semanas que ya empezaron no se tocan** (ya se anunciaron); la primera vez arma también la en curso. Con 5, 5 y 5 da 6 semanas de 5, y en las simulaciones (6/5/4, 8/8/9, 13/12, con 4, 5, 6 y 10 por semana) siempre llegó al mínimo de semanas posible.
+- Disparadores en `partido` (solo cuando cambia `estado`): si se juega un partido de una semana futura, pasa a la semana en curso; si un anulado vuelve a pendiente (deshacer retiro), queda sin semana; y después se vuelven a armar las semanas que no empezaron.
+- `mover_partido_a_semana(partido, semana?)` y `ajustar_partidos_por_semana(ranking, n)`, solo coordinador. A una semana pasada no se puede mover.
+- Las semanas se cuentan en días de Guatemala (`hoy_guatemala()`, `semana_de()`), igual que en `src/lib/ranking/semanas.ts`.
+
+Pruebas: `supabase/pruebas/semanas.sql`, 8 comprobaciones. Se corrieron contra siete variantes rotas a propósito de la migración (sin el freno de jugador ocupado, sin pasar el adelantado a su semana, rearmando la semana en curso, rearmando semanas pasadas, dejando mover a una semana pasada, sin el descenso de Segunda, sin el freno de la división del medio) y cada una hace fallar la prueba. La del jugador ocupado no se veía con 5 por semana, porque el orden por jornadas ya los separa solo; por eso hay un caso con 10 por semana. Las 12 pruebas que ya existían se actualizaron a los nombres nuevos; `herencia.sql` ahora espera 3 divisiones.
+
+### Aplicación
+
+- `src/lib/ranking/divisiones.ts`: nombres, nivel y la división que pide la URL. La portada abre en la división del que mira.
+- `asignarZonas` recibe `nivel` y `divisiones`: arriba sube si hay una división arriba (si no, premio); abajo baja si hay una abajo. La leyenda de la tabla dice los números del ranking.
+- El sorteo reparte en N partes iguales (las de arriba llevan uno más si no da exacto).
+- `/semana`: los partidos de una semana por división, flechas a la anterior y la siguiente, los atrasados que quedan, y el botón **Compartir imagen**. La imagen sale de `/semana/imagen?n=` (`next/og`, 1080 de ancho, alto según los partidos) con Inter en TTF (`src/fonts/inter-og-400.ttf` y `-700.ttf`, sacadas de la variable y recortadas al español; el generador no lee woff2). La imagen se pide al cargar la página y no al tocar el botón: Safari en iPhone solo deja compartir si `navigator.share` se llama enseguida del toque.
+- Desde el viernes una semana muestra sus resultados; lo que no se jugó dice "No se jugó".
+- Portada: una celda "Partidos de la semana". Partidos: cada pendiente dice "Esta semana", "Semana N" o "Atrasado". Detalle del partido: el coordinador lo pasa a otra semana o lo suelta.
+- Panel, ranking: al crear se elige cantidad de divisiones y partidos por semana; al abrir, el lunes de la semana 1; abierto, una tarjeta de semanas. **Con un ranking cerrado ahora también se ofrece "Empezar de cero"**: antes solo se podía crear el siguiente heredando, y un ranking de prueba cerrado en producción habría obligado a heredar sus divisiones.
+
+### Cómo se verificó
+
+- Postgres 16 local con un andamio de Supabase (roles, `auth.users`, `auth.uid()`), las 30 migraciones y la semilla: las 13 pruebas SQL pasan (72 comprobaciones).
+- Tipos: `database.types.ts` se regeneró con el mismo generador del CLI 2.117.0 (`@supabase/postgres-meta` 0.99.0 con `@supabase/postgrest-typegen` 0.2.0). Esa combinación reprodujo idéntico, línea por línea, el archivo que estaba en el repo antes del cambio.
+- La aplicación de verdad contra esa base con PostgREST 12 y un GoTrue mínimo: login real, crear el ranking de 3 divisiones, asignar 5, 5 y 5, generar el calendario (30 partidos), abrirlo (6 semanas de 5), registrar como jugadora un partido de la semana 3 (pasó a la 1 y la 3 se volvió a llenar) y mover uno como coordinador. Auditoría de layout sin hallazgos en 17 pantallas por 12 anchos, con y sin sesión.
+- Lo que no se pudo probar acá: compartir en un iPhone de verdad, y las pruebas de navegador del repo (necesitan Docker).
+
+Para producción: `npx supabase db push` (las dos migraciones nuevas) **antes** de que Vercel publique el código, porque las pantallas nuevas leen columnas que no existen sin ellas.
+
 ## Actualización: la lista de jugadores en teléfonos angostos
 
 En `/admin/jugadores`, cada fila ponía el nombre y hasta cuatro botones en la misma línea con `flex-wrap`, y el nombre tenía `flex-1 min-w-0`. En pantallas de unos 360 px los botones le quitaban todo el ancho: quedaban nombres como "K." o "I..", las etiquetas (coordinador, PIN sin cambiar) se montaban encima de "Nuevo PIN" y "EXT-01" se partía en dos. Ahora el nombre ocupa su propia línea en el teléfono (`basis-full`) y desde `sm` comparte la fila con un mínimo de `12rem`; los mensajes de cada botón se alinean a la izquierda en el teléfono.

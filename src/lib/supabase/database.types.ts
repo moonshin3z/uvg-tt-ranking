@@ -272,12 +272,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -294,12 +297,15 @@ export type Database = {
           ganador?: string | null
           grupo_id?: string | null
           id?: string
+          jornada?: number | null
           jugador_a: string
           jugador_b: string
           registrado_en?: string | null
           registrado_por?: string | null
           resolucion?: string | null
           ronda?: number
+          semana?: number | null
+          semana_fija?: boolean
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
@@ -316,12 +322,15 @@ export type Database = {
           ganador?: string | null
           grupo_id?: string | null
           id?: string
+          jornada?: number | null
           jugador_a?: string
           jugador_b?: string
           registrado_en?: string | null
           registrado_por?: string | null
           resolucion?: string | null
           ronda?: number
+          semana?: number | null
+          semana_fija?: boolean
           sets_a?: number | null
           sets_b?: number | null
           tipo?: Database["public"]["Enums"]["partido_tipo"]
@@ -440,11 +449,13 @@ export type Database = {
           fecha_limite: string
           horas_autoconfirmacion: number | null
           id: string
+          inicio_semanas: string | null
           n_ascienden: number
           n_descienden: number
           n_premiados: number
           nombre: string
           numero: number
+          partidos_por_semana: number
           pts_derrota: number
           pts_victoria: number
           puntos_por_set: number
@@ -459,11 +470,13 @@ export type Database = {
           fecha_limite: string
           horas_autoconfirmacion?: number | null
           id?: string
+          inicio_semanas?: string | null
           n_ascienden?: number
           n_descienden?: number
           n_premiados?: number
           nombre: string
           numero: number
+          partidos_por_semana?: number
           pts_derrota?: number
           pts_victoria?: number
           puntos_por_set?: number
@@ -478,11 +491,13 @@ export type Database = {
           fecha_limite?: string
           horas_autoconfirmacion?: number | null
           id?: string
+          inicio_semanas?: string | null
           n_ascienden?: number
           n_descienden?: number
           n_premiados?: number
           nombre?: string
           numero?: number
+          partidos_por_semana?: number
           pts_derrota?: number
           pts_victoria?: number
           puntos_por_set?: number
@@ -1086,7 +1101,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      abrir_ranking: { Args: { p_ranking_id: string }; Returns: undefined }
+      abrir_ranking: {
+        Args: { p_inicio_semanas?: string; p_ranking_id: string }
+        Returns: undefined
+      }
+      ajustar_partidos_por_semana: {
+        Args: { p_cantidad: number; p_ranking_id: string }
+        Returns: undefined
+      }
       anulados_sin_retiro: { Args: { p_ranking_id: string }; Returns: number }
       anular_partido: {
         Args: { p_nota: string; p_partido_id: string }
@@ -1101,12 +1123,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -1227,12 +1252,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -1262,6 +1290,7 @@ export type Database = {
       contenido_del_torneo: { Args: { p_torneo_id: string }; Returns: Json }
       crear_ranking: {
         Args: {
+          p_divisiones?: number
           p_fecha_limite: string
           p_horas_autoconfirmacion?: number
           p_n_ascienden?: number
@@ -1269,6 +1298,7 @@ export type Database = {
           p_n_premiados?: number
           p_nombre: string
           p_numero: number
+          p_partidos_por_semana?: number
           p_pts_derrota?: number
           p_pts_victoria?: number
           p_puntos_por_set?: number
@@ -1342,12 +1372,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -1359,6 +1392,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      division_de_nivel: {
+        Args: { p_nivel: number }
+        Returns: Database["public"]["Enums"]["division_tipo"]
       }
       elegir_saque_marcador: {
         Args: { p_marcador_id: string; p_saca?: string }
@@ -1431,6 +1468,7 @@ export type Database = {
         Args: { p_usuario_id: string }
         Returns: {
           division: Database["public"]["Enums"]["division_tipo"]
+          divisiones: number
           jugadores_division: number
           n_ascienden: number
           n_descienden: number
@@ -1454,6 +1492,7 @@ export type Database = {
         }
         Returns: string
       }
+      hoy_guatemala: { Args: never; Returns: string }
       impacto_retiro: {
         Args: { p_ranking_id: string; p_usuario_id: string }
         Returns: {
@@ -1480,6 +1519,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      jornada_circular: {
+        Args: { p_i: number; p_j: number; p_n: number }
+        Returns: number
       }
       jugadores_del_club: {
         Args: never
@@ -1515,6 +1558,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      mover_partido_a_semana: {
+        Args: { p_partido_id: string; p_semana?: number }
+        Returns: undefined
+      }
+      nivel_division: {
+        Args: { p_tipo: Database["public"]["Enums"]["division_tipo"] }
+        Returns: number
+      }
       orden_division: {
         Args: { p_division_id: string }
         Returns: {
@@ -1534,6 +1585,7 @@ export type Database = {
         Args: { p: Database["public"]["Tables"]["partido"]["Row"] }
         Returns: Json
       }
+      planificar_semanas: { Args: { p_ranking_id: string }; Returns: number }
       posiciones_division: {
         Args: { p_division_id: string }
         Returns: {
@@ -1590,11 +1642,13 @@ export type Database = {
           fecha_limite: string
           horas_autoconfirmacion: number | null
           id: string
+          inicio_semanas: string | null
           n_ascienden: number
           n_descienden: number
           n_premiados: number
           nombre: string
           numero: number
+          partidos_por_semana: number
           pts_derrota: number
           pts_victoria: number
           puntos_por_set: number
@@ -1657,12 +1711,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -1695,12 +1752,15 @@ export type Database = {
           ganador: string | null
           grupo_id: string | null
           id: string
+          jornada: number | null
           jugador_a: string
           jugador_b: string
           registrado_en: string | null
           registrado_por: string | null
           resolucion: string | null
           ronda: number
+          semana: number | null
+          semana_fija: boolean
           sets_a: number | null
           sets_b: number | null
           tipo: Database["public"]["Enums"]["partido_tipo"]
@@ -1721,6 +1781,7 @@ export type Database = {
         Args: { p_torneo_id: string; p_usuario_id: string }
         Returns: undefined
       }
+      semana_de: { Args: { p_dia: string; p_inicio: string }; Returns: number }
       set_valido: {
         Args: { p_a: number; p_b: number; p_tope: number }
         Returns: boolean
@@ -1768,7 +1829,7 @@ export type Database = {
       }
     }
     Enums: {
-      division_tipo: "mayor" | "menor"
+      division_tipo: "primera" | "segunda" | "tercera"
       evento_accion:
         | "registro"
         | "confirmo"
@@ -1936,7 +1997,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      division_tipo: ["mayor", "menor"],
+      division_tipo: ["primera", "segunda", "tercera"],
       evento_accion: [
         "registro",
         "confirmo",

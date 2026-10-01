@@ -1,7 +1,8 @@
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
-import { calendarioDeRanking, rankingPorId, tablaDeDivision } from "@/lib/ranking/consultas";
+import { calendarioDeRanking, divisionesDelRanking, rankingPorId, tablaDeDivision } from "@/lib/ranking/consultas";
+import { divisionElegida, nombreDivision } from "@/lib/ranking/divisiones";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import { Fila, Lista, Marcador, Pie, Segmentado } from "@/components/fila";
 import { LeyendaZonas, TablaPosiciones } from "@/components/tabla-posiciones";
@@ -33,11 +34,12 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
   const ranking = await rankingPorId(id);
   if (!ranking) notFound();
 
-  const division: DivisionTipo = divParam === "menor" ? "menor" : "mayor";
+  const divisiones = await divisionesDelRanking(ranking.id);
+  const division: DivisionTipo = divisionElegida(divParam, divisiones);
   const verCalendario = ver === "calendario";
 
   const [filas, calendario] = await Promise.all([
-    tablaDeDivision(ranking, division),
+    tablaDeDivision(ranking, division, divisiones.length),
     verCalendario ? calendarioDeRanking(ranking.id) : Promise.resolve([]),
   ]);
 
@@ -55,10 +57,7 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
         <Segmentado
           etiqueta="División"
           actual={division}
-          opciones={[
-            { valor: "mayor", etiqueta: "Mayor", href: aca("mayor", verCalendario) },
-            { valor: "menor", etiqueta: "Menor", href: aca("menor", verCalendario) },
-          ]}
+          opciones={divisiones.map((d) => ({ valor: d, etiqueta: nombreDivision(d), href: aca(d, verCalendario) }))}
         />
         <Segmentado
           etiqueta="Vista"
@@ -71,7 +70,13 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
 
         {!verCalendario ? (
           <>
-            <LeyendaZonas division={division} />
+            <LeyendaZonas
+              division={division}
+              divisiones={divisiones}
+              n_premiados={ranking.n_premiados}
+              n_ascienden={ranking.n_ascienden}
+              n_descienden={ranking.n_descienden}
+            />
             <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
           </>
         ) : deLaDivision.length === 0 ? (

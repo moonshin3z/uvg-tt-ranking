@@ -40,7 +40,7 @@ begin
   -- División mayor de la semilla: coordinador (20001), Ana (20002),
   -- Bruno (20003), Carla (20004). Se arma a mano un cuadro donde Ana y Bruno
   -- quedan con los mismos puntos y Bruno le ganó el directo a Ana.
-  select d.id into v_d from public.division d where d.tipo = 'mayor' limit 1;
+  select d.id into v_d from public.division d where d.tipo = 'primera' limit 1;
   update public.partido set estado = 'pendiente', ganador = null, sets_a = null, sets_b = null
    where division_id = v_d;
 

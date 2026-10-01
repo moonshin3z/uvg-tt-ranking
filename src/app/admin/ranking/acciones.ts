@@ -6,6 +6,7 @@ import { requerirCoordinador } from "@/lib/auth/coordinador";
 import { createClient } from "@/lib/supabase/server";
 import { datos } from "@/lib/supabase/errores";
 import { generarSemilla, sortearDivisiones, type Asignacion } from "@/lib/ranking/sorteo";
+import { esDivision } from "@/lib/ranking/divisiones";
 
 export type EstadoAccion = { error?: string; ok?: string };
 
@@ -61,6 +62,8 @@ const esquemaRanking = z.object({
   // repiten para dar un mensaje entendible antes de llegar a Postgres.
   sets_para_ganar: entero(1, 5),
   puntos_por_set: entero(5, 21),
+  divisiones: entero(2, 3),
+  partidos_por_semana: entero(1, 30),
 });
 
 export async function crearRanking(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
@@ -96,6 +99,8 @@ export async function crearRanking(_prev: EstadoAccion, formData: FormData): Pro
     p_horas_autoconfirmacion: (d.horas_autoconfirmacion === 0 ? null : d.horas_autoconfirmacion) as unknown as number,
     p_sets_para_ganar: d.sets_para_ganar,
     p_puntos_por_set: d.puntos_por_set,
+    p_divisiones: d.divisiones,
+    p_partidos_por_semana: d.partidos_por_semana,
   });
   if (error) return { error: mensaje(error, "No se pudo crear el ranking") };
 
@@ -125,15 +130,27 @@ async function guardarAsignacion(ranking_id: string, asignacion: Asignacion[], s
   return { ok: `${data} jugadores inscritos${semilla ? ` (semilla ${semilla})` : ""}` };
 }
 
+/** Cuántas divisiones tiene el ranking: el sorteo reparte entre esas. */
+async function cuantasDivisiones(ranking_id: string): Promise<number> {
+  const supabase = await createClient();
+  const data = datos(
+    await supabase.from("division").select("id").eq("ranking_id", ranking_id),
+    "las divisiones del ranking",
+  );
+  return data?.length ?? 0;
+}
+
 export async function sortear(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
   await requerirCoordinador();
   const { ranking_id, filas } = leerAsignacion(formData);
-  if (filas.length < 4) return { error: "Marcá al menos 4 jugadores para sortear" };
+  const divisiones = Math.max(await cuantasDivisiones(ranking_id), 2);
+  if (filas.length < 2 * divisiones) return { error: `Marcá al menos ${2 * divisiones} jugadores para sortear` };
 
   const semilla = generarSemilla();
   const asignacion = sortearDivisiones(
     filas.map((f) => f.id),
     semilla,
+    divisiones,
   );
   return guardarAsignacion(ranking_id, asignacion, semilla);
 }
@@ -142,13 +159,11 @@ export async function asignarManual(_prev: EstadoAccion, formData: FormData): Pr
   await requerirCoordinador();
   const { ranking_id, filas } = leerAsignacion(formData);
   if (filas.length < 4) return { error: "Marcá al menos 4 jugadores" };
-  const sinDivision = filas.filter((f) => f.division !== "mayor" && f.division !== "menor");
-  if (sinDivision.length > 0) return { error: "Asigná división a todos los marcados (o usá Sortear)" };
-
-  const asignacion: Asignacion[] = filas.map((f) => ({
-    usuario_id: f.id,
-    division: f.division as "mayor" | "menor",
-  }));
+  const asignacion: Asignacion[] = [];
+  for (const f of filas) {
+    if (!esDivision(f.division)) return { error: "Asigná división a todos los marcados (o usá Sortear)" };
+    asignacion.push({ usuario_id: f.id, division: f.division });
+  }
   return guardarAsignacion(ranking_id, asignacion, null);
 }
 
@@ -168,12 +183,35 @@ export async function generarCalendario(_prev: EstadoAccion, formData: FormData)
 
 export async function abrirRanking(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
   await requerirCoordinador();
+  const inicio = String(formData.get("inicio_semanas") ?? "");
+  if (inicio && !z.string().date().safeParse(inicio).success)
+    return { error: "La fecha de la semana 1 no es válida" };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("abrir_ranking", { p_ranking_id: String(formData.get("ranking_id") ?? "") });
+  const { error } = await supabase.rpc("abrir_ranking", {
+    p_ranking_id: String(formData.get("ranking_id") ?? ""),
+    p_inicio_semanas: inicio || undefined,
+  });
   if (error) return { error: mensaje(error, "No se pudo abrir el ranking") };
   revalidatePath(RUTA);
   revalidatePath("/");
-  return { ok: "Ranking abierto. Ya aparece en la portada." };
+  revalidatePath("/semana");
+  return { ok: "Ranking abierto. Ya aparece en la portada y los partidos quedaron repartidos en semanas." };
+}
+
+/** Cuántos partidos van por semana. Las semanas que ya empezaron no cambian. */
+export async function ajustarPartidosPorSemana(_prev: EstadoAccion, formData: FormData): Promise<EstadoAccion> {
+  await requerirCoordinador();
+  const cantidad = entero(1, 30).safeParse(formData.get("partidos_por_semana"));
+  if (!cantidad.success) return { error: "Entre 1 y 30 partidos por semana" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("ajustar_partidos_por_semana", {
+    p_ranking_id: String(formData.get("ranking_id") ?? ""),
+    p_cantidad: cantidad.data,
+  });
+  if (error) return { error: mensaje(error, "No se pudo cambiar") };
+  revalidatePath(RUTA);
+  revalidatePath("/semana");
+  return { ok: `Listo: ${cantidad.data} por semana desde la semana que viene.` };
 }
 
 // ---------------------------------------------------------------------------

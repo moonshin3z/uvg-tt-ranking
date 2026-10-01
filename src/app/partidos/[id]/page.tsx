@@ -8,7 +8,7 @@ import {
   setsDePartido,
   type EventoPartido,
 } from "@/lib/partidos/consultas";
-import { rankingPorId } from "@/lib/ranking/consultas";
+import { rankingPorId, ultimaSemanaDe } from "@/lib/ranking/consultas";
 import { createClient } from "@/lib/supabase/server";
 import { textoAutoconfirmacion } from "@/lib/fechas";
 import { Aviso, Heroe, Nota, Pila, TarjetaMarcador, primerNombre } from "@/components/fila";
@@ -16,6 +16,9 @@ import { Tope } from "@/components/tope";
 import { AnotarResultado, BotonDisputar, BotonesConfirmar } from "../formularios";
 import { abrirMarcador } from "../acciones";
 import { datos } from "@/lib/supabase/errores";
+import { divisionLarga } from "@/lib/ranking/divisiones";
+import { semanaActual } from "@/lib/ranking/semanas";
+import { MoverSemana } from "./semana";
 
 export const metadata: Metadata = { title: "Partido" };
 
@@ -143,8 +146,20 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
   const misSets = soyA ? p.sets_a : p.sets_b;
   const susSets = soyA ? p.sets_b : p.sets_a;
   const contexto = p.division
-    ? `División ${p.division.tipo === "mayor" ? "Mayor" : "Menor"}${p.tipo === "desempate" ? " · desempate" : ""}`
+    ? `${divisionLarga(p.division.tipo)}${p.tipo === "desempate" ? " · desempate" : ""}${
+        p.semana !== null && p.estado === "pendiente" ? ` · semana ${p.semana}` : ""
+      }`
     : `${p.torneo?.nombre ?? "Torneo"} · ${p.tipo === "grupo" ? "fase de grupos" : "llave"}`;
+
+  // El coordinador puede pasar un partido pendiente a otra semana.
+  const semanaHoy = ranking?.inicio_semanas ? Math.max(semanaActual(ranking.inicio_semanas), 1) : null;
+  const puedeMover =
+    esCoordinador &&
+    ranking?.estado === "abierto" &&
+    semanaHoy !== null &&
+    p.estado === "pendiente" &&
+    p.tipo === "regular";
+  const ultimaSemana = puedeMover ? await ultimaSemanaDe(ranking.id) : 0;
   const sets = puntos.map((s) => ({
     mios: soyA ? s.puntos_a : s.puntos_b,
     suyos: soyA ? s.puntos_b : s.puntos_a,
@@ -231,6 +246,15 @@ export default async function PaginaPartido({ params, searchParams }: PageProps<
                 ? `${nombreRival} todavía no lo confirmó; ${vence}.`
                 : "Cualquiera de los dos puede registrarlo. El otro lo confirma."}
             </Aviso>
+            {puedeMover && semanaHoy !== null ? (
+              <MoverSemana
+                partidoId={p.id}
+                semana={p.semana}
+                desde={semanaHoy}
+                hasta={Math.max(ultimaSemana, semanaHoy) + 1}
+                enCurso={ranking?.inicio_semanas && semanaActual(ranking.inicio_semanas) >= 1 ? semanaHoy : null}
+              />
+            ) : null}
           </>
         ) : (
           /* Cerrado, en disputa o anulado: muestra lo que pasó. */

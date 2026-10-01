@@ -47,11 +47,11 @@ test.describe("bitácora de partidos", () => {
         values ('${semestre}','E2E bitácora ${semestre}',current_date,current_date+90);
       insert into public.ranking(id,semestre_id,numero,nombre,fecha_limite,estado)
         values ('${ranking}','${semestre}',1,'Ranking bitácora E2E',current_date+30,'cerrado');
-      insert into public.division(ranking_id,tipo) values ('${ranking}','mayor');
+      insert into public.division(ranking_id,tipo) values ('${ranking}','primera');
       insert into public.partido(id,division_id,tipo,jugador_a,jugador_b)
         select '${partido}',d.id,'regular',least(a.id,b.id),greatest(a.id,b.id)
         from public.division d, public.usuario a, public.usuario b
-        where d.ranking_id='${ranking}' and d.tipo='mayor'
+        where d.ranking_id='${ranking}' and d.tipo='primera'
           and a.carnet='20002' and b.carnet='20003';
       insert into public.partido_evento(partido_id,actor,accion,antes,despues)
         select '${partido}',a.id,'registro',

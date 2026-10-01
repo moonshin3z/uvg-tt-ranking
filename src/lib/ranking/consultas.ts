@@ -1,6 +1,8 @@
 import { createPublicClient } from "@/lib/supabase/server";
 import type { DivisionTipo, RankingRow, TablaPosicionesRow } from "@/lib/supabase/tipos";
 import { asignarZonas, ordenarTabla, type EnfrentamientoDirecto, type FilaOrdenada } from "./tabla";
+import { DIVISIONES, nivelDivision } from "./divisiones";
+import type { PartidoSemanal } from "./semanas";
 import { datos } from "@/lib/supabase/errores";
 
 /**
@@ -32,7 +34,37 @@ export async function rankingVigente(): Promise<RankingRow | null> {
   );
 }
 
-export async function tablaDeDivision(ranking: RankingRow, division: DivisionTipo): Promise<FilaOrdenada[]> {
+/** Las divisiones que tiene un ranking, de Primera para abajo. */
+export async function divisionesDelRanking(rankingId: string): Promise<DivisionTipo[]> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase.from("division").select("tipo").eq("ranking_id", rankingId),
+    "las divisiones del ranking",
+  );
+  const tipos = new Set((data ?? []).map((d) => d.tipo));
+  return DIVISIONES.filter((t) => tipos.has(t));
+}
+
+/** En qué división juega alguien en un ranking, si juega. */
+export async function divisionDeJugador(usuarioId: string, rankingId: string): Promise<DivisionTipo | null> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase
+      .from("inscripcion")
+      .select("division!inner(ranking_id, tipo)")
+      .eq("usuario_id", usuarioId)
+      .eq("division.ranking_id", rankingId)
+      .maybeSingle(),
+    "la división del jugador",
+  );
+  return data?.division.tipo ?? null;
+}
+
+export async function tablaDeDivision(
+  ranking: RankingRow,
+  division: DivisionTipo,
+  divisiones: number,
+): Promise<FilaOrdenada[]> {
   const supabase = createPublicClient();
 
   const [respuestaFilas, respuestaDirectos] = await Promise.all([
@@ -64,7 +96,8 @@ export async function tablaDeDivision(ranking: RankingRow, division: DivisionTip
   }));
   const ordenadas = ordenarTabla(normalizadas, (directos ?? []) as EnfrentamientoDirecto[]);
   return asignarZonas(ordenadas, {
-    division,
+    nivel: nivelDivision(division),
+    divisiones,
     n_premiados: ranking.n_premiados,
     n_ascienden: ranking.n_ascienden,
     n_descienden: ranking.n_descienden,
@@ -179,4 +212,55 @@ export async function calendarioDeRanking(rankingId: string): Promise<PartidoDeC
       fecha: p.confirmado_en,
     }))
     .sort((x, y) => x.a.nombre.localeCompare(y.a.nombre) || x.b.nombre.localeCompare(y.b.nombre));
+}
+
+/**
+ * Los partidos del ranking que ya tienen semana, con los dos jugadores. Para
+ * la pantalla de la semana y su imagen: con 30 partidos por ranking se traen
+ * todos y se arman en `armarSemana`.
+ */
+export async function partidosSemanales(rankingId: string): Promise<PartidoSemanal[]> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select(
+        "id, semana, estado, ganador, sets_a, sets_b, registrado_en, division!inner(ranking_id, tipo), a:usuario!partido_jugador_a_fkey(id, nombre, carnet), b:usuario!partido_jugador_b_fkey(id, nombre, carnet)",
+      )
+      .eq("tipo", "regular")
+      .eq("division.ranking_id", rankingId)
+      .not("semana", "is", null)
+      .order("semana")
+      .order("id"),
+    "los partidos de la semana",
+  );
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    semana: p.semana,
+    estado: p.estado,
+    division: p.division.tipo,
+    a: p.a,
+    b: p.b,
+    ganador: p.ganador,
+    sets_a: p.sets_a,
+    sets_b: p.sets_b,
+    registrado_en: p.registrado_en,
+  }));
+}
+
+/** La última semana que tiene algún partido del ranking (0 si todavía no hay semanas). */
+export async function ultimaSemanaDe(rankingId: string): Promise<number> {
+  const supabase = createPublicClient();
+  const data = datos(
+    await supabase
+      .from("partido")
+      .select("semana, division!inner(ranking_id)")
+      .eq("division.ranking_id", rankingId)
+      .not("semana", "is", null)
+      .order("semana", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    "la última semana",
+  );
+  return data?.semana ?? 0;
 }

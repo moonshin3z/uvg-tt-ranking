@@ -38,7 +38,10 @@ export type FilaOrdenada = FilaTabla & {
 };
 
 export type ParametrosZona = {
-  division: "mayor" | "menor";
+  /** 1 = Primera. Desde la 2 hay una división arriba a la que subir. */
+  nivel: number;
+  /** Cuántas divisiones tiene el ranking: si `nivel` es menor, hay una abajo. */
+  divisiones: number;
   n_premiados: number;
   n_ascienden: number;
   n_descienden: number;
@@ -67,15 +70,21 @@ export function ordenarTabla(filas: FilaTabla[], directos: EnfrentamientoDirecto
   });
 }
 
+/**
+ * Arriba suben (si hay una división arriba) o ganan premio; abajo bajan (si hay
+ * una abajo). Los que suben también ganan premio cuando `n_premiados` los
+ * alcanza, pero la marca que se ve es la de subir.
+ */
 export function asignarZonas(filas: FilaTabla[], p: ParametrosZona): FilaOrdenada[] {
   const n = filas.length;
+  const hayArriba = p.nivel > 1;
+  const hayAbajo = p.nivel < p.divisiones;
   return filas.map((f, i) => {
     const pos = i + 1;
     let zona: FilaOrdenada["zona"] = null;
-    if (p.division === "menor" && pos <= p.n_ascienden) zona = "ascenso";
-    else if (p.division === "mayor" && pos <= p.n_premiados) zona = "premio";
-    else if (p.division === "menor" && pos <= p.n_premiados) zona = "premio";
-    if (p.division === "mayor" && pos > n - p.n_descienden) zona = "descenso";
+    if (hayArriba && pos <= p.n_ascienden) zona = "ascenso";
+    else if (pos <= p.n_premiados) zona = "premio";
+    if (hayAbajo && pos > n - p.n_descienden) zona = "descenso";
     return { ...f, posicion: pos, zona };
   });
 }

@@ -60,7 +60,7 @@ declare v_id uuid;
 begin
   insert into public.ranking (semestre_id, numero, nombre, fecha_limite, estado)
   values (pg_temp.semestre_nuevo(), 1, p_nombre, current_date + 30, 'borrador') returning id into v_id;
-  insert into public.division (ranking_id, tipo) values (v_id, 'mayor'), (v_id, 'menor');
+  insert into public.division (ranking_id, tipo) values (v_id, 'primera'), (v_id, 'segunda');
   return v_id;
 end; $$;
 
@@ -126,7 +126,7 @@ do $$
 declare v_r uuid; v_d uuid; v_a uuid; v_b uuid;
 begin
   v_r := pg_temp.ranking_nuevo('Con un partido jugado');
-  select id into v_d from public.division where ranking_id = v_r and tipo = 'mayor';
+  select id into v_d from public.division where ranking_id = v_r and tipo = 'primera';
   select id into v_a from public.usuario where carnet = '20002';
   select id into v_b from public.usuario where carnet = '20003';
   if v_a > v_b then select v_a, v_b into v_b, v_a; end if;
@@ -158,7 +158,7 @@ begin
   -- Partido todavía 'pendiente', pero con un marcador en vivo con puntos: hay
   -- dos personas jugando ahorita. Mirar solo partido.estado no lo ve.
   v_r := pg_temp.ranking_nuevo('Con marcador en vivo');
-  select id into v_d from public.division where ranking_id = v_r and tipo = 'mayor';
+  select id into v_d from public.division where ranking_id = v_r and tipo = 'primera';
   select id into v_a from public.usuario where carnet = '20002';
   select id into v_b from public.usuario where carnet = '20003';
   if v_a > v_b then select v_a, v_b into v_b, v_a; end if;
@@ -254,7 +254,7 @@ begin
   select count(*) into v_antes from public.historial_jugador(v_j);
 
   v_r := pg_temp.ranking_nuevo('Cancelado con gente adentro');
-  select id into v_d from public.division where ranking_id = v_r and tipo = 'mayor';
+  select id into v_d from public.division where ranking_id = v_r and tipo = 'primera';
   insert into public.inscripcion (division_id, usuario_id, origen) values (v_d, v_j, 'manual');
   update public.ranking set estado = 'abierto' where id = v_r;
 

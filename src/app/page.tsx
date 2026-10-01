@@ -2,11 +2,21 @@ import type { Route } from "next";
 import { torneoEnCurso } from "@/lib/torneos/consultas";
 import { redirect } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
-import { rankingVigente, tablaDeDivision, ultimosResultados } from "@/lib/ranking/consultas";
+import {
+  divisionDeJugador,
+  divisionesDelRanking,
+  partidosSemanales,
+  rankingVigente,
+  tablaDeDivision,
+  ultimosResultados,
+} from "@/lib/ranking/consultas";
+import { armarSemana, semanaPorDefecto, textoSemana } from "@/lib/ranking/semanas";
+import { divisionElegida, divisionLarga } from "@/lib/ranking/divisiones";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import Link from "next/link";
 import {
   Fila,
+  Flecha,
   Franja,
   FranjaPartidos,
   Lista,
@@ -18,7 +28,7 @@ import {
   primerNombre,
 } from "@/components/fila";
 import { LeyendaZonas, SelectorDivision, TablaPosiciones } from "@/components/tabla-posiciones";
-import { DIBUJO } from "@/components/iconos";
+import { DIBUJO, GLIFO } from "@/components/iconos";
 import { Tope } from "@/components/tope";
 import { EnVivo } from "@/components/en-vivo";
 import { misPartidos, type MisPartidos } from "@/lib/partidos/consultas";
@@ -92,8 +102,6 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
 
   if (sesion?.usuario.debe_cambiar_pin) redirect("/cambiar-pin");
 
-  const division: DivisionTipo = divisionParam === "menor" ? "menor" : "mayor";
-
   if (!ranking) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
@@ -111,13 +119,32 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
     );
   }
 
-  const [filas, resultados, mios, torneo] = await Promise.all([
-    tablaDeDivision(ranking, division),
+  const [divisiones, suya] = await Promise.all([
+    divisionesDelRanking(ranking.id),
+    sesion ? divisionDeJugador(sesion.authId, ranking.id) : null,
+  ]);
+  // Sin elegir en la URL, cada uno ve primero su propia división.
+  const division: DivisionTipo = divisionElegida(divisionParam ?? suya, divisiones);
+
+  const conSemanas = ranking.estado === "abierto" && ranking.inicio_semanas ? ranking.inicio_semanas : null;
+  const [filas, resultados, mios, torneo, semanales] = await Promise.all([
+    tablaDeDivision(ranking, division, divisiones.length),
     ultimosResultados(ranking),
     sesion && ["abierto", "en_desempates"].includes(ranking.estado) ? misPartidos(sesion.authId, ranking.id) : null,
     torneoEnCurso(),
+    conSemanas ? partidosSemanales(ranking.id) : null,
   ]);
   const franja = mios ? franjaDePartidos(mios, ranking.fecha_limite) : null;
+
+  // Los partidos de la semana, para entrar a verlos y compartirlos.
+  const semana =
+    conSemanas && semanales
+      ? armarSemana(
+          semanales,
+          conSemanas,
+          semanaPorDefecto(conSemanas, Math.max(0, ...semanales.map((p) => p.semana ?? 0))),
+        )
+      : null;
 
   return (
     // Sin padding horizontal: los bloques traen su propio margen, como en el
@@ -140,6 +167,21 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
         />
       ) : null}
 
+      {semana && conSemanas && semana.total > 0 ? (
+        <Lista>
+          <Fila
+            icono={{ glifo: GLIFO.calendario, color: "var(--uvg)" }}
+            fuerte
+            nombre="Partidos de la semana"
+            sub={`Semana ${semana.numero}, ${textoSemana(conSemanas, semana.numero)} · ${
+              semana.porJugar > 0 ? `${semana.porJugar} por jugar` : `${semana.jugados} jugados`
+            }`}
+            href="/semana"
+            derecha={<Flecha />}
+          />
+        </Lista>
+      ) : null}
+
       {/* La franja del torneo solo existe mientras hay uno en curso. */}
       {torneo ? (
         <Franja
@@ -156,10 +198,16 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
         />
       ) : null}
 
-      <SelectorDivision actual={division} />
+      <SelectorDivision actual={division} divisiones={divisiones} />
       <EnVivo />
 
-      <LeyendaZonas division={division} />
+      <LeyendaZonas
+        division={division}
+        divisiones={divisiones}
+        n_premiados={ranking.n_premiados}
+        n_ascienden={ranking.n_ascienden}
+        n_descienden={ranking.n_descienden}
+      />
       <TablaPosiciones filas={filas} division={division} usuarioActualId={sesion?.authId} />
 
       <Pie>
@@ -180,7 +228,7 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
               key={r.id}
               sinInicial
               nombre={`${r.ganador.nombre} le ganó a ${primerNombre(r.perdedor.nombre)}`}
-              sub={`${r.fecha ? `${cuandoPaso(r.fecha)} · ` : ""}División ${r.division === "mayor" ? "Mayor" : "Menor"}`}
+              sub={`${r.fecha ? `${cuandoPaso(r.fecha)} · ` : ""}${divisionLarga(r.division)}`}
               derecha={r.sets ? <Marcador texto={r.sets} gano={false} /> : null}
             />
           ))}

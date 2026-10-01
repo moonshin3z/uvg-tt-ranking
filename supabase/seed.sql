@@ -5,7 +5,7 @@
 -- armar el ranking 2 desde el panel del coordinador.
 --
 -- Login local:  carnet 20001 / PIN 123456  (coordinador)
---               carnet 20002 / PIN 123456  (jugador, división mayor)
+--               carnet 20002 / PIN 123456  (jugador, división Primera)
 --
 -- Estos usuarios entran directo, sin la pantalla de cambiar PIN. En producción
 -- eso NO pasa: ahí `usuario.debe_cambiar_pin` arranca en true y el que crea el
@@ -68,8 +68,8 @@ begin
   insert into public.ranking (semestre_id, numero, nombre, fecha_limite, estado)
   values (sem, 1, 'Ranking 1 · 2026-2', '2026-08-30', 'abierto') returning id into rk;
 
-  insert into public.division (ranking_id, tipo) values (rk, 'mayor') returning id into d_mayor;
-  insert into public.division (ranking_id, tipo) values (rk, 'menor') returning id into d_menor;
+  insert into public.division (ranking_id, tipo) values (rk, 'primera') returning id into d_mayor;
+  insert into public.division (ranking_id, tipo) values (rk, 'segunda') returning id into d_menor;
 
   jugadores_mayor := array[coord, j2, j3, j4];
   jugadores_menor := array[j5, j6, j7, j8, j9];
@@ -82,7 +82,7 @@ begin
   end loop;
 
   insert into public.sorteo (ranking_id, semilla, ejecutado_por, resultado)
-  values (rk, 'seed-demo', coord, jsonb_build_object('mayor', to_jsonb(jugadores_mayor), 'menor', to_jsonb(jugadores_menor)));
+  values (rk, 'seed-demo', coord, jsonb_build_object('primera', to_jsonb(jugadores_mayor), 'segunda', to_jsonb(jugadores_menor)));
 
   -- Round robin completo (todos contra todos, una vez) en ambas divisiones
   for i in 1 .. array_length(jugadores_mayor, 1) loop

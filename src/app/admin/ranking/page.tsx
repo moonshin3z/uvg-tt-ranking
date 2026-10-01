@@ -10,17 +10,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gestion } from "@/app/admin/gestion";
 import { ZonaDePeligro, type Contenido } from "@/app/admin/bajas";
-import { abrirRanking, cerrarFaseRegular, cerrarRanking, generarCalendario, generarDesempates } from "./acciones";
+import { cerrarFaseRegular, cerrarRanking, generarCalendario, generarDesempates } from "./acciones";
 import {
   BotonAccion,
   BotonCierre,
+  FormularioAbrir,
   FormularioDecidirEmpate,
   FormularioDivisiones,
+  FormularioPartidosPorSemana,
   FormularioRanking,
   FormularioSemestre,
   FormularioSiguiente,
   type JugadorAsignable,
 } from "./formularios";
+import { DIVISIONES, nombreDivision } from "@/lib/ranking/divisiones";
+import { lunesSugerido, semanaActual, textoSemana } from "@/lib/ranking/semanas";
 
 export const metadata: Metadata = { title: "Ranking" };
 
@@ -197,8 +201,8 @@ async function CuerpoRanking() {
             <Paso n={1} titulo="Ranking siguiente" listo={false}>
               <p className="mb-3 text-sm text-muted-foreground">
                 Se crea en borrador con las divisiones ya armadas: no hay sorteo, los lugares salen de la tabla
-                anterior. Quien no jugó el ranking pasado entra en Menor. Podés ajustarlo todo a mano antes de
-                abrirlo.
+                anterior. Quien no jugó el ranking pasado entra en la última división. Podés ajustarlo todo a mano
+                antes de abrirlo.
               </p>
               <FormularioSiguiente
                 rankingAnterior={ultimoCerrado.id}
@@ -230,7 +234,17 @@ async function CuerpoRanking() {
           <Paso n={2} titulo="Ranking" listo={false}>
             <FormularioRanking semestres={semestres ?? []} />
           </Paso>
-        ) : null}
+        ) : (
+          // Si el último cerrado fue de prueba, o el club rearmó las divisiones,
+          // heredar no sirve: tiene que poder empezarse de cero.
+          <Paso n="o" titulo="Empezar de cero" listo={false}>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Si el ranking anterior era de prueba o el club rearmó las divisiones, creá uno nuevo sin heredar nada:
+              las divisiones se asignan a mano.
+            </p>
+            <FormularioRanking semestres={semestres ?? []} />
+          </Paso>
+        )}
       </>
     );
   }
@@ -270,9 +284,12 @@ async function CuerpoRanking() {
     ...u,
     division: divisionDe.get(u.id) ?? null,
   }));
-  const nMayor = jugadores.filter((j) => j.division === "mayor").length;
-  const nMenor = jugadores.filter((j) => j.division === "menor").length;
-  const esperados = (nMayor * (nMayor - 1)) / 2 + (nMenor * (nMenor - 1)) / 2;
+  // Las divisiones del ranking, de Primera para abajo, con cuántos tiene cada una.
+  const tipos = new Set((divisiones ?? []).map((d) => d.tipo));
+  const delRanking = DIVISIONES.filter((t) => tipos.has(t));
+  const porDivision = delRanking.map((t) => ({ tipo: t, n: jugadores.filter((j) => j.division === t).length }));
+  const esperados = porDivision.reduce((suma, d) => suma + (d.n * (d.n - 1)) / 2, 0);
+  const resumen = porDivision.map((d) => `${nombreDivision(d.tipo)} ${d.n}`).join(", ");
   const sinDefinir = conteo.pendiente + conteo.jugado + conteo.disputado;
 
   // --- Borrador: armar ---------------------------------------------------
@@ -281,14 +298,19 @@ async function CuerpoRanking() {
       <>
         <Encabezado
           ranking={enCurso}
-          extra={`Mayor ${nMayor}, Menor ${nMenor}, ${conteo.regular} partidos.${sorteo ? ` Sorteo ${sorteo.semilla}.` : ""}`}
+          extra={`${resumen}, ${conteo.regular} partidos.${sorteo ? ` Sorteo ${sorteo.semilla}.` : ""}`}
         />
-        <Paso n={1} titulo="Divisiones" listo={nMayor >= 2 && nMenor >= 2}>
-          <FormularioDivisiones rankingId={enCurso.id} jugadores={jugadores} hereda={enCurso.anterior_id !== null} />
+        <Paso n={1} titulo="Divisiones" listo={porDivision.length > 0 && porDivision.every((d) => d.n >= 2)}>
+          <FormularioDivisiones
+            rankingId={enCurso.id}
+            jugadores={jugadores}
+            divisiones={delRanking}
+            hereda={enCurso.anterior_id !== null}
+          />
         </Paso>
         <Paso n={2} titulo="Calendario round robin" listo={conteo.regular === esperados && conteo.regular > 0}>
           <p className="mb-3 text-sm text-muted-foreground">
-            Con {nMayor} en Mayor y {nMenor} en Menor salen {esperados} partidos.{" "}
+            Con {porDivision.map((d) => `${d.n} en ${nombreDivision(d.tipo)}`).join(", ")} salen {esperados} partidos.{" "}
             {conteo.regular > 0 ? `Hay ${conteo.regular} generados.` : "Todavía no hay ninguno."}
           </p>
           <BotonAccion
@@ -301,15 +323,11 @@ async function CuerpoRanking() {
         </Paso>
         <Paso n={3} titulo="Abrir ranking" listo={false}>
           <p className="mb-3 text-sm text-muted-foreground">
-            Al abrir, la tabla aparece en la portada y los jugadores pueden registrar resultados.
+            Al abrir, la tabla aparece en la portada, los jugadores pueden registrar resultados y los {esperados}{" "}
+            partidos se reparten en semanas de hasta {enCurso.partidos_por_semana}, unas{" "}
+            {Math.ceil(esperados / Math.max(enCurso.partidos_por_semana, 1))} semanas.
           </p>
-          <BotonAccion
-            accion={abrirRanking}
-            rankingId={enCurso.id}
-            etiqueta="Abrir ranking"
-            etiquetaPendiente="Abriendo..."
-            variant="accent"
-          />
+          <FormularioAbrir rankingId={enCurso.id} lunes={lunesSugerido()} />
         </Paso>
         <ZonaRanking ranking={enCurso} />
       </>
@@ -323,6 +341,7 @@ async function CuerpoRanking() {
       <>
         <Encabezado ranking={enCurso} extra={`${jugados} de ${conteo.regular} partidos definidos.`} />
         <Exportar rankingId={enCurso.id} />
+        {enCurso.inicio_semanas ? <Semanas ranking={enCurso} inicio={enCurso.inicio_semanas} /> : null}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Cerrar la fase regular</CardTitle>
@@ -447,6 +466,30 @@ async function CuerpoRanking() {
       </Card>
       <ZonaRanking ranking={enCurso} />
     </>
+  );
+}
+
+/** Las semanas del ranking abierto: en cuál va y cuántos partidos por semana. */
+function Semanas({ ranking, inicio }: { ranking: RankingRow; inicio: string }) {
+  const hoy = semanaActual(inicio);
+  const actual = Math.max(hoy, 1);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Semanas</CardTitle>
+        <CardDescription>
+          {hoy < 1 ? "La semana 1 es del" : `Va la semana ${actual}, del`} {textoSemana(inicio, actual)}. Si un
+          partido no se jugó en su semana, queda pendiente y lo podés pasar a otra desde el partido. Si se juega uno
+          de una semana que no llegó, la app rearma las que vienen.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <Button asChild variant="outline" className="sm:self-start">
+          <Link href="/semana">Ver los partidos de la semana</Link>
+        </Button>
+        <FormularioPartidosPorSemana rankingId={ranking.id} actual={ranking.partidos_por_semana} />
+      </CardContent>
+    </Card>
   );
 }
 

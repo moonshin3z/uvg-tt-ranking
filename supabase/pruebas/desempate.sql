@@ -41,8 +41,8 @@ declare
   v_emp record; v_n int; v_pend int;
 begin
   select id into v_rk from public.ranking limit 1;
-  select id into v_d   from public.division where ranking_id = v_rk and tipo = 'mayor';
-  select id into v_men from public.division where ranking_id = v_rk and tipo = 'menor';
+  select id into v_d   from public.division where ranking_id = v_rk and tipo = 'primera';
+  select id into v_men from public.division where ranking_id = v_rk and tipo = 'segunda';
   update public.ranking set estado = 'abierto', n_premiados = 1, n_ascienden = 1, n_descienden = 1
    where id = v_rk;
 

@@ -4,6 +4,7 @@
  */
 
 import type { DivisionTipo } from "@/lib/supabase/tipos";
+import { divisionesDe } from "./divisiones";
 
 export type Asignacion = { usuario_id: string; division: DivisionTipo };
 
@@ -40,19 +41,29 @@ export function barajar<T>(items: readonly T[], semilla: string): T[] {
 }
 
 /**
- * Reparte a los participantes: se barajan con la semilla y la primera mitad
- * (redondeando hacia arriba) va a Mayor, el resto a Menor.
- * Se ordena la entrada antes de barajar para que el resultado no dependa del
- * orden en que llegaron los ids.
+ * Reparte a los participantes entre `divisiones` divisiones: se barajan con la
+ * semilla y se cortan en partes iguales; si no da exacto, las de arriba llevan
+ * uno más. Se ordena la entrada antes de barajar para que el resultado no
+ * dependa del orden en que llegaron los ids.
  */
-export function sortearDivisiones(usuarioIds: readonly string[], semilla: string): Asignacion[] {
+export function sortearDivisiones(usuarioIds: readonly string[], semilla: string, divisiones = 3): Asignacion[] {
   const unicos = [...new Set(usuarioIds)].sort();
-  if (unicos.length < 4) throw new Error("Se necesitan al menos 4 jugadores para sortear");
+  const tipos = divisionesDe(divisiones);
+  if (tipos.length < 2) throw new Error("Hacen falta al menos 2 divisiones");
+  if (unicos.length < 2 * tipos.length) {
+    throw new Error(`Se necesitan al menos ${2 * tipos.length} jugadores para sortear`);
+  }
 
   const barajados = barajar(unicos, semilla);
-  const corte = Math.ceil(barajados.length / 2);
-
-  return barajados.map((usuario_id, i) => ({ usuario_id, division: i < corte ? "mayor" : "menor" }));
+  const base = Math.floor(barajados.length / tipos.length);
+  const sobran = barajados.length % tipos.length;
+  const asignacion: Asignacion[] = [];
+  let i = 0;
+  tipos.forEach((division, k) => {
+    const cuantos = base + (k < sobran ? 1 : 0);
+    for (let j = 0; j < cuantos; j++) asignacion.push({ usuario_id: barajados[i++], division });
+  });
+  return asignacion;
 }
 
 /** Semilla legible: fecha + 6 caracteres aleatorios. */
