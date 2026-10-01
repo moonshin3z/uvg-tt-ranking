@@ -29,9 +29,9 @@ Usuarios del seed (PIN `123456` para todos):
 
 | Carnet | Rol         | División |
 | ------ | ----------- | -------- |
-| 20001  | coordinador | mayor    |
-| 20002  | jugador     | mayor    |
-| 20005  | jugador     | menor    |
+| 20001  | coordinador | primera  |
+| 20002  | jugador     | primera  |
+| 20005  | jugador     | segunda  |
 
 ## Comandos
 
