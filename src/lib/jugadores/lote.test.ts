@@ -52,6 +52,21 @@ describe("leerLote", () => {
     expect(leerLote("20001\tAna\tLópez")[0].problema).toMatch(/3 columnas/);
   });
 
+  it("la hoja de integrantes del club, con su columna de división, se lee entera", () => {
+    const hoja = [
+      "Division\tIntegrante\tCarnet",
+      "Division 1\tCristian M.\t26230",
+      "Division 2\tPalma R.\t261550",
+      "Division 3\tJhonatan m.\t161231",
+    ].join("\n");
+    const filas = leerLote(hoja);
+    expect(filas.map((f) => [f.carnet, f.nombre, f.problema])).toEqual([
+      ["26230", "Cristian M.", undefined],
+      ["261550", "Palma R.", undefined],
+      ["161231", "Jhonatan m.", undefined],
+    ]);
+  });
+
   it("marca el carnet repetido en la segunda aparición y deja buena la primera", () => {
     const filas = leerLote("20001\tAna López\n20001\tOtra Persona");
     expect(filas[0].problema).toBeUndefined();

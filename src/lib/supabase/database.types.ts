@@ -1462,6 +1462,10 @@ export type Database = {
         Args: { p_partido_id: string }
         Returns: undefined
       }
+      fijar_calendario: {
+        Args: { p_filas: Json; p_ranking_id: string }
+        Returns: number
+      }
       generar_calendario: { Args: { p_ranking_id: string }; Returns: number }
       generar_desempates: { Args: { p_ranking_id: string }; Returns: number }
       historial_jugador: {

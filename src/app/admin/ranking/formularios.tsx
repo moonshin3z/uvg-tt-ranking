@@ -1,15 +1,18 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import { nombreDivision } from "@/lib/ranking/divisiones";
+import { claveNombre } from "@/lib/ranking/calendario";
+import { Badge } from "@/components/ui/badge";
 import {
   abrirRanking,
   ajustarPartidosPorSemana,
   asignarManual,
+  cargarCalendario,
   cerrarFaseRegular,
   cerrarRanking,
   crearRanking,
@@ -20,6 +23,7 @@ import {
   generarDesempates,
   sortear,
   type EstadoAccion,
+  type EstadoCalendario,
 } from "./acciones";
 
 const vacio: EstadoAccion = {};
@@ -373,6 +377,138 @@ export function FormularioPartidosPorSemana({ rankingId, actual }: { rankingId: 
         </Button>
       </div>
       <Mensaje estado={estado} />
+    </form>
+  );
+}
+
+const ORDEN_COMO: Record<string, number> = { ninguno: 0, varios: 0, descarte: 1, parecido: 1, igual: 2 };
+
+const COMO: Record<string, { texto: string; variante: "default" | "outline" | "descenso" }> = {
+  igual: { texto: "igual", variante: "default" },
+  parecido: { texto: "se parece", variante: "outline" },
+  descarte: { texto: "por descarte", variante: "outline" },
+  ninguno: { texto: "no lo encontré", variante: "descenso" },
+  varios: { texto: "hay varios", variante: "descenso" },
+};
+
+/**
+ * El calendario del club, pegado desde Excel: en qué semana va cada partido.
+ *
+ * Dos pasos. Primero muestra a quién reconoció en cada nombre de la hoja; los
+ * dudosos («se parece», «por descarte») y los que no encontró se corrigen con
+ * la lista de su división. Recién al guardar se fijan las semanas.
+ */
+export function CalendarioDelClub({ rankingId }: { rankingId: string }) {
+  const [estado, accion, pendiente] = useActionState(cargarCalendario, {} as EstadoCalendario);
+  const [texto, setTexto] = useState("");
+  const revision = estado.ok ? undefined : estado.revision;
+  const puedeGuardar = revision !== undefined && revision.problemas.length === 0 && revision.partidos.length > 0;
+
+  return (
+    <form action={accion} className="flex flex-col gap-4">
+      <input type="hidden" name="ranking_id" value={rankingId} />
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="calendario">Pegá el calendario desde Excel</Label>
+        <textarea
+          id="calendario"
+          name="calendario"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          rows={6}
+          spellCheck={false}
+          placeholder={"1\tDivision 1\tGiancarlo R. vs Arturo S.\n1\tDivision 2\tMarcelo D. vs Andres M."}
+          className="min-h-32 rounded-[10px] border-0 bg-relleno p-3 text-base leading-relaxed"
+        />
+        <p className="text-sm text-muted-foreground">
+          Seleccioná en la hoja las columnas de semana, división y partido (o la hoja entera) y pegá acá. Se leen las
+          filas que tienen «vs»; el título y los resúmenes se ignoran solos.
+        </p>
+      </div>
+
+      {revision ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">
+            {revision.filas} partidos en {revision.semanas} semanas. Revisá a quién reconocí en cada nombre:
+          </p>
+          <ul className="divide-y rounded-lg border text-sm">
+            {/* Primero lo que hay que mirar: lo que no encontró y lo dudoso. */}
+            {[...revision.nombres]
+              .sort((x, y) => ORDEN_COMO[x.como] - ORDEN_COMO[y.como])
+              .map((n) => {
+                const clave = claveNombre(n.texto, n.division);
+                const opciones = (estado.inscritos ?? []).filter(
+                  (j) => n.division === null || j.division === n.division,
+                );
+                const como = COMO[n.como];
+                return (
+                  <li key={clave} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+                    <span className="min-w-0 basis-full font-medium sm:basis-40">
+                      {n.texto}
+                      {n.division ? (
+                        <span className="ml-1 text-xs font-normal text-muted-foreground">
+                          {nombreDivision(n.division)}
+                        </span>
+                      ) : null}
+                    </span>
+                    <select
+                      name={`nombre:${clave}`}
+                      defaultValue={n.id ?? ""}
+                      aria-label={`Quién es ${n.texto}`}
+                      className="min-h-10 min-w-0 flex-1 rounded-[10px] border-0 bg-relleno px-2 text-base"
+                    >
+                      <option value="">Elegí quién es</option>
+                      {opciones.map((j) => (
+                        <option key={j.id} value={j.id}>
+                          {j.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    <Badge variant={como.variante}>{como.texto}</Badge>
+                  </li>
+                );
+              })}
+          </ul>
+          {revision.problemas.map((p) => (
+            <p key={p} role="alert" className="text-sm text-destructive">
+              {p}
+            </p>
+          ))}
+        </div>
+      ) : null}
+
+      {estado.error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {estado.error}
+        </p>
+      ) : null}
+      {estado.ok ? (
+        <p role="status" className="text-sm text-primary">
+          {estado.ok}
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="submit"
+          name="paso"
+          value="revisar"
+          variant="outline"
+          disabled={pendiente || texto.trim() === ""}
+        >
+          {pendiente ? "Leyendo..." : revision ? "Volver a revisar" : "Revisar el calendario"}
+        </Button>
+        {puedeGuardar ? (
+          <Button
+            type="submit"
+            name="paso"
+            value="guardar"
+            disabled={pendiente}
+            className="py-2 text-center whitespace-normal"
+          >
+            {pendiente ? "Guardando..." : `Fijar los ${revision.partidos.length} partidos`}
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }

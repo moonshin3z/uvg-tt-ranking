@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { datos } from "@/lib/supabase/errores";
 import { generarSemilla, sortearDivisiones, type Asignacion } from "@/lib/ranking/sorteo";
 import { esDivision } from "@/lib/ranking/divisiones";
+import { revisarCalendario, type Inscrito, type RevisionCalendario } from "@/lib/ranking/calendario";
 
 export type EstadoAccion = { error?: string; ok?: string };
 
@@ -313,4 +314,72 @@ export async function decidirEmpate(_prev: EstadoAccion, formData: FormData): Pr
   if (error) return { error: mensaje(error, "No se pudo registrar la decisión") };
   revalidatePath(RUTA);
   return { ok: "Empate decidido. Queda anotado quién lo decidió y por qué." };
+}
+
+// ---------------------------------------------------------------------------
+// El calendario del club
+// ---------------------------------------------------------------------------
+export type EstadoCalendario = {
+  error?: string;
+  ok?: string;
+  revision?: RevisionCalendario;
+  /** Los inscritos de cada división, para que el coordinador corrija un nombre. */
+  inscritos?: Inscrito[];
+};
+
+async function inscritosDe(ranking_id: string): Promise<Inscrito[]> {
+  const supabase = await createClient();
+  const data = datos(
+    await supabase
+      .from("inscripcion")
+      .select("usuario_id, usuario(nombre), division!inner(ranking_id, tipo)")
+      .eq("division.ranking_id", ranking_id),
+    "los inscritos del ranking",
+  );
+  return (data ?? [])
+    .map((i) => ({ id: i.usuario_id, nombre: i.usuario.nombre, division: i.division.tipo }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+}
+
+/** Las correcciones del coordinador: `nombre:<clave>` → id del inscrito. */
+function leerElegidos(formData: FormData): Record<string, string> {
+  const elegidos: Record<string, string> = {};
+  for (const [k, v] of formData.entries()) {
+    if (k.startsWith("nombre:") && typeof v === "string" && v) elegidos[k.slice("nombre:".length)] = v;
+  }
+  return elegidos;
+}
+
+/**
+ * Dos pasos, como el alta de jugadores: primero se muestra a quién reconoció
+ * en cada nombre de la hoja, y recién al confirmar se fijan las semanas.
+ */
+export async function cargarCalendario(_prev: EstadoCalendario, formData: FormData): Promise<EstadoCalendario> {
+  await requerirCoordinador();
+  const ranking_id = String(formData.get("ranking_id") ?? "");
+  const texto = String(formData.get("calendario") ?? "");
+  if (!texto.trim()) return { error: "Pegá el calendario primero" };
+
+  const inscritos = await inscritosDe(ranking_id);
+  if (inscritos.length === 0) return { error: "Asigná las divisiones antes de cargar el calendario" };
+  const revision = revisarCalendario(texto, inscritos, leerElegidos(formData));
+
+  if (formData.get("paso") !== "guardar" || revision.problemas.length > 0) return { revision, inscritos };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fijar_calendario", {
+    p_ranking_id: ranking_id,
+    p_filas: revision.partidos,
+  });
+  if (error) return { error: mensaje(error, "No se pudo cargar el calendario"), revision, inscritos };
+
+  revalidatePath(RUTA);
+  revalidatePath("/semana");
+  revalidatePath("/partidos");
+  const quedaron = revision.partidos.length - (data ?? 0);
+  return {
+    ok: `Listo: ${data} partidos quedaron en la semana que dice el calendario${
+      quedaron > 0 ? `; ${quedaron} ya se habían jugado y quedan en la semana en que se jugaron` : ""
+    }.`,
+  };
 }

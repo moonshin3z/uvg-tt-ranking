@@ -1,5 +1,19 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+## Actualización: el calendario del club
+
+El 2 de octubre llegó la lista real y el calendario que armó el coordinador en Excel (`Calendario_ranking_35_partidos_2_meses.xlsx`): **Primera y Segunda con 5, Tercera con 6**, 35 partidos en 8 semanas de 3 a 5. Iván decidió que la app siga **exactamente** ese calendario, no el que arma ella. En Tercera, el calendario dice «Joseph B.» (en la lista es «Joshep») y «Diego Q.», que no está en el ranking: su lugar es de **wellington G**.
+
+- Migración `20261014`: `fijar_calendario(ranking, filas)` fija cada partido en la semana que dice el calendario (`semana_fija = true`). Rechaza, diciendo cuál, una pareja que no está en el ranking (por ejemplo, de dos divisiones distintas), un partido repetido y alguien que juegue dos veces en una semana. Lo ya jugado no se mueve. Se puede cargar en borrador o abierto; lo que el calendario no nombre lo sigue acomodando la app.
+- `planificar_semanas` cambió una condición: "ya hay algo repartido" ahora mira solo los no fijos. Si no, cargar el calendario en borrador hacía que al abrir no se llenara la semana en curso.
+- `src/lib/ranking/calendario.ts` lee lo que se pega desde Excel (la hoja entera sirve: se toman las filas con «vs») y reconoce a cada jugador en su división: igual, parecido (iniciales, o un nombre de 5+ letras con hasta 2 letras cambiadas, como «Joseph» y «Joshep») o por descarte (si en una división queda un solo nombre y un solo inscrito sin pareja). El panel muestra lo dudoso primero y deja corregirlo antes de guardar.
+- En el panel: en borrador, un paso opcional "Calendario del club" después de generar el calendario; abierto, dentro de la tarjeta de semanas.
+- La alta masiva acepta la hoja de integrantes con su columna de división (la ignora). Antes la rechazaba por tener 3 columnas.
+
+Pruebas: `supabase/pruebas/calendario.sql` (5 comprobaciones con los 16 integrantes y las 35 filas reales de la hoja), corridas contra siete variantes rotas de la migración. `calendario.test.ts` usa la hoja tal como se copia de Excel (`calendario-del-club.fixture.tsv`). En la app real: los 16 inscritos, la hoja pegada entera, los dos nombres dudosos reconocidos bien, y los 35 partidos en la semana exacta del Excel.
+
+Para el arranque, el orden en el panel es: alta de los 16 (pegando la hoja de integrantes), crear el ranking, asignar divisiones, generar el calendario, pegar el calendario del club, revisar, fijar y abrir eligiendo el lunes de la semana 1.
+
 ## Actualización: tres divisiones y partidos por semana
 
 El 1 de octubre el club cambió el formato, antes de crear el ranking real (en producción solo había datos de prueba). Decisiones de Iván, con el coordinador:

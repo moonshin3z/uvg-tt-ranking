@@ -14,6 +14,7 @@ import { cerrarFaseRegular, cerrarRanking, generarCalendario, generarDesempates 
 import {
   BotonAccion,
   BotonCierre,
+  CalendarioDelClub,
   FormularioAbrir,
   FormularioDecidirEmpate,
   FormularioDivisiones,
@@ -255,7 +256,7 @@ async function CuerpoRanking() {
   const [divisionesRespuesta, usuariosRespuesta, sorteoRespuesta] = await Promise.all([
     supabase
       .from("division")
-      .select("id, tipo, inscripcion(usuario_id), partido(id, tipo, estado)")
+      .select("id, tipo, inscripcion(usuario_id), partido(id, tipo, estado, semana_fija)")
       .eq("ranking_id", enCurso.id),
     supabase.from("usuario").select("id, carnet, nombre").eq("activo", true).order("nombre"),
     supabase.from("sorteo").select("semilla").eq("ranking_id", enCurso.id).maybeSingle(),
@@ -265,12 +266,13 @@ async function CuerpoRanking() {
   const sorteo = datos(sorteoRespuesta, "el sorteo del ranking");
 
   const divisionDe = new Map<string, DivisionTipo>();
-  const conteo = { regular: 0, pendiente: 0, jugado: 0, disputado: 0, desempatePendiente: 0 };
+  const conteo = { regular: 0, pendiente: 0, jugado: 0, disputado: 0, desempatePendiente: 0, fijos: 0 };
   for (const d of divisiones ?? []) {
     for (const i of d.inscripcion) divisionDe.set(i.usuario_id, d.tipo);
     for (const p of d.partido) {
       if (p.tipo === "regular") {
         conteo.regular++;
+        if (p.semana_fija) conteo.fijos++;
         if (p.estado === "pendiente") conteo.pendiente++;
         if (p.estado === "jugado") conteo.jugado++;
         if (p.estado === "disputado") conteo.disputado++;
@@ -321,6 +323,17 @@ async function CuerpoRanking() {
             variant="outline"
           />
         </Paso>
+        {conteo.regular > 0 && conteo.regular === esperados ? (
+          <Paso n="+" titulo="Calendario del club (opcional)" listo={conteo.fijos > 0}>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Si el club ya armó en qué semana va cada partido, pegalo acá y la app lo respeta.{" "}
+              {conteo.fijos > 0
+                ? `Hay ${conteo.fijos} partidos fijados por el calendario.`
+                : "Si no, al abrir la app los reparte sola."}
+            </p>
+            <CalendarioDelClub rankingId={enCurso.id} />
+          </Paso>
+        ) : null}
         <Paso n={3} titulo="Abrir ranking" listo={false}>
           <p className="mb-3 text-sm text-muted-foreground">
             Al abrir, la tabla aparece en la portada, los jugadores pueden registrar resultados y los {esperados}{" "}
@@ -488,6 +501,13 @@ function Semanas({ ranking, inicio }: { ranking: RankingRow; inicio: string }) {
           <Link href="/semana">Ver los partidos de la semana</Link>
         </Button>
         <FormularioPartidosPorSemana rankingId={ranking.id} actual={ranking.partidos_por_semana} />
+        <details className="rounded-lg border p-3">
+          <summary className="cursor-pointer text-sm font-medium">Cargar el calendario del club</summary>
+          <p className="mt-2 mb-3 text-sm text-muted-foreground">
+            Fija cada partido en la semana que dice la hoja. Lo que ya se jugó no se mueve.
+          </p>
+          <CalendarioDelClub rankingId={ranking.id} />
+        </details>
       </CardContent>
     </Card>
   );

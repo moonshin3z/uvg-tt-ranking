@@ -30,7 +30,10 @@ export function leerLote(texto: string): FilaLote[] {
     const cruda = lineas[i].trim();
     if (cruda === "") continue;
 
-    const campos = partir(cruda);
+    // Una columna de división ("Division 1", "Primera") no es ni carnet ni
+    // nombre: es la hoja de integrantes del club pegada entera. Se ignora; la
+    // división se asigna después, al armar el ranking.
+    const campos = partir(cruda).filter((c, _, todos) => todos.length <= 2 || !esDivision(c));
     const linea = i + 1;
 
     // Encabezado de la hoja: se salta en silencio y solo si es la primera fila
@@ -108,7 +111,11 @@ function limpiarNombre(s: string) {
 
 function esEncabezado(campos: string[]) {
   const t = campos.join(" ").toLowerCase();
-  return /carn[eé]/.test(t) && /nombre|jugador/.test(t);
+  return /carn[eé]/.test(t) && /nombre|jugador|integrante/.test(t);
+}
+
+function esDivision(campo: string) {
+  return /^(divisi[oó]n|div\.?)?\s*(\d|primera|segunda|tercera|mayor|menor)$/i.test(campo.trim());
 }
 
 /**
