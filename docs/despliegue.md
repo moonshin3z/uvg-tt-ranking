@@ -13,9 +13,9 @@ puede hacer nadie más. Los marcados **(código)** ya están hechos.
 - **(código)** El registro abierto está cerrado en `supabase/config.toml`, en
   los dos interruptores. Y aunque se abriera, el trigger crea todo perfil como
   jugador: el rol solo lo da `asignar_rol`, que exige coordinador.
-- **(vos)** Confirmá con el club **cuántos sets se juegan**. Hoy está en 2 de 3
-  a 11 puntos. Si el club juega al mejor de 5, hay que cambiarlo antes de que
-  alguien registre el primer resultado, porque el sistema va a rechazar un 3-1
+- **(vos)** Confirmá con el club **cuántos sets se juegan**. Resuelto el 27 de
+  septiembre: al mejor de 3 a 11 puntos, que es lo que viene elegido. Se fija al
+  crear el ranking y no se cambia después, porque el sistema rechazaría un 3-1
   en un ranking configurado a 2.
 
 ## 1. El repositorio (vos)
@@ -33,7 +33,12 @@ git push -u origin main
 ```
 
 Privado porque el reglamento, los nombres y los carnets del club no tienen por
-qué ser públicos, aunque el código no tenga secretos.
+qué ser públicos, aunque el código no tenga secretos. Ojo si alguna vez se
+hace público (pasó el 4 de octubre, para trabajar desde la tablet):
+`supabase/pruebas/calendario.sql` y
+`src/lib/ranking/calendario-del-club.fixture.tsv` tienen los nombres y carnets
+reales. La app ya los muestra en las fichas públicas, pero no hace falta
+repetirlos en el repositorio.
 
 ### Si el push se rechaza por `.github/workflows/ci.yml`
 
@@ -83,7 +88,7 @@ npx supabase link --project-ref <el ref del proyecto>
 npx supabase db push
 ```
 
-`db push` aplica las 22 migraciones en orden. **No corre la semilla**, y así
+`db push` aplica las 31 migraciones en orden. **No corre la semilla**, y así
 tiene que ser: la semilla es de desarrollo y crea nueve usuarios de prueba con
 el PIN 123456.
 
@@ -93,7 +98,7 @@ Verificá que aplicaron todas:
 npx supabase migration list
 ```
 
-Las 22 tienen que aparecer con fecha en las dos columnas, local y remoto.
+Las 31 tienen que aparecer con fecha en las dos columnas, local y remoto.
 
 Después, en el SQL Editor del panel, pegá entero `supabase/verificar-nube.sql`.
 Solo lee: no escribe ni borra nada. Devuelve una fila por revisión, y las diez
@@ -205,6 +210,32 @@ npx supabase db dump -f respaldo-YYYY-MM-DD.sql
 ```
 
 Guardalo fuera de la máquina. Son unos kilobytes.
+
+## 9. Publicar desde un Codespace (vos)
+
+Sirve cuando no tenés la computadora: un Codespace del repositorio en el
+navegador, con la terminal de abajo.
+
+- **Los comandos, de a uno.** `supabase login` se queda esperando Enter y un
+  código de 8 caracteres; si pegás el bloque entero, se come las líneas que
+  siguen como si fueran tu respuesta.
+- **`npm ci` no hace falta para publicar.** Si falla con `EUSAGE` (el lockfile
+  "no sincronizado"), es que en el Codespace se tocó `package.json` o
+  `package-lock.json`: `git status` lo muestra y `git checkout --` lo arregla.
+  Pero el CLI se puede bajar solo, con la misma versión del proyecto:
+
+  ```
+  npx -y supabase@2.117.0 login
+  npx -y supabase@2.117.0 link --project-ref <el ref del proyecto>
+  npx -y supabase@2.117.0 migration list
+  npx -y supabase@2.117.0 db push
+  git push origin main
+  ```
+
+- **IPv6 no molesta.** El Codespace no tiene IPv6 y la conexión directa a la
+  base sí lo usa, pero `link` y `db push` van por el pooler por defecto.
+- **Si no te acordás de la contraseña de la base**, se cambia en Project
+  Settings > Database. La app no la usa: usa las llaves de la API.
 
 ## Lo que NO hay que hacer
 

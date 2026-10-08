@@ -1,6 +1,6 @@
 # Club de Tenis de Mesa UVG
 
-Sistema del club: ranking por divisiones (Mayor y Menor, round robin, dos rankings por semestre), registro y confirmación de resultados, torneos y marcador en vivo. PWA móvil primero.
+Sistema del club: ranking por divisiones (Primera, Segunda y Tercera; round robin; dos rankings por semestre; partidos repartidos en semanas, o en las que diga el calendario del club), registro y confirmación de resultados, torneos y marcador en vivo. PWA móvil primero.
 
 ## Stack
 
@@ -46,7 +46,7 @@ Usuarios del seed (PIN `123456` para todos):
 | `npm run test:sql`          | las comprobaciones de `supabase/pruebas/` contra la BD local        |
 | `npm run test:humo`         | que cada pantalla cargue, con y sin sesión (navegador)              |
 | `npm run test:partidos`     | independencia de torneos, filtro de ranking y cancelaciones (local) |
-| `npm run test:pin`          | cambio de PIN en el primer ingreso, sin bucle (local)               |
+| `npm run test:pin`          | cambio de PIN en el primer ingreso, sin bucle ni pestañas (local)   |
 | `npm run test:torneos`      | siembra manual y eliminación directa de torneos (local)             |
 | `npm run test:jugadores`    | nombrar coordinador desde la lista de jugadores (local)             |
 | `npm run test:bajas`        | bitácora de rankings y torneos borrados o cancelados (local)        |
@@ -110,22 +110,24 @@ src/
 ## Reglas que viven en la base de datos
 
 - Cada pareja se enfrenta una sola vez por ranking (índice único).
-- Un jugador no puede estar en las dos divisiones del mismo ranking (trigger).
+- Un jugador no puede estar en dos divisiones del mismo ranking (trigger).
+- El reparto en semanas y el calendario del club no ponen a nadie dos veces en la misma semana, y una semana que ya empezó no se vuelve a repartir.
 - Un partido solo suma en la tabla cuando está `confirmado` o `resuelto`.
 - La tabla de posiciones es la vista `tabla_posiciones`; nunca se persisten puntos.
 - Lectura pública de todo lo que aparece en la tabla; escritura directa solo del coordinador. Los jugadores registran y confirman a través de funciones RPC (fase 3).
 
 ## Roadmap
 
-| Fase | Entrega                                                            | Estado    |
-| ---- | ------------------------------------------------------------------ | --------- |
-| 0    | Repo, esquema del ranking, RLS, tipos, CI                          | listo     |
-| 1    | Ingreso con carnet + PIN, tabla pública                            | listo     |
-| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario | listo     |
-| 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h | listo     |
-| 4    | Cierre: desempates, ascensos y descensos, exportar CSV             | en prueba |
-| 5    | Torneos (eliminación, grupos + llave)                              |           |
-| 6    | Marcador en vivo, offline, push                                    |           |
+| Fase | Entrega                                                            | Estado |
+| ---- | ------------------------------------------------------------------ | ------ |
+| 0    | Repo, esquema del ranking, RLS, tipos, CI                          | listo  |
+| 1    | Ingreso con carnet + PIN, tabla pública                            | listo  |
+| 2    | Coordinador: crear ranking, inscribir, sortear, generar calendario | listo  |
+| 3    | Jugadores: registrar, confirmar, disputar; autoconfirmación a 72 h | listo  |
+| 4    | Cierre: desempates, ascensos y descensos, exportar CSV             | listo  |
+| 5    | Torneos (eliminación, grupos + llave)                              | listo  |
+| 6    | Marcador en vivo y sin señal (push, pendiente)                     | listo  |
+| 7    | Tres divisiones, semanas, imagen de la semana, calendario del club | listo  |
 
 ## Producción
 

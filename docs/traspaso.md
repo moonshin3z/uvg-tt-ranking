@@ -1,5 +1,94 @@
 # Traspaso — Sistema del club de tenis de mesa UVG
 
+Las actualizaciones van de la más nueva a la más vieja. Desde «1. Qué es esto y
+para quién» sigue el traspaso original del 18 de septiembre: vale para entender
+el sistema, pero el estado actual es el de las actualizaciones.
+
+## Actualización: arranque del ranking, el PIN en iPhone y la documentación (8 de octubre)
+
+**Producción.** Iván publicó el 3 de octubre desde un Codespace (no tenía la
+computadora): `db push` de `20261012`, `20261013` y `20261014`, y en GitHub
+quedó "Sigue el calendario que arma el club". Esa noche armó el ranking real en
+el panel: 16 jugadores (Primera 5, Segunda 5, Tercera 6), 35 partidos, al mejor
+de 3, fecha límite el **20 de noviembre** (el viernes en que termina la
+universidad). Lo que se aprendió del Codespace está en `docs/despliegue.md` §9.
+
+**La semana 1.** El ranking se abrió con la semana 1 el lunes 5 de octubre, y el
+calendario del coordinador se había comprimido a 7 semanas para terminar antes
+del 20. Después llegaron resultados de los cuatro partidos de la semana 1 del
+Excel (Arturo le ganó 2-1 a Giancarlo, Iván 2-0 a Marvin, Jose J. 2-0 a Ian;
+Marcelo contra Andres se pospuso): el club ya había jugado su semana 1 la del
+28 de septiembre, y contando desde ahí el Excel original de 8 semanas termina
+del 17 al 19 de noviembre. Se arregló así, en dos pasos y probado antes en una
+base local con el estado exacto de producción:
+
+1. Iván volvió a cargar la hoja original de 8 semanas desde el panel (Semanas →
+   "Cargar el calendario del club"), pero el inicio siguió en el 5 de octubre y
+   la app mostraba siempre la "semana 1". Peor: los tres partidos de la semana 2
+   del Excel que se jugaron del 6 al 8 de octubre (Iván-Giancarlo,
+   Arturo-Cristian, Christofer-Alfred) el disparador los había pasado a la
+   semana en curso, que para la app era la 1.
+2. El 8 de octubre, en el SQL Editor, una sola sentencia que pone el inicio en
+   el 28 de septiembre y devuelve esos tres partidos a la semana 2 con
+   `semana_fija = true`, buscados por carnet. La app no tiene pantalla para
+   cambiar el inicio de un ranking abierto.
+
+   ```sql
+   with ranking as (
+     update public.ranking set inicio_semanas = '2026-09-28'
+      where estado = 'abierto'
+     returning id
+   ),
+   jugados_esta_semana as (
+     select least(a.id, b.id) as a, greatest(a.id, b.id) as b
+       from (values ('25238', '251002'), ('261319', '26230'), ('26967', '21977')) as v(x, y)
+       join public.usuario a on a.carnet = v.x
+       join public.usuario b on b.carnet = v.y
+   )
+   update public.partido p
+      set semana = 2, semana_fija = true
+     from public.division d, ranking r, jugados_esta_semana j
+    where d.id = p.division_id and d.ranking_id = r.id
+      and p.tipo = 'regular' and p.estado <> 'pendiente'
+      and p.jugador_a = j.a and p.jugador_b = j.b
+   returning p.id, p.semana;
+   ```
+
+Comprobado en producción (https://tt-ranking-uvg.vercel.app): la portada dice
+"Semana 2, 6 al 8 de octubre", `/semana` abre en la 2 (2 de 8) y la semana 1
+muestra 4 de 4 jugados. Marcelo contra Andres no se pospuso al final: Andres
+ganó 2-0; es de la semana 1 y, como se jugó en la 2, también aparece ahí con "De
+la semana 1".
+
+Los dos textos para pegar (el de 7 y el de 8 semanas) están en el Project de
+Claude, en `claude/publicar-desde-tablet.md`.
+
+**El primer cambio de PIN en iPhone** (commit "Arregla el primer cambio de PIN
+en iPhone"). Iván lo vio en producción: después de guardar el PIN nuevo, la
+pantalla seguía pidiéndolo. En `/cambiar-pin` obligatorio seguía la barra de
+pestañas, y con el teclado abierto tapaba la mitad de abajo de «Guardar PIN»; el
+toque caía en «Partidos», que con `debe_cambiar_pin` rebota a `/cambiar-pin`:
+campos vacíos y PIN sin cambiar. Se reprodujo en un build de producción local
+con Chromium a 375×400 tocando esa parte del botón. Cambios:
+
+- `Pestanas` no se dibuja mientras `debe_cambiar_pin`.
+- `cambiarPin` llama a `revalidatePath("/", "layout")` antes de redirigir. Sin
+  eso Next solo redibuja la página de destino y la barra no volvía hasta
+  recargar (cambiar el PIN no toca cookies, así que nada fuerza el layout).
+- En pantallas táctiles la barra se baja mientras hay un campo de texto con
+  foco (`body:has(...)` en `globals.css`).
+- `e2e/pin.spec.ts` comprueba que no haya pestañas en el PIN obligatorio y que
+  aparezcan al llegar a Partidos.
+
+Verificado: el toque de la reproducción ahora guarda; el flujo completo llega a
+`/partidos?bienvenida=1` con la barra; con foco se baja en el teléfono y no en la
+computadora; `npm run verify` en verde (94 pruebas).
+
+**Documentación.** Al día con las tres divisiones, las semanas y el calendario
+del club: los cuatro documentos compartibles (proyecto, técnica, manual del
+coordinador y guía para jugadores, enlaces en `claude/documentacion-enlaces.md`
+del Project), este archivo, `README.md` y `docs/despliegue.md`.
+
 ## Actualización: el calendario del club
 
 El 2 de octubre llegó la lista real y el calendario que armó el coordinador en Excel (`Calendario_ranking_35_partidos_2_meses.xlsx`): **Primera y Segunda con 5, Tercera con 6**, 35 partidos en 8 semanas de 3 a 5. Iván decidió que la app siga **exactamente** ese calendario, no el que arma ella. En Tercera, el calendario dice «Joseph B.» (en la lista es «Joshep») y «Diego Q.», que no está en el ranking: su lugar es de **wellington G**.
@@ -176,7 +265,7 @@ movimiento en los componentes compartidos, sin agregar opciones ni texto:
   blanco pasaron a `bg-background` para que las tarjetas se vean.
 - La zona de la tabla se marca con el número de posición dentro de un círculo
   verde o rojo, en vez de la barra de 3px. Las filas entran en cascada.
-- El selector Mayor/Menor y Grupos/Cuadro tiene una píldora que se desliza
+- El selector de división y Grupos/Cuadro tiene una píldora que se desliza
   (`SEG_*` y `pildora()` en `fila.tsx`).
 - La franja del torneo en curso es una tarjeta verde con un punto que late; el
   rótulo urgente también late. El perfil tiene la cabecera curva y las cifras
@@ -370,7 +459,7 @@ Iván (estudiante de ciencias de la computación en la Universidad del Valle de 
 
 El sistema cubre tres cosas:
 
-1. **Ranking por divisiones.** Dos divisiones, Mayor y Menor. Round robin dentro de cada una: todos contra todos. Dos rankings por semestre. Al cerrar uno, los primeros de Menor ascienden y los últimos de Mayor descienden, y de ahí nace el siguiente.
+1. **Ranking por divisiones.** Dos divisiones, Mayor y Menor (desde el 1 de octubre son tres: Primera, Segunda y Tercera, con partidos repartidos en semanas; ver las actualizaciones de arriba). Round robin dentro de cada una: todos contra todos. Dos rankings por semestre. Al cerrar uno, los primeros de la división de abajo ascienden y los últimos de la de arriba descienden, y de ahí nace el siguiente.
 2. **Torneos.** Llave directa o grupos + llave. Con BYE cuando el número no es potencia de dos.
 3. **Marcador en vivo.** Se puede llevar punto por punto desde el teléfono, o no usarlo y anotar el resultado a mano. Registrar el marcador nunca es obligatorio.
 
@@ -503,14 +592,14 @@ Detalle que cuesta encontrar: `set local role` y `set_config(..., true)` **solo 
 | `npm run typecheck`       | `next typegen && tsc --noEmit`                              |
 | `npm run lint`            | eslint                                                      |
 | `npm run format:check`    | prettier                                                    |
-| `npm test`                | vitest, 55 pruebas unitarias                                |
+| `npm test`                | vitest, 94 pruebas unitarias                                |
 | `npm run test:sql`        | las comprobaciones de `supabase/pruebas/` (necesita Docker) |
 | `npm run test:humo`       | 13 pruebas de navegador: que cada pantalla cargue           |
 | `npm run test:responsive` | auditoría de layout en tres anchos                          |
 | `npm run db:reset`        | recrea la base local con migraciones + semilla              |
 | `npm run db:types`        | regenera `database.types.ts` (necesita Docker)              |
 
-Usuarios de la semilla, PIN `123456` para todos: `20001` coordinador, `20002` jugador de Mayor, `20005` jugador de Menor.
+Usuarios de la semilla, PIN `123456` para todos: `20001` coordinador, `20002` jugador de Primera, `20005` jugador de Segunda.
 
 ### Por qué existe `test:humo`
 
@@ -569,7 +658,7 @@ revoke execute on function public.lo_que_sea(...) from public, anon;
 
 - Cada pareja se enfrenta **una sola vez por ranking y por tipo** (índice único sobre `division_id, jugador_a, jugador_b, tipo`). Puede haber un regular y un desempate.
 - Los jugadores de un partido se guardan en orden canónico `jugador_a < jugador_b`, para que el índice único detecte `(a,b)` y `(b,a)` como el mismo partido.
-- Un jugador no puede estar en las dos divisiones del mismo ranking (lo valida un trigger).
+- Un jugador no puede estar en dos divisiones del mismo ranking (lo valida un trigger).
 - `ranking.numero` solo puede ser 1 o 2, único por semestre.
 - Los sorteos guardan su **semilla** con el objeto. Con ella cualquiera puede rehacer el sorteo y comprobar que no se acomodó a nadie. Es deliberado y hay que mantenerlo.
 - El retiro de un jugador a mitad de ranking **anula todos sus partidos**, jugados y pendientes, aunque eso baje puntos de otros. El razonamiento: no alcanzó a jugar contra todos, así que los puntos que repartió son desiguales. El coordinador ve antes cuántos partidos se anulan y quiénes pierden puntos, y puede cancelar.
@@ -691,6 +780,8 @@ Esta sección vale más que cualquier otra. Todos pasaron de verdad en este proy
 
 ## 8. Estado del despliegue
 
+Histórico, del 18 de septiembre: los dos commits de abajo ya están en GitHub. El estado actual está en la actualización del 8 de octubre.
+
 - **Repo:** GitHub, handle `moonshin3z`. Rama `main`.
 - **CI:** dos jobs. `verify` (typecheck, lint, format:check, test, build) y `migraciones` (levanta Supabase, aplica todo y corre `scripts/pruebas-sql.mjs`).
 - **Supabase:** proyecto en la nube ya creado y con las migraciones aplicadas. Postgres 17.
@@ -772,7 +863,7 @@ Estas no son decisiones técnicas: **son preguntas que Iván tiene que hacerle a
 - ~~Cuántos sets se juegan~~. **Resuelto (27 sep):** al mejor de 3. Se elige al crear el ranking ("Formato del partido", ya viene en 2 de 3) y no se puede cambiar después.
 - Puntos para el fondo de la tabla.
 - ~~Qué pasa con un jugador que se suma a mitad de ranking~~. **Resuelto (27 sep):** no entra; juega el siguiente ranking. La base ya lo cumple: `armar_divisiones` y `generar_calendario` solo corren en `borrador`. `/reglas` lo dice.
-- Qué pasa si una división queda con menos de 6 jugadores o desbalanceada.
+- ~~Qué pasa si una división queda con menos de 6 jugadores o desbalanceada~~. **Resuelto para este ranking (2 oct):** el club definió tres divisiones a mano, de 5, 5 y 6.
 
 ---
 
@@ -806,7 +897,7 @@ Lo que cambió en la aplicación: `src/app/admin/bajas.tsx` y `bajas-acciones.ts
 
 ## 11. Documentos del proyecto
 
-Iván tiene doce documentos en su Project de Claude que cubren el diseño desde el principio. Si podés leerlos, valen la pena; si no, lo esencial está acá arriba.
+Iván tiene dieciséis documentos en su Project de Claude que cubren el diseño desde el principio (los de abajo, más `traspaso-a-otro-agente.md`, `checklist-arranque.md`, `documentacion-enlaces.md` y `publicar-desde-tablet.md`, el más nuevo). Si podés leerlos, valen la pena; si no, lo esencial está acá arriba.
 
 ```
 claude/modelo-del-problema-v1.md
@@ -823,6 +914,6 @@ claude/diseno-audit-y-direcciones.md
 claude/pendientes-y-mejoras.md
 ```
 
-El más útil para retomar es `pendientes-y-mejoras.md`, que está al día hasta el 18 de septiembre de 2026.
+Para retomar sirven más `checklist-arranque.md` y `publicar-desde-tablet.md`; `pendientes-y-mejoras.md` se quedó en el 18 de septiembre. Los cuatro documentos compartibles (proyecto, técnica, manual del coordinador y guía para jugadores) están enlazados en `documentacion-enlaces.md` y al día al 8 de octubre.
 
 En el repo: `README.md` (arranque, comandos, estructura) y `docs/despliegue.md`.
