@@ -2148,6 +2148,22 @@ html.con-hoja .tabbar {
   opacity: 0;
 }
 
+/* Con el teclado abierto la barra se baja, como en las apps de iOS. Si no,
+   queda flotando encima de lo último del formulario y el toque que iba al
+   botón de guardar cae en una pestaña. Solo en pantallas táctiles: en la
+   computadora no hay teclado que tape nada. */
+@media (pointer: coarse) {
+  body:has(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"]):focus,
+      textarea:focus
+    )
+    .tabbar {
+    transform: translateY(150%);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 @keyframes subir {
   from {
     opacity: 0;

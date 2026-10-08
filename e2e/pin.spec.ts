@@ -33,12 +33,16 @@ test("el primer cambio de PIN no vuelve a pedirlo", async ({ page }) => {
   try {
     await ingresar(page, "20002", "123456");
     await expect(page).toHaveURL(/\/cambiar-pin$/);
+    // Sin pestañas mientras tiene el PIN del coordinador: todas lo devolvían
+    // acá, y en un iPhone con el teclado abierto la barra tapaba «Guardar PIN».
+    await expect(page.getByRole("navigation", { name: "Secciones" })).toHaveCount(0);
     await page.getByLabel("PIN nuevo").fill("483920");
     await page.getByLabel("Repetí el PIN").fill("483920");
     await page.getByRole("button", { name: "Guardar PIN" }).click();
     await expect(page).toHaveURL(/\/partidos\?bienvenida=1$/);
     await expect(page).not.toHaveURL(/\/cambiar-pin/);
     await expect(page.getByText("Listo, ya estás adentro")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Secciones" })).toBeVisible();
   } finally {
     await salir(page).catch(() => undefined);
     sql(`update auth.users

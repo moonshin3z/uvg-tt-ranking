@@ -13,10 +13,17 @@ import { PestanasCliente, type Pestana } from "./pestanas-cliente";
  * a buscarlo.
  *
  * No aparecen sin sesión: sin ingresar solo existe la tabla.
+ *
+ * Tampoco mientras el jugador tiene que cambiar el PIN que le dio el
+ * coordinador. Ahí todas las pestañas lo devuelven a /cambiar-pin, así que no
+ * sirven para nada, y en un iPhone con el teclado abierto la barra tapaba la
+ * mitad de abajo de «Guardar PIN»: el dedo caía en «Partidos», la página lo
+ * rebotaba a /cambiar-pin con los campos vacíos y el PIN quedaba sin cambiar.
+ * Desde afuera parecía que guardar no hacía nada.
  */
 export async function Pestanas() {
   const sesion = await obtenerSesion();
-  if (!sesion) return null;
+  if (!sesion || sesion.usuario.debe_cambiar_pin) return null;
 
   // Cuántos esperan tu respuesta. Sin ranking en juego no hay nada que contar.
   let porResponder = 0;

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requerirSesion } from "@/lib/auth/sesion";
@@ -32,6 +33,11 @@ export async function cambiarPin(_prev: EstadoCambioPin, formData: FormData): Pr
   const supabase = await createClient();
   const { error } = await supabase.rpc("cambiar_mi_pin", { p_nuevo: pin });
   if (error) return { error: mensajeDeCambioDePin(error.message) };
+
+  // Las pestañas viven en el layout raíz y no se muestran mientras el PIN es
+  // el del coordinador. Sin esto, Next solo redibuja la página de destino y el
+  // jugador llegaba a Partidos sin barra hasta recargar.
+  revalidatePath("/", "layout");
 
   // Primer ingreso: al jugador le mostramos qué hacer ahora; al coordinador,
   // su panel.
