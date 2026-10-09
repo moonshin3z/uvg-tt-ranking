@@ -9,10 +9,23 @@ import {
   type FilaHistorial,
 } from "@/lib/jugadores/consultas";
 import { normalizarCarnet } from "@/lib/auth/carnet";
-import { CabeceraPerfil, Cifras, Fila, FilaAccion, Flecha, Lista, Marcador, Pie, Rotulo } from "@/components/fila";
+import {
+  CabeceraPerfil,
+  Cifras,
+  Fila,
+  FilaAccion,
+  FilaExterna,
+  Flecha,
+  Lista,
+  Marcador,
+  Pie,
+  primerNombre,
+  Rotulo,
+} from "@/components/fila";
 import { GLIFO } from "@/components/iconos";
 import { Tope } from "@/components/tope";
 import { salir } from "@/app/(auth)/ingresar/acciones";
+import { CREADOR, PORTAFOLIO_VISIBLE } from "@/lib/creditos";
 import { divisionLarga, nivelDivision, nombreDivision } from "@/lib/ranking/divisiones";
 
 export async function generateMetadata({ params }: PageProps<"/jugador/[carnet]">): Promise<Metadata> {
@@ -72,6 +85,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
   const difSets = historial.reduce((n, h) => n + (h.pg - h.pp), 0);
 
   const division = actual ? nombreDivision(actual.division) : null;
+  const esCreador = jugador.carnet === CREADOR.carnet;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
@@ -84,6 +98,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
           jugador.activo ? "" : " · dado de baja"
         }`}
         puesto={puesto}
+        sello={esCreador ? "Creador de la app" : undefined}
         detalle={
           actual && puesto ? (
             <>
@@ -109,6 +124,26 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
           Entre vos y {jugador.nombre.split(" ")[0]} van {h2h.ganoOtro}-{h2h.ganoDuenio} a tu favor en {h2h.jugados}{" "}
           partido{h2h.jugados === 1 ? "" : "s"}.
         </Pie>
+      ) : null}
+
+      {esCreador ? (
+        <>
+          <Rotulo>Sobre la app</Rotulo>
+          <Lista>
+            <FilaExterna
+              href={CREADOR.portafolio}
+              nombre={soyYo ? "Tu portafolio" : "Su portafolio"}
+              sub={PORTAFOLIO_VISIBLE}
+              icono={{ glifo: GLIFO.codigo, color: "var(--uvg)" }}
+            />
+          </Lista>
+          {soyYo ? null : (
+            <Pie>
+              {primerNombre(jugador.nombre)} hizo esta app para el club. Si algo no funciona o se te ocurre una
+              mejora, escribile.
+            </Pie>
+          )}
+        </>
       ) : null}
 
       <Rotulo>Historial</Rotulo>

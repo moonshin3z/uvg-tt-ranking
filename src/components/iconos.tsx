@@ -87,6 +87,11 @@ export const GLIFO = {
       <path d="M12 6v12M7.5 10.5v3M16.5 10.5v3" />
     </Glifo>
   ),
+  codigo: (
+    <Glifo>
+      <path d="M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.4 5.5l-2.8 13" />
+    </Glifo>
+  ),
 };
 
 function Grande({ children }: { children: React.ReactNode }) {

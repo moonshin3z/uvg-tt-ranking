@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { divisionesDelRanking, rankingVigente } from "@/lib/ranking/consultas";
 import { formatearFecha, textoFechaLimite } from "@/lib/fechas";
-import { Pie, Rotulo } from "@/components/fila";
+import { FilaExterna, Lista, Pie, Rotulo } from "@/components/fila";
 import { Tope } from "@/components/tope";
+import { CREADOR } from "@/lib/creditos";
 
 export const metadata: Metadata = {
   title: "Cómo funciona",
@@ -142,6 +143,19 @@ export default async function PaginaReglas() {
             confirmar resultados.
           </p>
         </Seccion>
+
+        <section>
+          <Rotulo>Quién hizo esto</Rotulo>
+          <Lista>
+            <FilaExterna
+              href={CREADOR.portafolio}
+              nombre={CREADOR.nombre}
+              sub="Juega en el club e hizo esta app"
+              fuerte
+            />
+          </Lista>
+          <Pie>Si algo no funciona o se te ocurre una mejora, escribile.</Pie>
+        </section>
 
         <p className="text-center text-sm">
           <Link

@@ -139,6 +139,54 @@ export function FilaAccion({
   );
 }
 
+/**
+ * La misma fila, pero hacia afuera de la app: abre en otra pestaña y lleva
+ * la flecha en diagonal, para que se note que te saca de la app.
+ */
+export function FilaExterna({
+  href,
+  nombre,
+  sub,
+  icono,
+  sinInicial,
+  fuerte,
+}: Omit<Props, "href" | "children" | "derecha" | "envolver"> & { href: string }) {
+  return (
+    <li className={claseFila({ icono, sinInicial })}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className="celda">
+        <Contenido
+          nombre={nombre}
+          sub={sub}
+          icono={icono}
+          sinInicial={sinInicial}
+          fuerte={fuerte}
+          derecha={<FlechaAfuera />}
+        />
+      </a>
+    </li>
+  );
+}
+
+/** La flecha en diagonal de una fila que sale de la app. */
+function FlechaAfuera() {
+  return (
+    <svg
+      className="chev"
+      width="13"
+      height="13"
+      viewBox="0 0 13 13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M2.5 10.5l8-8M4 2.5h6.5V9" />
+    </svg>
+  );
+}
+
 /** El resultado de un partido jugado: `3-1`, en verde si lo ganó quien mira. */
 export function Marcador({ texto, gano }: { texto: string; gano: boolean }) {
   return <span className={cn("res", gano && "gano")}>{texto}</span>;
@@ -264,6 +312,7 @@ export function CabeceraPerfil({
   bajo,
   puesto,
   detalle,
+  sello,
 }: {
   nombre: string;
   /** Carnet y división, la línea chica de abajo. */
@@ -271,11 +320,21 @@ export function CabeceraPerfil({
   /** El puesto, ya formateado: "4.º". Sin puesto, no se dibuja el bloque. */
   puesto?: string;
   detalle?: React.ReactNode;
+  /** Una pastilla debajo del carnet: «Creador de la app». */
+  sello?: string;
 }) {
   return (
     <div className="perfil-cab">
       <p className="nom">{nombre}</p>
       <p className="car">{bajo}</p>
+      {sello ? (
+        <p className="sello">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M12 1.5c.9 6.3 3.3 9.6 10.5 10.5-7.2.9-9.6 4.2-10.5 10.5-.9-6.3-3.3-9.6-10.5-10.5C8.7 11.1 11.1 7.8 12 1.5z" />
+          </svg>
+          {sello}
+        </p>
+      ) : null}
       {puesto ? (
         <div className="puesto">
           <span className="n">{puesto}</span>

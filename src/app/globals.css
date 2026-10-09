@@ -1144,6 +1144,25 @@
     color: rgba(255, 255, 255, 0.66);
   }
 
+  /* «Creador de la app»: la pastilla de vidrio sobre el verde del perfil. */
+  .perfil-cab .sello {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 5px 11px 5px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .perfil-cab .sello svg {
+    color: #8ee0b0;
+  }
+
   .puesto {
     display: flex;
     align-items: baseline;

@@ -4,6 +4,20 @@ Las actualizaciones van de la más nueva a la más vieja. Desde «1. Qué es est
 para quién» sigue el traspaso original del 18 de septiembre: vale para entender
 el sistema, pero el estado actual es el de las actualizaciones.
 
+## Actualización: quién hizo la app (9 de octubre)
+
+La app dice quién la hizo, para que el que encuentre un error o tenga una idea sepa a quién decirle. Los datos viven en
+`src/lib/creditos.ts` (nombre, carnet y portafolio); si cambian, se cambian ahí.
+
+- **Cómo funciona** (`/reglas`) termina con la sección «Quién hizo esto»: una fila con el nombre que abre el portafolio
+  en otra pestaña, y debajo «Si algo no funciona o se te ocurre una mejora, escribile».
+- **Su perfil** (`/jugador/25238`) lleva la pastilla «Creador de la app» en la cabecera verde y, debajo de las cifras,
+  «Sobre la app» con la fila del portafolio. Visto por él mismo dice «Tu portafolio» y no lleva la nota de abajo.
+- Piezas nuevas: `FilaExterna` en `fila.tsx` (fila que sale de la app, con flecha en diagonal y `target="_blank"`), el
+  glifo `codigo` y la clase `.perfil-cab .sello`.
+- Verificado con la app compilada contra un Supabase falso: la pastilla y el enlace salen solo en el perfil de ese
+  carnet, el de Arturo no tiene ninguno, y ninguna de las dos pantallas se pasa de 390 px.
+
 ## Actualización: arranque del ranking, el PIN en iPhone y la documentación (8 de octubre)
 
 **Producción.** Iván publicó el 3 de octubre desde un Codespace (no tenía la
