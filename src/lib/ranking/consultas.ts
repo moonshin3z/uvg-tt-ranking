@@ -3,6 +3,7 @@ import type { DivisionTipo, RankingRow, TablaPosicionesRow } from "@/lib/supabas
 import { asignarZonas, ordenarTabla, type EnfrentamientoDirecto, type FilaOrdenada } from "./tabla";
 import { DIVISIONES, nivelDivision } from "./divisiones";
 import type { PartidoSemanal } from "./semanas";
+import { podioDeTabla, type Podio } from "./medallas";
 import { datos } from "@/lib/supabase/errores";
 
 /**
@@ -102,6 +103,15 @@ export async function tablaDeDivision(
     n_ascienden: ranking.n_ascienden,
     n_descienden: ranking.n_descienden,
   });
+}
+
+/**
+ * El oro y la plata de cada división de un ranking cerrado. Sale de la misma
+ * tabla ordenada que se ve en pantalla, así que nunca puede contradecirla.
+ */
+export async function podiosDelRanking(ranking: RankingRow, divisiones: DivisionTipo[]): Promise<Podio[]> {
+  const tablas = await Promise.all(divisiones.map((d) => tablaDeDivision(ranking, d, divisiones.length)));
+  return divisiones.map((d, i) => podioDeTabla(d, tablas[i]));
 }
 
 export async function ultimosResultados(ranking: RankingRow, limite = 8): Promise<ResultadoReciente[]> {

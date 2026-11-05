@@ -6,10 +6,12 @@ import {
   divisionDeJugador,
   divisionesDelRanking,
   partidosSemanales,
+  podiosDelRanking,
   rankingVigente,
   tablaDeDivision,
   ultimosResultados,
 } from "@/lib/ranking/consultas";
+import { Premiacion } from "@/components/premiacion";
 import { armarSemana, semanaPorDefecto, textoSemana } from "@/lib/ranking/semanas";
 import { divisionElegida, divisionLarga } from "@/lib/ranking/divisiones";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
@@ -127,12 +129,14 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
   const division: DivisionTipo = divisionElegida(divisionParam ?? suya, divisiones);
 
   const conSemanas = ranking.estado === "abierto" && ranking.inicio_semanas ? ranking.inicio_semanas : null;
-  const [filas, resultados, mios, torneo, semanales] = await Promise.all([
+  const cerrado = ranking.estado === "cerrado";
+  const [filas, resultados, mios, torneo, semanales, podios] = await Promise.all([
     tablaDeDivision(ranking, division, divisiones.length),
     ultimosResultados(ranking),
     sesion && ["abierto", "en_desempates"].includes(ranking.estado) ? misPartidos(sesion.authId, ranking.id) : null,
     torneoEnCurso(),
     conSemanas ? partidosSemanales(ranking.id) : null,
+    cerrado ? podiosDelRanking(ranking, divisiones) : null,
   ]);
   const franja = mios ? franjaDePartidos(mios, ranking.fecha_limite) : null;
 
@@ -152,10 +156,17 @@ export default async function Portada({ searchParams }: PageProps<"/">) {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
       <Tope
         titulo={ranking.nombre}
-        sub={`${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · cierra el ${formatearFecha(ranking.fecha_limite)}`}
+        sub={
+          cerrado
+            ? `Terminó el ${formatearFecha(ranking.cerrado_en ?? ranking.fecha_limite)}`
+            : `${ESTADO_RANKING[ranking.estado] ?? ranking.estado} · cierra el ${formatearFecha(ranking.fecha_limite)}`
+        }
       />
 
       {motivo === "solo-coordinador" ? <Nota>Esa sección es solo para el coordinador.</Nota> : null}
+
+      {/* Cerrado el ranking, lo primero es la premiación. Se abre sola una vez. */}
+      {podios ? <Premiacion rankingId={ranking.id} rankingNombre={ranking.nombre} podios={podios} auto /> : null}
 
       {franja ? (
         <FranjaPartidos

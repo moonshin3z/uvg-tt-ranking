@@ -1,7 +1,14 @@
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { obtenerSesion } from "@/lib/auth/sesion";
-import { calendarioDeRanking, divisionesDelRanking, rankingPorId, tablaDeDivision } from "@/lib/ranking/consultas";
+import {
+  calendarioDeRanking,
+  divisionesDelRanking,
+  podiosDelRanking,
+  rankingPorId,
+  tablaDeDivision,
+} from "@/lib/ranking/consultas";
+import { Premiacion } from "@/components/premiacion";
 import { divisionElegida, nombreDivision } from "@/lib/ranking/divisiones";
 import type { DivisionTipo } from "@/lib/supabase/tipos";
 import { Fila, Lista, Marcador, Pie, Segmentado } from "@/components/fila";
@@ -38,9 +45,10 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
   const division: DivisionTipo = divisionElegida(divParam, divisiones);
   const verCalendario = ver === "calendario";
 
-  const [filas, calendario] = await Promise.all([
+  const [filas, calendario, podios] = await Promise.all([
     tablaDeDivision(ranking, division, divisiones.length),
     verCalendario ? calendarioDeRanking(ranking.id) : Promise.resolve([]),
+    ranking.estado === "cerrado" ? podiosDelRanking(ranking, divisiones) : null,
   ]);
 
   const deLaDivision = calendario.filter((p) => p.division === division);
@@ -54,6 +62,13 @@ export default async function PaginaRanking({ params, searchParams }: PageProps<
       <Tope titulo={ranking.nombre} sub={ETIQUETA[ranking.estado] ?? ranking.estado} atras="/rankings" />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
         <div className="h-1.5" />
+        {/* La premiación queda guardada acá, para volver a verla cuando sea. */}
+        {podios ? (
+          <>
+            <Premiacion rankingId={ranking.id} rankingNombre={ranking.nombre} podios={podios} />
+            <div className="h-1.5" />
+          </>
+        ) : null}
         <Segmentado
           etiqueta="División"
           actual={division}

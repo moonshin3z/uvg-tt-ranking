@@ -1,6 +1,8 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import type { Puesto } from "@/lib/ranking/medallas";
+import { Medalla } from "@/components/medalla";
 
 /**
  * Las piezas de las pantallas, copiadas del prototipo de iOS
@@ -303,6 +305,9 @@ export function Vacio({
   );
 }
 
+/** Una pastilla de la cabecera del perfil: con medalla, o con la chispa del creador. */
+export type Sello = { texto: string; medalla?: Puesto };
+
 /**
  * La cabecera del perfil: el degradé verde, el nombre y el puesto en cifra
  * grande. Sube detrás de la barra de arriba, que empieza transparente.
@@ -312,7 +317,7 @@ export function CabeceraPerfil({
   bajo,
   puesto,
   detalle,
-  sello,
+  sellos = [],
 }: {
   nombre: string;
   /** Carnet y división, la línea chica de abajo. */
@@ -320,20 +325,28 @@ export function CabeceraPerfil({
   /** El puesto, ya formateado: "4.º". Sin puesto, no se dibuja el bloque. */
   puesto?: string;
   detalle?: React.ReactNode;
-  /** Una pastilla debajo del carnet: «Creador de la app». */
-  sello?: string;
+  /** Pastillas debajo del carnet: sus medallas y «Creador de la app». */
+  sellos?: Sello[];
 }) {
   return (
     <div className="perfil-cab">
       <p className="nom">{nombre}</p>
       <p className="car">{bajo}</p>
-      {sello ? (
-        <p className="sello">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <path d="M12 1.5c.9 6.3 3.3 9.6 10.5 10.5-7.2.9-9.6 4.2-10.5 10.5-.9-6.3-3.3-9.6-10.5-10.5C8.7 11.1 11.1 7.8 12 1.5z" />
-          </svg>
-          {sello}
-        </p>
+      {sellos.length > 0 ? (
+        <div className="sellos">
+          {sellos.map((s) => (
+            <p key={s.texto} className={cn("sello", s.medalla && "medalla")}>
+              {s.medalla ? (
+                <Medalla puesto={s.medalla} tamano={14} />
+              ) : (
+                <svg className="chispa" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 1.5c.9 6.3 3.3 9.6 10.5 10.5-7.2.9-9.6 4.2-10.5 10.5-.9-6.3-3.3-9.6-10.5-10.5C8.7 11.1 11.1 7.8 12 1.5z" />
+                </svg>
+              )}
+              {s.texto}
+            </p>
+          ))}
+        </div>
       ) : null}
       {puesto ? (
         <div className="puesto">

@@ -1144,12 +1144,19 @@
     color: rgba(255, 255, 255, 0.66);
   }
 
-  /* «Creador de la app»: la pastilla de vidrio sobre el verde del perfil. */
+  /* Las pastillas de vidrio sobre el verde del perfil: las medallas y
+     «Creador de la app». */
+  .perfil-cab .sellos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
   .perfil-cab .sello {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: 12px;
     padding: 5px 11px 5px 9px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.14);
@@ -1159,8 +1166,226 @@
     letter-spacing: -0.01em;
   }
 
-  .perfil-cab .sello svg {
+  .perfil-cab .sello.medalla {
+    padding-left: 7px;
+  }
+
+  .perfil-cab .sello .chispa {
     color: #8ee0b0;
+  }
+
+  /* La premiación: pantalla completa encima de todo cuando cierra un ranking. */
+  html.con-premiacion {
+    overflow: hidden;
+  }
+
+  .premiacion {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: #fff;
+    background:
+      radial-gradient(90% 50% at 50% 0%, rgba(246, 199, 68, 0.24) 0%, rgba(246, 199, 68, 0) 70%),
+      radial-gradient(140% 90% at 50% 0%, #0f9a52 0%, #06381f 58%, #03200f 100%);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.4s var(--curva),
+      visibility 0s linear 0.4s;
+  }
+
+  .premiacion.ver {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.45s var(--curva);
+  }
+
+  .premiacion-confeti {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .premiacion-cerrar {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 14px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .premiacion-cerrar:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 2px;
+  }
+
+  .premiacion-cuerpo {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: calc(44px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .premiacion-copa {
+    position: relative;
+    display: grid;
+    place-items: center;
+    align-self: center;
+  }
+
+  .premiacion-copa::before {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(246, 199, 68, 0.45) 0%, rgba(246, 199, 68, 0) 65%);
+  }
+
+  .premiacion-copa svg {
+    position: relative;
+    filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.28));
+  }
+
+  .premiacion-antetitulo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .premiacion-titulo {
+    margin-top: -8px;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .premiacion-bajada {
+    margin: -6px 0 4px;
+    font-size: 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .podio {
+    padding: 12px 16px 4px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .podio h3 {
+    padding-bottom: 2px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .podio-fila {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 64px;
+    padding: 8px 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .podio-fila + .podio-fila {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .podio-medio {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  .podio-nombre {
+    overflow: hidden;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .podio-sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .premiacion-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .premiacion .btn.premiacion-boton {
+    background: #fff;
+    color: #06381f;
+  }
+
+  .premiacion .btn.premiacion-texto {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  /* La entrada: la copa salta, después cada división sube en su turno y sus
+     medallas caen con un rebote. Se repite cada vez que se abre. */
+  .premiacion.ver .premiacion-copa {
+    animation: premio-copa 0.9s var(--curva) 0.1s both;
+  }
+
+  .premiacion.ver .premiacion-copa::before {
+    animation: premio-brillo 2.6s ease-in-out 0.8s infinite;
+  }
+
+  .premiacion.ver .premiacion-antetitulo,
+  .premiacion.ver .premiacion-titulo,
+  .premiacion.ver .premiacion-bajada {
+    animation: premio-subir 0.6s var(--curva) 0.3s both;
+  }
+
+  .premiacion.ver .podio,
+  .premiacion.ver .premiacion-acciones {
+    animation: premio-subir 0.65s var(--curva) var(--retraso, 0.6s) both;
+  }
+
+  .premiacion.ver .podio-medalla {
+    animation: premio-medalla 0.7s var(--curva) calc(var(--retraso, 0.6s) + 0.15s) both;
+  }
+
+  .premiacion.ver .podio-fila + .podio-fila .podio-medalla {
+    animation-delay: calc(var(--retraso, 0.6s) + 0.3s);
   }
 
   .puesto {
@@ -2180,6 +2405,65 @@ html.con-hoja .tabbar {
     transform: translateY(150%);
     opacity: 0;
     pointer-events: none;
+  }
+}
+
+@keyframes premio-subir {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes premio-copa {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-14deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.1) rotate(4deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes premio-brillo {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes premio-medalla {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-30deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.15) rotate(6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
   }
 }
 

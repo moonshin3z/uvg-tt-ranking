@@ -21,12 +21,15 @@ import {
   Pie,
   primerNombre,
   Rotulo,
+  type Sello,
 } from "@/components/fila";
 import { GLIFO } from "@/components/iconos";
+import { Medalla } from "@/components/medalla";
 import { Tope } from "@/components/tope";
 import { salir } from "@/app/(auth)/ingresar/acciones";
 import { CREADOR, PORTAFOLIO_VISIBLE } from "@/lib/creditos";
 import { divisionLarga, nivelDivision, nombreDivision } from "@/lib/ranking/divisiones";
+import { medallaDe, medallasDelHistorial, nombreMedalla, textoMedalla } from "@/lib/ranking/medallas";
 
 export async function generateMetadata({ params }: PageProps<"/jugador/[carnet]">): Promise<Metadata> {
   const { carnet } = await params;
@@ -86,6 +89,11 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
 
   const division = actual ? nombreDivision(actual.division) : null;
   const esCreador = jugador.carnet === CREADOR.carnet;
+  // Las medallas van primero: son lo que ganó jugando.
+  const sellos: Sello[] = [
+    ...medallasDelHistorial(historial).map((m) => ({ texto: textoMedalla(m), medalla: m.puesto })),
+    ...(esCreador ? [{ texto: "Creador de la app" }] : []),
+  ];
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-8">
@@ -98,7 +106,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
           jugador.activo ? "" : " · dado de baja"
         }`}
         puesto={puesto}
-        sello={esCreador ? "Creador de la app" : undefined}
+        sellos={sellos}
         detalle={
           actual && puesto ? (
             <>
@@ -153,6 +161,7 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
         <Lista>
           {historial.map((h) => {
             const d = distincion(h);
+            const medalla = medallaDe(h.ranking_estado, h.posicion);
             return (
               <Fila
                 key={h.ranking_id}
@@ -162,7 +171,14 @@ export default async function PerfilJugador({ params }: PageProps<"/jugador/[car
                 href={`/rankings/${h.ranking_id}` as Route}
                 derecha={
                   <>
-                    {d ? <Marcador texto={d.texto} gano={d.bueno} /> : null}
+                    {medalla ? (
+                      <span className="inline-flex" title={nombreMedalla(medalla)}>
+                        <Medalla puesto={medalla} tamano={20} />
+                        <span className="sr-only">{nombreMedalla(medalla)}</span>
+                      </span>
+                    ) : null}
+                    {/* Con medalla, «premio» ya está dicho; «subió» no. */}
+                    {d && !(medalla && d.texto === "premio") ? <Marcador texto={d.texto} gano={d.bueno} /> : null}
                     <Flecha />
                   </>
                 }
