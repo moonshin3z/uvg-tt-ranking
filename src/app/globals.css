@@ -1174,7 +1174,11 @@
     color: #8ee0b0;
   }
 
-  /* La premiación: pantalla completa encima de todo cuando cierra un ranking. */
+  /* La premiación: pantalla completa encima de todo cuando cierra un ranking.
+     Es una secuencia tipo historias (intro, una pantalla por división y el
+     resumen). Cada pantalla se monta de nuevo al entrar, así sus animaciones
+     arrancan de cero; los tiempos de acá van de la mano con los de las
+     partículas en premiacion.tsx. */
   html.con-premiacion {
     overflow: hidden;
   }
@@ -1183,14 +1187,18 @@
     position: fixed;
     inset: 0;
     z-index: 60;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     color: #fff;
     background:
-      radial-gradient(90% 50% at 50% 0%, rgba(246, 199, 68, 0.24) 0%, rgba(246, 199, 68, 0) 70%),
-      radial-gradient(140% 90% at 50% 0%, #0f9a52 0%, #06381f 58%, #03200f 100%);
+      radial-gradient(90% 50% at 50% 0%, rgba(246, 199, 68, 0.22) 0%, rgba(246, 199, 68, 0) 70%),
+      radial-gradient(140% 90% at 50% 0%, #0f9a52 0%, #06381f 58%, #021a0d 100%);
     opacity: 0;
     visibility: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
     transition:
       opacity 0.4s var(--curva),
       visibility 0s linear 0.4s;
@@ -1202,10 +1210,17 @@
     transition: opacity 0.45s var(--curva);
   }
 
+  /* Mantener apretado pausa la pantalla y su barrita. */
+  .premiacion.pausada .prem-escena,
+  .premiacion.pausada .prem-escena *,
+  .premiacion.pausada .prem-relleno {
+    animation-play-state: paused;
+  }
+
   .premiacion-confeti {
     position: fixed;
     inset: 0;
-    z-index: 2;
+    z-index: 4;
     width: 100%;
     height: 100%;
     pointer-events: none;
@@ -1213,9 +1228,9 @@
 
   .premiacion-cerrar {
     position: fixed;
-    top: calc(12px + env(safe-area-inset-top, 0px));
+    top: calc(24px + env(safe-area-inset-top, 0px));
     right: 14px;
-    z-index: 3;
+    z-index: 6;
     display: grid;
     place-items: center;
     width: 38px;
@@ -1234,6 +1249,361 @@
     outline-offset: 2px;
   }
 
+  .prem-progreso {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: 14px;
+    left: 14px;
+    z-index: 5;
+    display: flex;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .prem-segmento {
+    position: relative;
+    flex: 1;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  .prem-relleno {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .prem-relleno.lleno {
+    transform: none;
+  }
+
+  .prem-relleno.activo {
+    animation: prem-progreso linear forwards;
+  }
+
+  .prem-area {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    touch-action: manipulation;
+  }
+
+  .prem-escena {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+    overflow: hidden;
+    padding: calc(76px + env(safe-area-inset-top, 0px)) 22px calc(84px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+    animation: prem-entra 0.5s var(--curva) both;
+  }
+
+  .prem-saltar {
+    position: fixed;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    z-index: 5;
+    min-height: 40px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transform: translateX(-50%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .prem-antetitulo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  /* La intro: reflectores, rayos, la copa que salta y el título. */
+  .prem-intro {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .prem-foco {
+    position: absolute;
+    top: -12%;
+    width: 60%;
+    height: 125%;
+    background: linear-gradient(to bottom, rgba(255, 240, 200, 0.3), rgba(255, 240, 200, 0) 72%);
+    clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+    filter: blur(4px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    transform-origin: 50% 0;
+  }
+
+  .prem-foco.izq {
+    left: -14%;
+    animation:
+      prem-aparecer 0.9s ease-out both,
+      prem-foco-izq 3.2s ease-in-out infinite alternate;
+  }
+
+  .prem-foco.der {
+    right: -14%;
+    animation:
+      prem-aparecer 0.9s ease-out 0.2s both,
+      prem-foco-der 3.6s ease-in-out infinite alternate;
+  }
+
+  .prem-rayos {
+    position: absolute;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    width: 560px;
+    height: 560px;
+    margin: -280px 0 0 -280px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 228, 140, 0.2) 0deg 7deg,
+      rgba(255, 228, 140, 0) 7deg 20deg
+    );
+    -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 62%);
+    mask-image: radial-gradient(circle, #000 12%, transparent 62%);
+    animation:
+      prem-aparecer 1s ease-out 0.4s both,
+      prem-girar 26s linear infinite;
+  }
+
+  .prem-intro .prem-rayos {
+    top: 46%;
+    width: 640px;
+    height: 640px;
+    margin: -320px 0 0 -320px;
+  }
+
+  .prem-intro .prem-antetitulo,
+  .prem-intro .prem-titulo-grande,
+  .prem-intro .prem-bajada {
+    position: relative;
+    z-index: 1;
+  }
+
+  .prem-intro .prem-antetitulo {
+    animation: prem-sube 0.6s var(--curva) 0.9s both;
+  }
+
+  .prem-titulo-grande {
+    font-size: 54px;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    text-shadow: 0 6px 30px rgba(0, 0, 0, 0.35);
+    animation: prem-titulo 0.9s var(--curva) 1.05s both;
+  }
+
+  .prem-bajada {
+    font-size: 17px;
+    color: rgba(255, 255, 255, 0.82);
+    animation: prem-sube 0.6s var(--curva) 1.5s both;
+  }
+
+  /* Una división: primero sube la plata, después el oro con su destello. */
+  .prem-division {
+    justify-content: space-between;
+  }
+
+  .prem-cabeza {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: prem-sube 0.6s var(--curva) 0.05s both;
+  }
+
+  .prem-titulo-division {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .prem-destello {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(70% 45% at 72% 58%, rgba(255, 226, 140, 0.5), rgba(255, 226, 140, 0) 70%);
+    pointer-events: none;
+    animation: prem-destello 1.4s ease-out 2.2s both;
+  }
+
+  .prem-podio {
+    --alto-plata: clamp(110px, 17vh, 150px);
+    --alto-oro: clamp(160px, 25vh, 230px);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .prem-podio::after {
+    content: "";
+    position: absolute;
+    right: -10%;
+    bottom: -12px;
+    left: -10%;
+    z-index: -1;
+    height: 24px;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0) 70%);
+  }
+
+  .prem-columna {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .prem-persona {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0 2px 14px;
+  }
+
+  .prem-columna.plata .prem-persona {
+    animation: prem-persona 0.7s var(--curva) 0.9s both;
+  }
+
+  .prem-columna.oro .prem-persona {
+    animation: prem-persona 0.8s var(--curva) 2.2s both;
+  }
+
+  .prem-columna.oro .prem-persona::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    z-index: -1;
+    width: 200px;
+    height: 200px;
+    margin-left: -100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(246, 199, 68, 0.5), rgba(246, 199, 68, 0) 65%);
+    animation: prem-latir 2.4s ease-in-out 2.6s infinite;
+  }
+
+  /* Los rayos detrás del oro, centrados en su medalla. */
+  .prem-rayos.oro {
+    top: 50%;
+    z-index: -2;
+    width: 460px;
+    height: 460px;
+    margin: -230px 0 0 -230px;
+    animation:
+      prem-aparecer 0.8s ease-out 2.2s both,
+      prem-girar 26s linear infinite;
+  }
+
+  .prem-suspenso {
+    position: absolute;
+    right: -20px;
+    bottom: calc(var(--alto-oro) + 26px);
+    left: -20px;
+    font-size: 17px;
+    font-weight: 700;
+    font-style: italic;
+    color: #ffe08a;
+    animation: prem-suspenso 1.05s ease-in-out 1.2s both;
+  }
+
+  .prem-nombre {
+    max-width: 100%;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .prem-columna.oro .prem-nombre {
+    font-size: 24px;
+    color: #ffe08a;
+    text-shadow: 0 2px 18px rgba(246, 199, 68, 0.45);
+  }
+
+  .prem-dato {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .prem-bloque {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding-top: 12px;
+    border-radius: 14px 14px 4px 4px;
+    transform-origin: 50% 100%;
+  }
+
+  .prem-columna.plata .prem-bloque {
+    height: var(--alto-plata);
+    background: linear-gradient(180deg, #f6f8fa 0%, #d3d8df 38%, #8e97a2 100%);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.75),
+      0 18px 40px -18px rgba(0, 0, 0, 0.6);
+    animation: prem-bloque 0.75s var(--curva) 0.35s both;
+  }
+
+  .prem-columna.oro .prem-bloque {
+    height: var(--alto-oro);
+    background: linear-gradient(180deg, #fff0b8 0%, #f6c744 36%, #c08604 100%);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.7),
+      0 0 70px -6px rgba(246, 199, 68, 0.55),
+      0 18px 40px -18px rgba(0, 0, 0, 0.6);
+    animation: prem-bloque 0.85s var(--curva) 1.5s both;
+  }
+
+  .prem-num {
+    font-size: 76px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .prem-columna.plata .prem-num {
+    color: rgba(60, 68, 80, 0.35);
+  }
+
+  .prem-columna.oro .prem-num {
+    color: rgba(122, 83, 0, 0.4);
+  }
+
+  /* El resumen: todas las divisiones juntas, para quedarse mirando. */
   .premiacion-cuerpo {
     position: relative;
     z-index: 1;
@@ -1243,37 +1613,11 @@
     width: 100%;
     max-width: 440px;
     margin: 0 auto;
-    padding: calc(44px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
+    padding: calc(40px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
-  .premiacion-copa {
-    position: relative;
-    display: grid;
-    place-items: center;
-    align-self: center;
-  }
-
-  .premiacion-copa::before {
-    content: "";
-    position: absolute;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(246, 199, 68, 0.45) 0%, rgba(246, 199, 68, 0) 65%);
-  }
-
-  .premiacion-copa svg {
-    position: relative;
-    filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.28));
-  }
-
-  .premiacion-antetitulo {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+  .premiacion-cuerpo .prem-antetitulo {
     text-align: center;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.72);
   }
 
   .premiacion-titulo {
@@ -1286,11 +1630,9 @@
     text-wrap: balance;
   }
 
-  .premiacion-bajada {
-    margin: -6px 0 4px;
-    font-size: 16px;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+  .premiacion.ver .premiacion-cuerpo .prem-antetitulo,
+  .premiacion.ver .premiacion-titulo {
+    animation: premio-subir 0.6s var(--curva) 0.1s both;
   }
 
   .podio {
@@ -1343,6 +1685,28 @@
     color: rgba(255, 255, 255, 0.7);
   }
 
+  .podio-placa {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 800;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .podio-placa.oro {
+    background: linear-gradient(180deg, #fff0b8 0%, #f6c744 40%, #c08604 100%);
+    color: #5c3f00;
+  }
+
+  .podio-placa.plata {
+    background: linear-gradient(180deg, #f6f8fa 0%, #d3d8df 40%, #8e97a2 100%);
+    color: #3b434e;
+  }
+
   .premiacion-acciones {
     display: flex;
     flex-direction: column;
@@ -1359,33 +1723,9 @@
     color: rgba(255, 255, 255, 0.85);
   }
 
-  /* La entrada: la copa salta, después cada división sube en su turno y sus
-     medallas caen con un rebote. Se repite cada vez que se abre. */
-  .premiacion.ver .premiacion-copa {
-    animation: premio-copa 0.9s var(--curva) 0.1s both;
-  }
-
-  .premiacion.ver .premiacion-copa::before {
-    animation: premio-brillo 2.6s ease-in-out 0.8s infinite;
-  }
-
-  .premiacion.ver .premiacion-antetitulo,
-  .premiacion.ver .premiacion-titulo,
-  .premiacion.ver .premiacion-bajada {
-    animation: premio-subir 0.6s var(--curva) 0.3s both;
-  }
-
   .premiacion.ver .podio,
   .premiacion.ver .premiacion-acciones {
     animation: premio-subir 0.65s var(--curva) var(--retraso, 0.6s) both;
-  }
-
-  .premiacion.ver .podio-medalla {
-    animation: premio-medalla 0.7s var(--curva) calc(var(--retraso, 0.6s) + 0.15s) both;
-  }
-
-  .premiacion.ver .podio-fila + .podio-fila .podio-medalla {
-    animation-delay: calc(var(--retraso, 0.6s) + 0.3s);
   }
 
   .puesto {
@@ -2420,24 +2760,57 @@ html.con-hoja .tabbar {
   }
 }
 
-@keyframes premio-copa {
-  0% {
+@keyframes prem-progreso {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes prem-entra {
+  from {
     opacity: 0;
-    transform: scale(0.3) rotate(-14deg);
+    transform: scale(1.04);
   }
 
-  60% {
-    opacity: 1;
-    transform: scale(1.1) rotate(4deg);
-  }
-
-  100% {
+  to {
     opacity: 1;
     transform: none;
   }
 }
 
-@keyframes premio-brillo {
+@keyframes prem-aparecer {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes prem-sube {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes prem-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes prem-latir {
   0%,
   100% {
     opacity: 0.55;
@@ -2447,6 +2820,178 @@ html.con-hoja .tabbar {
   50% {
     opacity: 1;
     transform: scale(1.08);
+  }
+}
+
+@keyframes prem-foco-izq {
+  from {
+    transform: rotate(-30deg);
+  }
+
+  to {
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes prem-foco-der {
+  from {
+    transform: rotate(30deg);
+  }
+
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes prem-copa-entra {
+  0% {
+    opacity: 0;
+    transform: translateY(80px) scale(0.4) rotate(-10deg);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.12) rotate(3deg);
+  }
+
+  75% {
+    transform: translateY(4px) scale(0.97) rotate(-1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes prem-titulo {
+  from {
+    opacity: 0;
+    transform: scale(1.6);
+    filter: blur(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes prem-titilar {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+@keyframes prem-bloque {
+  0% {
+    transform: scaleY(0);
+  }
+
+  70% {
+    transform: scaleY(1.06);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes prem-persona {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.7);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.06);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes prem-colgar {
+  0% {
+    transform: rotate(-38deg);
+  }
+
+  25% {
+    transform: rotate(24deg);
+  }
+
+  45% {
+    transform: rotate(-14deg);
+  }
+
+  65% {
+    transform: rotate(8deg);
+  }
+
+  82% {
+    transform: rotate(-3deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes prem-brillo {
+  0%,
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 94, 0));
+  }
+
+  50% {
+    filter: brightness(1.22) drop-shadow(0 0 14px rgba(255, 215, 94, 0.8));
+  }
+}
+
+@keyframes prem-suspenso {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  25% {
+    opacity: 1;
+    transform: none;
+  }
+
+  75% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes prem-destello {
+  0% {
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.35;
   }
 }
 

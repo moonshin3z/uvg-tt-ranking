@@ -10,14 +10,26 @@ Cuando un ranking se cierra, el 1.º de cada división se lleva oro y el 2.º pl
 Ranking 1 (fecha límite movida al 11 de noviembre). No hay migración ni nada guardado aparte: todo sale de la posición
 final que ya calcula la tabla, con los desempates resueltos.
 
-- **La premiación** (`src/components/premiacion.tsx`): pantalla completa con la copa, confeti desde las esquinas de abajo
-  y una tarjeta por división con el oro y la plata. En la portada, con el ranking vigente cerrado, aparece la fila
-  «Premiación» arriba de la tabla y la pantalla se abre sola la primera vez que alguien entra. Que ya la vio se guarda en
-  `localStorage` (`ranking-uvg:premiacion:<id del ranking>`), así que no hace falta cuenta; si el navegador no deja
-  guardar, no se abre sola. En `/rankings/<id>` de un ranking cerrado está la misma fila para volver a verla.
+- **La premiación** (`src/components/premiacion.tsx`), rehecha el 9 y el 11 de noviembre porque la primera versión (una
+  sola pantalla con la lista) a Iván le pareció pobre, y no quiere íconos tipo emoji (copa, estrellitas, medallas). Ahora es una ceremonia tipo historias de Instagram:
+  1. Intro (3,8 s): reflectores que se mueven, rayos girando detrás del título, el título que entra desenfocado y
+     fuegos artificiales.
+  2. Una pantalla por división (6,2 s): sube el bloque de la plata y aparece quién la ganó;
+     sale «Y el oro es para…» mientras sube el bloque del oro, y a los 2,2 s se revela el nombre con un destello, rayos
+     detrás y una ráfaga de confeti.
+  3. El resumen con las tarjetas de todas las divisiones (placas «1» y «2» en oro y plata, sin medallas), «Ver la tabla final», «Volver a verla» y «Cerrar».
+     Las barritas de arriba marcan el tiempo y avanzan solas (la pantalla siguiente arranca con el `animationend` de la
+     barrita, así que pausar la animación pausa todo). Tocar a la derecha adelanta, a la izquierda vuelve, mantener apretado
+     pausa, las flechas del teclado también sirven y «Saltar» va al resumen.
+- **Cuándo sale**: en la portada, con el ranking vigente cerrado, aparece la fila «Premiación» arriba de la tabla y la
+  ceremonia se abre sola la primera vez que alguien entra. Que ya la vio se guarda en `localStorage`
+  (`ranking-uvg:premiacion:<id del ranking>`), así que no hace falta cuenta; si el navegador no deja guardar, no se abre
+  sola. En `/rankings/<id>` de un ranking cerrado está la misma fila para volver a verla.
 - **Detalles**: va en un portal fuera de `#app` y deja `#app` con `inert`; Escape cierra; el foco va al botón de cerrar y
-  vuelve adonde estaba. Con movimiento reducido no hay confeti y las entradas son instantáneas. El confeti es un canvas
-  con `requestAnimationFrame`, sin librerías, y se apaga solo a los 7 segundos.
+  vuelve adonde estaba. Con movimiento reducido abre directo en el resumen, sin partículas. El confeti y los fuegos son
+  un canvas con `requestAnimationFrame` (clase `Fiesta`), sin librerías; los tiempos de las partículas están en el
+  componente y van de la mano con los `animation-delay` de `globals.css` (bloque «La premiación»). Los podios crecen con
+  la altura de la pantalla (`--alto-plata` y `--alto-oro`).
 - **Las medallas en el perfil**: pastillas en la cabecera verde («Oro en Primera · Ranking 1 · 2026-2»), antes de la de
   creador, y la medalla en la fila de ese ranking en el historial. Con medalla se omite «premio» (ya está dicho), pero
   «subió» sigue.
@@ -29,7 +41,9 @@ final que ya calcula la tabla, con los desempates resueltos.
 - **Verificado** con la app compilada contra un Supabase falso con el ranking cerrado (la tabla del 5 de noviembre como
   si cerrara ese día): se abre sola una vez, no se vuelve a abrir al recargar, abre desde la fila, cierra con el botón y
   con Escape, `#app` queda inerte solo mientras está abierta, las pastillas salen en los perfiles del 1.º y del 2.º y en
-  ningún otro, y no se pasa de ancho ni en 375 px.
+  ningún otro, y no se pasa de ancho ni en 375 px. La ceremonia (9 nov), igual: avanza sola hasta el resumen en unos 25
+  s, adelanta y vuelve con toques y flechas, la barrita se queda quieta mientras se mantiene apretado, «Saltar» y
+  «Volver a verla» funcionan, cabe en 375 × 667 y con movimiento reducido abre en el resumen sin barritas.
 
 ## Actualización: quién hizo la app (9 de octubre)
 
